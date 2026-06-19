@@ -1,0 +1,36 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Api/">
+    <Project Path="src/Api/TSMS.Api/TSMS.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/SharedInfrastructure/SharedInfrastructure.csproj" />
+    <Project Path="src/BuildingBlocks/SharedKernel/SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Course/">
+    <Project Path="src/Modules/Course/Course.Application/Course.Application.csproj" />
+    <Project Path="src/Modules/Course/Course.Domain/Course.Domain.csproj" />
+    <Project Path="src/Modules/Course/Course.Infrastructure/Course.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Enrollment/">
+    <Project Path="src/Modules/Enrollment/Enrollment.Application/Enrollment.Application.csproj" />
+    <Project Path="src/Modules/Enrollment/Enrollment.Domain/Enrollment.Domain.csproj" />
+    <Project Path="src/Modules/Enrollment/Enrollment.Infrastructure/Enrollment.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/Identity.Application/Identity.Application.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Domain/Identity.Domain.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Reporting/">
+    <Project Path="src/Modules/Reporting/Reporting.Application/Reporting.Application.csproj" />
+    <Project Path="src/Modules/Reporting/Reporting.Domain/Reporting.Domain.csproj" />
+    <Project Path="src/Modules/Reporting/Reporting.Infrastructure/Reporting.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Course.UnitTests/Course.UnitTests.csproj" />
+    <Project Path="tests/Enrollment.UnitTests/Enrollment.UnitTests.csproj" />
+    <Project Path="tests/Identity.UnitTests/Identity.UnitTests.csproj" />
+  </Folder>
+</Solution>
