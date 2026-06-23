@@ -12,21 +12,25 @@
     <Project Path="src/Modules/Course/Course.Application/Course.Application.csproj" />
     <Project Path="src/Modules/Course/Course.Domain/Course.Domain.csproj" />
     <Project Path="src/Modules/Course/Course.Infrastructure/Course.Infrastructure.csproj" />
+    <Project Path="src/Modules/Course/Course.Presentation/Course.Presentation.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Enrollment/">
     <Project Path="src/Modules/Enrollment/Enrollment.Application/Enrollment.Application.csproj" />
     <Project Path="src/Modules/Enrollment/Enrollment.Domain/Enrollment.Domain.csproj" />
     <Project Path="src/Modules/Enrollment/Enrollment.Infrastructure/Enrollment.Infrastructure.csproj" />
+    <Project Path="src/Modules/Enrollment/Enrollment.Presentation/Enrollment.Presentation.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Identity/">
     <Project Path="src/Modules/Identity/Identity.Application/Identity.Application.csproj" />
     <Project Path="src/Modules/Identity/Identity.Domain/Identity.Domain.csproj" />
     <Project Path="src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Presentation/Identity.Presentation.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Reporting/">
     <Project Path="src/Modules/Reporting/Reporting.Application/Reporting.Application.csproj" />
     <Project Path="src/Modules/Reporting/Reporting.Domain/Reporting.Domain.csproj" />
     <Project Path="src/Modules/Reporting/Reporting.Infrastructure/Reporting.Infrastructure.csproj" />
+    <Project Path="src/Modules/Reporting/Reporting.Presentation/Reporting.Presentation.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Course.UnitTests/Course.UnitTests.csproj" />
