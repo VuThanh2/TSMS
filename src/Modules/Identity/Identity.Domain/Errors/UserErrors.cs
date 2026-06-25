@@ -27,6 +27,14 @@ public static class UserErrors
     public static readonly Error PasswordTooShort =
         Error.Create("User.PasswordTooShort",
             $"Password must be at least {ValueObjects.Password.MinLength} characters.");
+    
+    public static readonly Error PasswordResetFailed =
+        Error.Create("User.PasswordResetFailed",
+            "Failed to reset password. Please try again.");
+    
+    // ── Authentication
+    public static readonly Error InvalidCredentials =
+        Error.Create("User.InvalidCredentials", "Email hoặc mật khẩu không đúng.");
 
     // ── User lifecycle 
     public static readonly Error NotFound =

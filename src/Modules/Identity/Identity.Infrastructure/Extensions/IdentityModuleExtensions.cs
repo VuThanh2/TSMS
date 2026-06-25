@@ -1,3 +1,4 @@
+using System.Reflection;
 using Identity.Application.Common.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Domain.Repositories;
@@ -20,10 +21,15 @@ namespace Identity.Infrastructure.Extensions;
 // DI registration cho toàn bộ Identity Infrastructure.
 // Được gọi từ TSMS.Api — Composition Root duy nhất biết về tất cả modules.
 public static class IdentityModuleExtensions {
+    // Assembly của Application Layer — expose để Program.cs scan MediatR handlers.
+    public static readonly Assembly ApplicationAssembly =
+        typeof(Identity.Application.Authentication.Login.LoginCommand).Assembly;
+    
     public static IServiceCollection AddIdentityModule(
         this IServiceCollection services,
         IConfiguration configuration) {
-        services.AddDbContext(configuration);   
+        services.AddDbContext(configuration);  
+        services.AddIdentityCore();
         services.AddJwtAuthentication(configuration);
         services.AddRepositoriesAndServices();
 
@@ -98,6 +104,6 @@ public static class IdentityModuleExtensions {
     private static void AddRepositoriesAndServices(this IServiceCollection services) {
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserQueryService, UserQueryService>();
-        services.AddScoped<TokenService>();
+        services.AddScoped<ITokenService, TokenService>();
     }
 }

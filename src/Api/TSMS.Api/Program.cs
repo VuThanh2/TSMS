@@ -1,23 +1,32 @@
+using Identity.Infrastructure.Extensions;
+using TSMS.Api.Extensions;
+using TSMS.Api.Middleware;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ── Modules
+builder.Services.AddIdentityModule(builder.Configuration);
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// ── Cross-cutting
+builder.Services.AddApiServices(builder.Configuration);
+
+// ── OpenAPI
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ── Seed
+await app.SeedIdentityDataAsync();
+
+// ── Middleware pipeline
 if (app.Environment.IsDevelopment())
-{
     app.MapOpenApi();
-}
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowFrontend");
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
