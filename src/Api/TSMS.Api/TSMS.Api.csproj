@@ -22,8 +22,4 @@
     <ProjectReference Include="..\..\Modules\Reporting\Reporting.Presentation\Reporting.Presentation.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
 </Project>
