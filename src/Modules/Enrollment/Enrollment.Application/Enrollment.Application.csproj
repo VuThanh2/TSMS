@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Enrollment.Domain\Enrollment.Domain.csproj" />
-    <ProjectReference Include="..\..\Course\Course.Application\Course.Application.csproj" />
+    <ProjectReference Include="..\..\Course\CourseManagement.Application\CourseManagement.Application.csproj" />
     <ProjectReference Include="..\..\Identity\Identity.Application\Identity.Application.csproj" />
   </ItemGroup>
 

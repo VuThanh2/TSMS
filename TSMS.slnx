@@ -8,11 +8,11 @@
     <Project Path="src/BuildingBlocks/SharedKernel/SharedKernel.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />
-  <Folder Name="/src/Modules/Course/">
-    <Project Path="src/Modules/Course/Course.Application/Course.Application.csproj" />
-    <Project Path="src/Modules/Course/Course.Domain/Course.Domain.csproj" />
-    <Project Path="src/Modules/Course/Course.Infrastructure/Course.Infrastructure.csproj" />
-    <Project Path="src/Modules/Course/Course.Presentation/Course.Presentation.csproj" />
+  <Folder Name="/src/Modules/CourseManagement/">
+    <Project Path="src/Modules/Course/CourseManagement.Application/CourseManagement.Application.csproj" />
+    <Project Path="src/Modules/Course/CourseManagement.Domain/CourseManagement.Domain.csproj" />
+    <Project Path="src/Modules/Course/CourseManagement.Infrastructure/CourseManagement.Infrastructure.csproj" />
+    <Project Path="src/Modules/Course/CourseManagement.Presentation/CourseManagement.Presentation.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Enrollment/">
     <Project Path="src/Modules/Enrollment/Enrollment.Application/Enrollment.Application.csproj" />
