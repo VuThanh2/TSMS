@@ -1,3 +1,4 @@
+using CourseManagement.Infrastructure.Extensions;
 using Identity.Infrastructure.Extensions;
 using TSMS.Api.Extensions;
 using TSMS.Api.Middleware;
@@ -6,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ── Modules
 builder.Services.AddIdentityModule(builder.Configuration);
+builder.Services.AddCourseModule(builder.Configuration);
 
 // ── Cross-cutting
 builder.Services.AddApiServices(builder.Configuration);
@@ -28,5 +30,8 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// ── Hangfire jobs
+app.RegisterCourseJobs();
 
 app.Run();

@@ -9,6 +9,11 @@ public interface ICourseRepository {
     /// Loads Course with its ClassSessions collection eager-loaded.
     /// Required for any operation that mutates ClassSessions.
     Task<Course?> GetByIdWithSessionsAsync(Guid id, CancellationToken cancellationToken = default);
+    
+    /// Batch fetch by IDs — avoids N+1 when loading multiple courses at once.
+    Task<IReadOnlyList<Course>> GetByIdsAsync(
+        IEnumerable<Guid> ids,
+        CancellationToken cancellationToken = default);
 
     Task<(IReadOnlyList<Entities.Course> Items, int TotalCount)> GetPagedAsync(
         string? keyword,

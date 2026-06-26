@@ -1,4 +1,5 @@
 using System.Reflection;
+using CourseManagement.Application.Common.Interfaces;
 using Identity.Application.Common.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Domain.Repositories;
@@ -103,7 +104,9 @@ public static class IdentityModuleExtensions {
 
     private static void AddRepositoriesAndServices(this IServiceCollection services) {
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IUserQueryService, UserQueryService>();
+        services.AddScoped<UserQueryService>();
+        services.AddScoped<IUserQueryService>(sp => sp.GetRequiredService<UserQueryService>());
+        services.AddScoped<ILecturerLookupService>(sp => sp.GetRequiredService<UserQueryService>());
         services.AddScoped<ITokenService, TokenService>();
     }
 }

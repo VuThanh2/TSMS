@@ -1,3 +1,5 @@
+using CourseManagement.Infrastructure.Extensions;
+using CourseManagement.Presentation.Controllers;
 using FluentValidation;
 using Identity.Infrastructure.Extensions;
 using Identity.Presentation.Controllers;
@@ -9,7 +11,11 @@ public static class ServiceCollectionExtensions {
     public static IServiceCollection AddApiServices(
         this IServiceCollection services,
         IConfiguration configuration) {
-        services.AddControllers().AddApplicationPart(typeof(AuthenticationController).Assembly);
+        services
+            .AddControllers()
+            // Scan Presentation assemblies để đăng ký controllers từ từng module.
+            .AddApplicationPart(typeof(AuthenticationController).Assembly)
+            .AddApplicationPart(typeof(CourseController).Assembly);
         services.AddCorsPolicy(configuration);
         services.AddMediatRWithValidation();
 
@@ -39,19 +45,21 @@ public static class ServiceCollectionExtensions {
         // Mỗi module expose ApplicationAssembly để đăng ký handlers + validators.
         services.AddMediatR(cfg => {
             cfg.RegisterServicesFromAssemblies(
-                IdentityModuleExtensions.ApplicationAssembly
-                // CourseModuleExtensions.ApplicationAssembly,    
+                IdentityModuleExtensions.ApplicationAssembly,
+                CourseModuleExtensions.ApplicationAssembly 
                 // EnrollmentModuleExtensions.ApplicationAssembly,
                 // ReportingModuleExtensions.ApplicationAssembly
             );
 
-            // Pipeline behavior: validate trước khi handler chạy.
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
 
         // Scan validators từ cùng assemblies.
-        services.AddValidatorsFromAssembly(
+        services.AddValidatorsFromAssemblies([
             IdentityModuleExtensions.ApplicationAssembly,
-               includeInternalTypes: true);
+                CourseModuleExtensions.ApplicationAssembly
+            // EnrollmentModuleExtensions.ApplicationAssembly,
+            // ReportingModuleExtensions.ApplicationAssembly
+        ], includeInternalTypes: true);
     }
 }

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SharedKernel.Abstractions;
 
 namespace CourseManagement.Infrastructure.Extensions;
 
@@ -24,6 +25,7 @@ public static class CourseModuleExtensions {
         services.AddDbContext<CourseDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("CourseDb")));
 
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CourseDbContext>());
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<CourseQueryService>();
         services.AddScoped<ICourseQueryService>(sp => sp.GetRequiredService<CourseQueryService>());

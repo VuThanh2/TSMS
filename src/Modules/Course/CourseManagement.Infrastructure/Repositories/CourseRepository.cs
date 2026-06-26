@@ -28,6 +28,15 @@ public class CourseRepository : ICourseRepository {
             .Include("_classSessions")
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
+    
+    public async Task<IReadOnlyList<Course>> GetByIdsAsync(
+        IEnumerable<Guid> ids,
+        CancellationToken cancellationToken = default) {
+        var idList = ids.ToList();
+        return await _context.Courses
+            .Where(c => idList.Contains(c.Id))
+            .ToListAsync(cancellationToken);
+    }
 
     public async Task<(IReadOnlyList<Course> Items, int TotalCount)> GetPagedAsync(
         string? keyword,
