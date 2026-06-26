@@ -1,13 +1,14 @@
 using CourseManagement.Application.Common.Interfaces;
 using CourseManagement.Domain.ValueObjects;
 using CourseManagement.Infrastructure.Persistence;
+using Enrollment.Application.Common.Interfaces;
 using Identity.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace CourseManagement.Infrastructure.Services;
 
 /// Consumed by Identity BC (deactivation check) and Enrollment BC (enrollment validation).
-public class CourseQueryService : ICourseQueryService, ICourseLookupService {
+public class CourseQueryService : ICourseQueryService, ICourseLookupService, ICourseEnrollmentService {
     private readonly CourseDbContext _context;
 
     public CourseQueryService(CourseDbContext context) {
@@ -68,7 +69,33 @@ public class CourseQueryService : ICourseQueryService, ICourseLookupService {
         CancellationToken cancellationToken = default) {
         return await _context.Courses
             .AnyAsync(c => c.LecturerId == lecturerId
-                && (c.Status == CourseStatus.Upcoming || c.Status == CourseStatus.Active),
+                           && (c.Status == CourseStatus.Upcoming || c.Status == CourseStatus.Active),
                 cancellationToken);
+    }
+ 
+    // Identity BC dùng để check "courseIds này có cái nào đang Active không?"
+    public async Task<bool> AreAnyActiveAsync(
+        IReadOnlyList<Guid> courseIds,
+        CancellationToken cancellationToken = default) {
+        return await _context.Courses
+            .AnyAsync(c => courseIds.Contains(c.Id) && c.Status == CourseStatus.Active,
+                cancellationToken);
+    }
+    
+    // ── ICourseEnrollmentService
+ 
+    public async Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsAsync(
+        Guid courseId,
+        CancellationToken cancellationToken = default) {
+        return await _context.ClassSessions
+            .Where(s => s.CourseId == courseId)
+            .OrderBy(s => s.SessionDate)
+            .ThenBy(s => s.SessionType)
+            .Select(s => new ClassSessionLookup(
+                s.Id,
+                s.CourseId,
+                s.SessionDate,
+                s.SessionType.ToString()))
+            .ToListAsync(cancellationToken);
     }
 }

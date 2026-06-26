@@ -22,19 +22,19 @@ public sealed class UpdateUserStatusCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly UserManager<Domain.Entities.AppUser> _userManager;
     private readonly ICourseLookupService _courseLookup;
-    private readonly IEnrollmentLookupService _enrollmentLookup;
+    private readonly IEnrollmentIdentityService _enrollmentIdentity;
     private readonly IPublisher _publisher;
 
     public UpdateUserStatusCommandHandler(
         IUserRepository userRepository,
         UserManager<Domain.Entities.AppUser> userManager,
         ICourseLookupService courseLookup,
-        IEnrollmentLookupService enrollmentLookup,
+        IEnrollmentIdentityService enrollmentIdentity,
         IPublisher publisher) {
         _userRepository = userRepository;
         _userManager = userManager;
         _courseLookup = courseLookup;
-        _enrollmentLookup = enrollmentLookup;
+        _enrollmentIdentity = enrollmentIdentity;
         _publisher = publisher;
     }
 
@@ -79,45 +79,47 @@ public sealed class UpdateUserStatusCommandHandler
         Domain.Entities.AppUser user,
         Guid currentUserId,
         CancellationToken cancellationToken) {
-        // Precondition 1: Admin không thể deactivate chính mình.
         if (user.Id == currentUserId)
             return Result.Failure<UpdateUserStatusOutputDto>(UserErrors.CannotDeactivateSelf);
-
-        // Precondition 2 (Lecturer): không có Course Upcoming/Active.
+ 
         if (user.Role == UserRole.Lecturer) {
             var hasActiveCourses = await _courseLookup.HasActiveCoursesByLecturerAsync(
                 user.Id, cancellationToken);
-
+ 
             if (hasActiveCourses)
-                return Result.Failure<UpdateUserStatusOutputDto>(
-                    UserErrors.LecturerHasActiveCourses);
+                return Result.Failure<UpdateUserStatusOutputDto>(UserErrors.LecturerHasActiveCourses);
         }
-
-        // Precondition 3 (Student): không có Enrollment trong Course Active.
+ 
         if (user.Role == UserRole.Student) {
-            var hasActiveEnrollments = await _enrollmentLookup.HasActiveEnrollmentsByStudentAsync(
+            // Step 1: hỏi Enrollment BC — courseIds nào Student đang Active enroll.
+            var activeCourseIds = await _enrollmentIdentity.GetActiveCourseIdsByStudentAsync(
                 user.Id, cancellationToken);
-
-            if (hasActiveEnrollments)
-                return Result.Failure<UpdateUserStatusOutputDto>(
-                    UserErrors.StudentHasActiveEnrollments);
+ 
+            // Step 2: hỏi Course BC — trong số đó có courseId nào đang Active không.
+            // Application layer orchestrate 2 cross-BC calls — đúng trách nhiệm.
+            if (activeCourseIds.Count > 0) {
+                var hasActiveCourse = await _courseLookup.AreAnyActiveAsync(
+                    activeCourseIds, cancellationToken);
+ 
+                if (hasActiveCourse)
+                    return Result.Failure<UpdateUserStatusOutputDto>(
+                        UserErrors.StudentHasActiveEnrollments);
+            }
         }
-
+ 
         var domainResult = user.Deactivate();
-
+ 
         if (domainResult.IsFailure)
             return Result.Failure<UpdateUserStatusOutputDto>(domainResult.Error);
-
+ 
         await _userManager.UpdateAsync(user);
-
-        // Set LockoutEnd = MaxValue để /login tự động reject user bị deactivate.
         await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
-
+ 
         foreach (var domainEvent in user.DomainEvents)
             await _publisher.Publish(domainEvent, cancellationToken);
-
+ 
         user.ClearDomainEvents();
-
+ 
         return Result.Success(new UpdateUserStatusOutputDto(user.Id, user.IsActive));
     }
 }

@@ -17,15 +17,15 @@ public sealed class GetAvailableCoursesQueryHandler
     : IRequestHandler<GetAvailableCoursesQuery, Result<PagedList<GetAvailableCoursesOutputDto>>> {
     private readonly ICourseRepository _courseRepository;
     private readonly ILecturerLookupService _lecturerLookupService;
-    private readonly IEnrollmentLookupService _enrollmentLookupService;
+    private readonly IEnrollmentCourseService _enrollmentCourseService;
 
     public GetAvailableCoursesQueryHandler(
         ICourseRepository courseRepository,
         ILecturerLookupService lecturerLookupService,
-        IEnrollmentLookupService enrollmentLookupService) {
+        IEnrollmentCourseService enrollmentCourseService) {
         _courseRepository = courseRepository;
         _lecturerLookupService = lecturerLookupService;
-        _enrollmentLookupService = enrollmentLookupService;
+        _enrollmentCourseService = enrollmentCourseService;
     }
 
     public async Task<Result<PagedList<GetAvailableCoursesOutputDto>>> Handle(
@@ -41,7 +41,7 @@ public sealed class GetAvailableCoursesQueryHandler
             cancellationToken: cancellationToken);
 
         // Lọc ra các course Student đã enroll để exclude.
-        var enrolledCourseIds = await _enrollmentLookupService.GetEnrolledCourseIdsAsync(
+        var enrolledCourseIds = await _enrollmentCourseService.GetEnrolledCourseIdsAsync(
             request.StudentId, cancellationToken);
 
         var available = allUpcoming
@@ -58,7 +58,7 @@ public sealed class GetAvailableCoursesQueryHandler
         foreach (var course in pageItems) {
             var lecturerName = await _lecturerLookupService.GetFullNameAsync(
                 course.LecturerId, cancellationToken);
-            var enrolledCount = await _enrollmentLookupService.GetEnrollmentCountAsync(
+            var enrolledCount = await _enrollmentCourseService.GetEnrollmentCountAsync(
                 course.Id, cancellationToken);
             dtos.Add(CourseMapper.ToGetAvailableCoursesOutputDto(course, lecturerName, enrolledCount));
         }

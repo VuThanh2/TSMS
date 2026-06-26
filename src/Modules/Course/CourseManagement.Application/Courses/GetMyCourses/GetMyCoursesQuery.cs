@@ -13,22 +13,22 @@ public sealed class GetMyCoursesQueryHandler
     : IRequestHandler<GetMyCoursesQuery, Result<IReadOnlyList<GetMyCoursesOutputDto>>> {
     private readonly ICourseRepository _courseRepository;
     private readonly ILecturerLookupService _lecturerLookupService;
-    private readonly IEnrollmentLookupService _enrollmentLookupService;
+    private readonly IEnrollmentCourseService _enrollmentCourseService;
 
     public GetMyCoursesQueryHandler(
         ICourseRepository courseRepository,
         ILecturerLookupService lecturerLookupService,
-        IEnrollmentLookupService enrollmentLookupService) {
+        IEnrollmentCourseService enrollmentCourseService) {
         _courseRepository = courseRepository;
         _lecturerLookupService = lecturerLookupService;
-        _enrollmentLookupService = enrollmentLookupService;
+        _enrollmentCourseService = enrollmentCourseService;
     }
 
     public async Task<Result<IReadOnlyList<GetMyCoursesOutputDto>>> Handle(
         GetMyCoursesQuery request,
         CancellationToken cancellationToken) {
         // Lấy courseIds và grades trong một lần call để tránh multiple round-trips.
-        var gradesByCourse = await _enrollmentLookupService.GetGradesByCourseAsync(
+        var gradesByCourse = await _enrollmentCourseService.GetGradesByCourseAsync(
             request.StudentId, cancellationToken);
 
         if (gradesByCourse.Count == 0)

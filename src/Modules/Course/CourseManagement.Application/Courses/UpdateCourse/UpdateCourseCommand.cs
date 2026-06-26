@@ -20,17 +20,17 @@ public sealed class UpdateCourseCommandHandler
     : IRequestHandler<UpdateCourseCommand, Result<UpdateCourseOutputDto>> {
     private readonly ICourseRepository _courseRepository;
     private readonly ILecturerLookupService _lecturerLookupService;
-    private readonly IEnrollmentLookupService _enrollmentLookupService;
+    private readonly IEnrollmentCourseService _enrollmentCourseService;
     private readonly IUnitOfWork _unitOfWork;
 
     public UpdateCourseCommandHandler(
         ICourseRepository courseRepository,
         ILecturerLookupService lecturerLookupService,
-        IEnrollmentLookupService enrollmentLookupService,
+        IEnrollmentCourseService enrollmentCourseService,
         IUnitOfWork unitOfWork) {
         _courseRepository = courseRepository;
         _lecturerLookupService = lecturerLookupService;
-        _enrollmentLookupService = enrollmentLookupService;
+        _enrollmentCourseService = enrollmentCourseService;
         _unitOfWork = unitOfWork;
     }
 
@@ -45,7 +45,7 @@ public sealed class UpdateCourseCommandHandler
             return Result.Failure<UpdateCourseOutputDto>(CourseErrors.NotFound);
 
         // Precondition: maxCapacity mới không được nhỏ hơn số sinh viên đã đăng ký.
-        var enrolledCount = await _enrollmentLookupService.GetEnrollmentCountAsync(
+        var enrolledCount = await _enrollmentCourseService.GetEnrollmentCountAsync(
             request.CourseId, cancellationToken);
 
         if (request.MaxCapacity < enrolledCount)

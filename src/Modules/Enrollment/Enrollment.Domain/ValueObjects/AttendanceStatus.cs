@@ -1,6 +1,7 @@
 namespace Enrollment.Domain.ValueObjects;
 
-public enum AttendanceStatus
-{
-    
+public enum AttendanceStatus {
+    Present,
+    Absent,
+    Excused
 }

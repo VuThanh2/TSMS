@@ -2,10 +2,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Enrollment.Application\Enrollment.Application.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\SharedInfrastructure\SharedInfrastructure.csproj" />
+    <ProjectReference Include="..\..\Identity\Identity.Application\Identity.Application.csproj" />
+    <ProjectReference Include="..\..\Course\CourseManagement.Application\CourseManagement.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Persistence\Migrations\" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.9" />
   </ItemGroup>
 
   <PropertyGroup>
