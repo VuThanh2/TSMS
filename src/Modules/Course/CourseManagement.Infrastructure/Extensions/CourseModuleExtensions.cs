@@ -4,6 +4,7 @@ using CourseManagement.Domain.Repositories;
 using CourseManagement.Infrastructure.Persistence;
 using CourseManagement.Infrastructure.Repositories;
 using CourseManagement.Infrastructure.Services;
+using EnrollmentManagement.Application.Common.Interfaces;
 using Hangfire;
 using Identity.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -24,14 +25,19 @@ public static class CourseModuleExtensions {
         IConfiguration configuration) {
         services.AddDbContext<CourseDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("CourseDb")));
-
+ 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CourseDbContext>());
         services.AddScoped<ICourseRepository, CourseRepository>();
-        services.AddScoped<CourseQueryService>();
-        services.AddScoped<ICourseQueryService>(sp => sp.GetRequiredService<CourseQueryService>());
-        services.AddScoped<ICourseLookupService>(sp => sp.GetRequiredService<CourseQueryService>());
+ 
+        // Internal service — dùng cho CourseManagement Application handlers.
+        services.AddScoped<ICourseQueryService, CourseQueryService>();
+ 
+        // Cross-BC services — mỗi interface một concrete class riêng.
+        services.AddScoped<ICourseLookupService, CourseQueryService>();
+        services.AddScoped<ICourseEnrollmentService, CourseEnrollmentService>();
+ 
         services.AddScoped<UpdateCourseStatusJobService>();
-
+ 
         return services;
     }
 

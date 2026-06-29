@@ -14,11 +14,11 @@
     <Project Path="src/Modules/Course/CourseManagement.Infrastructure/CourseManagement.Infrastructure.csproj" />
     <Project Path="src/Modules/Course/CourseManagement.Presentation/CourseManagement.Presentation.csproj" />
   </Folder>
-  <Folder Name="/src/Modules/Enrollment/">
-    <Project Path="src/Modules/Enrollment/Enrollment.Application/Enrollment.Application.csproj" />
-    <Project Path="src/Modules/Enrollment/Enrollment.Domain/Enrollment.Domain.csproj" />
-    <Project Path="src/Modules/Enrollment/Enrollment.Infrastructure/Enrollment.Infrastructure.csproj" />
-    <Project Path="src/Modules/Enrollment/Enrollment.Presentation/Enrollment.Presentation.csproj" />
+  <Folder Name="/src/Modules/EnrollmentManagement/">
+    <Project Path="src/Modules/Enrollment/EnrollmentManagement.Application/EnrollmentManagement.Application.csproj" />
+    <Project Path="src/Modules/Enrollment/EnrollmentManagement.Domain/EnrollmentManagement.Domain.csproj" />
+    <Project Path="src/Modules/Enrollment/EnrollmentManagement.Infrastructure/EnrollmentManagement.Infrastructure.csproj" />
+    <Project Path="src/Modules/Enrollment/EnrollmentManagement.Presentation/EnrollmentManagement.Presentation.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Identity/">
     <Project Path="src/Modules/Identity/Identity.Application/Identity.Application.csproj" />

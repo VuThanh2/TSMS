@@ -4,7 +4,7 @@
     <ProjectReference Include="..\Identity.Application\Identity.Application.csproj" />
     <ProjectReference Include="..\..\..\..\Modules\Course\CourseManagement.Application\CourseManagement.Application.csproj" />
     <ProjectReference Include="..\..\Course\CourseManagement.Application\CourseManagement.Application.csproj" />
-    <ProjectReference Include="..\..\Enrollment\Enrollment.Application\Enrollment.Application.csproj" />
+    <ProjectReference Include="..\..\Enrollment\EnrollmentManagement.Application\EnrollmentManagement.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

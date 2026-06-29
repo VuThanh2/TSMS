@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using EnrollmentManagement.Application.Common.Interfaces;
 
 namespace Identity.Infrastructure.Extensions;
 
@@ -104,9 +105,14 @@ public static class IdentityModuleExtensions {
 
     private static void AddRepositoriesAndServices(this IServiceCollection services) {
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<UserQueryService>();
-        services.AddScoped<IUserQueryService>(sp => sp.GetRequiredService<UserQueryService>());
-        services.AddScoped<ILecturerLookupService>(sp => sp.GetRequiredService<UserQueryService>());
+ 
+        // Internal service — dùng cho Identity Application handlers.
+        services.AddScoped<IUserQueryService, UserQueryService>();
+ 
+        // Cross-BC services — mỗi interface một concrete class riêng.
+        services.AddScoped<ILecturerLookupService, LecturerLookupService>();
+        services.AddScoped<IStudentEnrollmentService, StudentEnrollmentService>();
+ 
         services.AddScoped<ITokenService, TokenService>();
     }
 }

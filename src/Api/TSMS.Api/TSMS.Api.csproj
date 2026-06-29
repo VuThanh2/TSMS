@@ -20,12 +20,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Course\CourseManagement.Infrastructure\CourseManagement.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\Modules\Enrollment\Enrollment.Infrastructure\Enrollment.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Enrollment\EnrollmentManagement.Infrastructure\EnrollmentManagement.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Reporting\Reporting.Infrastructure\Reporting.Infrastructure.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\SharedInfrastructure\SharedInfrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Identity.Presentation\Identity.Presentation.csproj" />
     <ProjectReference Include="..\..\Modules\Course\CourseManagement.Presentation\CourseManagement.Presentation.csproj" />
-    <ProjectReference Include="..\..\Modules\Enrollment\Enrollment.Presentation\Enrollment.Presentation.csproj" />
+    <ProjectReference Include="..\..\Modules\Enrollment\EnrollmentManagement.Presentation\EnrollmentManagement.Presentation.csproj" />
     <ProjectReference Include="..\..\Modules\Reporting\Reporting.Presentation\Reporting.Presentation.csproj" />
   </ItemGroup>
 

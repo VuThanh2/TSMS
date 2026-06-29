@@ -1,5 +1,7 @@
 using CourseManagement.Infrastructure.Extensions;
 using CourseManagement.Presentation.Controllers;
+using EnrollmentManagement.Infrastructure.Extensions;
+using EnrollmentManagement.Presentation.Controllers;
 using FluentValidation;
 using Identity.Infrastructure.Extensions;
 using Identity.Presentation.Controllers;
@@ -15,7 +17,8 @@ public static class ServiceCollectionExtensions {
             .AddControllers()
             // Scan Presentation assemblies để đăng ký controllers từ từng module.
             .AddApplicationPart(typeof(AuthenticationController).Assembly)
-            .AddApplicationPart(typeof(CourseController).Assembly);
+            .AddApplicationPart(typeof(CourseController).Assembly)
+            .AddApplicationPart(typeof(EnrollmentsController).Assembly);
         services.AddCorsPolicy(configuration);
         services.AddMediatRWithValidation();
 
@@ -46,8 +49,8 @@ public static class ServiceCollectionExtensions {
         services.AddMediatR(cfg => {
             cfg.RegisterServicesFromAssemblies(
                 IdentityModuleExtensions.ApplicationAssembly,
-                CourseModuleExtensions.ApplicationAssembly 
-                // EnrollmentModuleExtensions.ApplicationAssembly,
+                CourseModuleExtensions.ApplicationAssembly, 
+                EnrollmentModuleExtensions.ApplicationAssembly
                 // ReportingModuleExtensions.ApplicationAssembly
             );
 
@@ -57,8 +60,8 @@ public static class ServiceCollectionExtensions {
         // Scan validators từ cùng assemblies.
         services.AddValidatorsFromAssemblies([
             IdentityModuleExtensions.ApplicationAssembly,
-                CourseModuleExtensions.ApplicationAssembly
-            // EnrollmentModuleExtensions.ApplicationAssembly,
+            CourseModuleExtensions.ApplicationAssembly,
+            EnrollmentModuleExtensions.ApplicationAssembly,
             // ReportingModuleExtensions.ApplicationAssembly
         ], includeInternalTypes: true);
     }

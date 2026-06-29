@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Modules\Enrollment\Enrollment.Domain\Enrollment.Domain.csproj" />
-    <ProjectReference Include="..\..\src\Modules\Enrollment\Enrollment.Application\Enrollment.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Enrollment\EnrollmentManagement.Domain\EnrollmentManagement.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Enrollment\EnrollmentManagement.Application\EnrollmentManagement.Application.csproj" />
   </ItemGroup>
 
 </Project>
