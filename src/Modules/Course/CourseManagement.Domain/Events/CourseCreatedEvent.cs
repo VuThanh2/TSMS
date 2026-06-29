@@ -9,14 +9,16 @@ public sealed record CourseCreatedEvent : IDomainEvent {
     public Guid CourseId { get; init; }
     public Guid LecturerId { get; init; }
     public string CourseName { get; init; } = string.Empty;
+    public string LecturerName { get; init; } = string.Empty;
     public DateOnly StartDate { get; init; }
     public DateOnly EndDate { get; init; }
     public int MaxCapacity { get; init; }
-
+ 
     public static CourseCreatedEvent Create(
         Guid courseId,
         Guid lecturerId,
         string courseName,
+        string lecturerName,
         DateOnly startDate,
         DateOnly endDate,
         int maxCapacity) =>
@@ -26,6 +28,7 @@ public sealed record CourseCreatedEvent : IDomainEvent {
             CourseId = courseId,
             LecturerId = lecturerId,
             CourseName = courseName,
+            LecturerName = lecturerName,
             StartDate = startDate,
             EndDate = endDate,
             MaxCapacity = maxCapacity

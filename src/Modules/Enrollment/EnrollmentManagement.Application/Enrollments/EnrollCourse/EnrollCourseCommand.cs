@@ -89,10 +89,28 @@ public sealed class EnrollCourseCommandHandler
             sessionPairs.Add((sessionId, sessionType));
         }
 
+        var studentFullName = await _studentEnrollmentService.GetFullNameAsync(
+            request.StudentId, cancellationToken) ?? string.Empty;
+ 
+        var studentEmail = await _studentEnrollmentService.GetEmailAsync(
+            request.StudentId, cancellationToken) ?? string.Empty;
+ 
+        var courseStatus = await _courseEnrollmentService.GetStatusAsync(
+            request.CourseId, cancellationToken) ?? string.Empty;
+ 
+        var courseLookups = await _courseEnrollmentService.GetCoursesByIdsAsync(
+            [request.CourseId], cancellationToken);
+        var courseName = courseLookups.FirstOrDefault()?.CourseName ?? string.Empty;
+ 
         var enrollmentResult = Enrollment.Create(
             request.StudentId,
             request.CourseId,
-            sessionPairs);
+            sessionPairs,
+            studentFullName,
+            studentEmail,
+            courseName,
+            courseStatus,
+            totalSessionsInCourse: allSessions.Count);
 
         if (enrollmentResult.IsFailure)
             return Result.Failure<EnrollCourseOutputDto>(enrollmentResult.Error);

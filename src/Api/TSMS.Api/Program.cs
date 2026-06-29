@@ -1,5 +1,6 @@
 using CourseManagement.Infrastructure.Extensions;
 using EnrollmentManagement.Infrastructure.Extensions;
+using EnrollmentManagement.Infrastructure.Services;
 using Identity.Infrastructure.Extensions;
 using TSMS.Api.Extensions;
 using TSMS.Api.Middleware;
@@ -32,6 +33,7 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<GradeHub>("/hubs/grade");
 
 // ── Hangfire jobs
 app.RegisterCourseJobs();

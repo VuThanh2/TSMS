@@ -11,14 +11,16 @@ public sealed record AttendanceMarkedEvent : IDomainEvent {
     public Guid StudentId { get; init; }
     public Guid ClassSessionId { get; init; }
     public Guid CourseId { get; init; }
-    public AttendanceStatus Status { get; init; }
-
+    public AttendanceStatus PreviousStatus { get; init; }
+    public AttendanceStatus NewStatus { get; init; }
+ 
     public static AttendanceMarkedEvent Create(
         Guid attendanceId,
         Guid studentId,
         Guid classSessionId,
         Guid courseId,
-        AttendanceStatus status) =>
+        AttendanceStatus previousStatus,
+        AttendanceStatus newStatus) =>
         new() {
             EventId = Guid.NewGuid(),
             OccurredOn = DateTime.UtcNow,
@@ -26,6 +28,7 @@ public sealed record AttendanceMarkedEvent : IDomainEvent {
             StudentId = studentId,
             ClassSessionId = classSessionId,
             CourseId = courseId,
-            Status = status
+            PreviousStatus = previousStatus,
+            NewStatus = newStatus
         };
 }

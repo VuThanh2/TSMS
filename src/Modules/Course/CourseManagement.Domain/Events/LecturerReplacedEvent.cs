@@ -9,16 +9,19 @@ public sealed record LecturerReplacedEvent : IDomainEvent {
     public Guid CourseId { get; init; }
     public Guid PreviousLecturerId { get; init; }
     public Guid NewLecturerId { get; init; }
-
+    public string NewLecturerName { get; init; } = string.Empty;
+ 
     public static LecturerReplacedEvent Create(
         Guid courseId,
         Guid previousLecturerId,
-        Guid newLecturerId) =>
+        Guid newLecturerId,
+        string newLecturerName) =>
         new() {
             EventId = Guid.NewGuid(),
             OccurredOn = DateTime.UtcNow,
             CourseId = courseId,
             PreviousLecturerId = previousLecturerId,
-            NewLecturerId = newLecturerId
+            NewLecturerId = newLecturerId,
+            NewLecturerName = newLecturerName
         };
 }

@@ -1,6 +1,5 @@
 using CourseManagement.Domain.ValueObjects;
 using CourseManagement.Infrastructure.Persistence;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -9,15 +8,12 @@ namespace CourseManagement.Infrastructure.Services;
 /// Hangfire recurring job — runs daily to auto-transition course statuses.
 public class UpdateCourseStatusJobService {
     private readonly CourseDbContext _context;
-    private readonly IPublisher _publisher;
     private readonly ILogger<UpdateCourseStatusJobService> _logger;
 
     public UpdateCourseStatusJobService(
         CourseDbContext context,
-        IPublisher publisher,
         ILogger<UpdateCourseStatusJobService> logger) {
         _context = context;
-        _publisher = publisher;
         _logger = logger;
     }
 

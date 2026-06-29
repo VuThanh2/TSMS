@@ -43,11 +43,13 @@ public class Attendance : AggregateRoot {
         if (Status == newStatus)
             return Result.Success();
  
+        var previousStatus = Status;
+ 
         Status = newStatus;
         UpdatedAt = DateTime.UtcNow;
  
         RaiseDomainEvent(AttendanceMarkedEvent.Create(
-            Id, StudentId, ClassSessionId, CourseId, newStatus));
+            Id, StudentId, ClassSessionId, CourseId, previousStatus, newStatus));
  
         return Result.Success();
     }

@@ -35,14 +35,19 @@ public class Enrollment : AggregateRoot {
     public static Result<Enrollment> Create(
         Guid studentId,
         Guid courseId,
-        IReadOnlyList<(Guid ClassSessionId, ValueObjects.SessionType SessionType)> sessions) {
+        IReadOnlyList<(Guid ClassSessionId, ValueObjects.SessionType SessionType)> sessions,
+        string studentFullName,        // ← enrich
+        string studentEmail,           // ← enrich
+        string courseName,             // ← enrich
+        string courseStatus,           // ← enrich
+        int totalSessionsInCourse) {   // ← enrich
+ 
         if (sessions.Count != 2)
             return Result.Failure<Enrollment>(EnrollmentErrors.InvalidSessionCount);
-
-        // Hai session phải khác SessionType (1 Morning + 1 Afternoon).
+ 
         if (sessions[0].SessionType == sessions[1].SessionType)
             return Result.Failure<Enrollment>(EnrollmentErrors.DuplicateSessionType);
-
+ 
         var enrollment = new Enrollment {
             Id = Guid.NewGuid(),
             StudentId = studentId,
@@ -51,18 +56,23 @@ public class Enrollment : AggregateRoot {
             Grade = null,
             EnrolledAt = DateTime.UtcNow
         };
-
+ 
         foreach (var (classSessionId, sessionType) in sessions) {
             var enrolledSession = EnrolledSession.Create(enrollment.Id, classSessionId, sessionType);
             enrollment._enrolledSessions.Add(enrolledSession);
         }
-
+ 
         enrollment.RaiseDomainEvent(StudentEnrolledEvent.Create(
             enrollment.Id,
             enrollment.StudentId,
             enrollment.CourseId,
-            enrollment.EnrolledAt));
-
+            enrollment.EnrolledAt,
+            studentFullName,
+            studentEmail,
+            courseName,
+            courseStatus,
+            totalSessionsInCourse));
+ 
         return Result.Success(enrollment);
     }
 

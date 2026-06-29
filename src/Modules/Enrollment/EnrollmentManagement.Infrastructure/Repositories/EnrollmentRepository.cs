@@ -56,9 +56,7 @@ public class EnrollmentRepository : IEnrollmentRepository {
         Guid courseId,
         CancellationToken cancellationToken = default) {
         return await _context.Enrollments
-            .CountAsync(
-                e => e.CourseId == courseId && e.Status == EnrollmentStatus.Active,
-                cancellationToken);
+            .CountAsync(e => e.CourseId == courseId, cancellationToken);
     }
 
     public void Add(Domain.Entities.Enrollment enrollment) {

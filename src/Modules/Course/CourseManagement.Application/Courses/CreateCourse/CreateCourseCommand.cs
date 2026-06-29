@@ -66,24 +66,25 @@ public sealed class CreateCourseCommandHandler
         if (dateRangeResult.IsFailure)
             return Result.Failure<CreateCourseOutputDto>(dateRangeResult.Error);
 
+        var lecturerName = await _lecturerLookupService.GetFullNameAsync(
+            request.LecturerId, cancellationToken) ?? string.Empty;
+ 
         var createResult = Course.Create(
             lecturerId: request.LecturerId,
             courseName: courseNameResult.Value,
             description: request.Description,
             dateRange: dateRangeResult.Value,
-            maxCapacity: request.MaxCapacity);
-
+            maxCapacity: request.MaxCapacity,
+            lecturerName: lecturerName);        
+ 
         if (createResult.IsFailure)
             return Result.Failure<CreateCourseOutputDto>(createResult.Error);
-
+ 
         var course = createResult.Value;
-
+ 
         _courseRepository.Add(course);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var lecturerName = await _lecturerLookupService.GetFullNameAsync(
-            course.LecturerId, cancellationToken);
-
+ 
         return Result.Success(CourseMapper.ToCreateCourseOutputDto(course, lecturerName));
     }
 }

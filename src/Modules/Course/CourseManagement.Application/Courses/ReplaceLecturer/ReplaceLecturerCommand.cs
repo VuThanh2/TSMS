@@ -58,18 +58,17 @@ public sealed class ReplaceLecturerCommandHandler
         if (hasOverlap)
             return Result.Failure<ReplaceLecturerOutputDto>(CourseErrors.LecturerDateRangeOverlap);
 
-        // Domain enforces: Completed course immutable, newLecturerId != currentLecturerId.
-        var replaceResult = course.ReplaceLecturer(request.NewLecturerId);
-
+        var newLecturerName = await _lecturerLookupService.GetFullNameAsync(
+            request.NewLecturerId, cancellationToken) ?? string.Empty;
+ 
+        var replaceResult = course.ReplaceLecturer(request.NewLecturerId, newLecturerName);
+ 
         if (replaceResult.IsFailure)
             return Result.Failure<ReplaceLecturerOutputDto>(replaceResult.Error);
-
+ 
         _courseRepository.Update(course);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var newLecturerName = await _lecturerLookupService.GetFullNameAsync(
-            course.LecturerId, cancellationToken);
-
+        
         return Result.Success(CourseMapper.ToReplaceLecturerOutputDto(course, newLecturerName));
     }
 }

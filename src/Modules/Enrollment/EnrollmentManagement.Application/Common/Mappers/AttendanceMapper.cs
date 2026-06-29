@@ -26,7 +26,6 @@ public static class AttendanceMapper {
     public static MarkAttendanceOutputDto ToMarkAttendanceOutputDto(Attendance attendance) =>
         new(
             AttendanceId: attendance.Id,
-            EnrollmentId: attendance.Id,
             ClassSessionId: attendance.ClassSessionId,
             StudentId: attendance.StudentId,
             AttendanceStatus: attendance.Status.ToString());

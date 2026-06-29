@@ -34,10 +34,11 @@ public class Course : AggregateRoot {
         CourseName courseName,
         string? description,
         DateRange dateRange,
-        int maxCapacity) {
+        int maxCapacity,
+        string lecturerName) {            // ← thêm parameter
         if (maxCapacity <= 0)
             return Result.Failure<Course>(CourseErrors.MaxCapacityMustBePositive);
-
+ 
         var course = new Course {
             Id = Guid.NewGuid(),
             LecturerId = lecturerId,
@@ -49,11 +50,11 @@ public class Course : AggregateRoot {
             MaxCapacity = maxCapacity,
             CreatedAt = DateTime.UtcNow
         };
-
+ 
         course.RaiseDomainEvent(CourseCreatedEvent.Create(
-            course.Id, course.LecturerId, course._courseName,
+            course.Id, course.LecturerId, course._courseName, lecturerName,  // ← thêm lecturerName
             course._startDate, course._endDate, course.MaxCapacity));
-
+ 
         return Result.Success(course);
     }
 
@@ -97,7 +98,7 @@ public class Course : AggregateRoot {
     ///   - newLecturerId refers to an Active Lecturer.
     ///   - newLecturerId != current LecturerId.
     ///   - No date range overlap with this Lecturer's other courses.
-    public Result ReplaceLecturer(Guid newLecturerId) {
+    public Result ReplaceLecturer(Guid newLecturerId, string newLecturerName) {
         if (Status == CourseStatus.Completed)
             return Result.Failure(CourseErrors.CompletedCourseIsImmutable);
         
@@ -106,9 +107,9 @@ public class Course : AggregateRoot {
 
         var previousLecturerId = LecturerId;
         LecturerId = newLecturerId;
-
-        RaiseDomainEvent(LecturerReplacedEvent.Create(Id, previousLecturerId, newLecturerId));
-
+ 
+        RaiseDomainEvent(LecturerReplacedEvent.Create(Id, previousLecturerId, newLecturerId, newLecturerName));
+ 
         return Result.Success();
     }
     

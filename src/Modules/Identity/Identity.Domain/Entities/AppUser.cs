@@ -98,7 +98,7 @@ public class AppUser : IdentityUser<Guid>
 
         UpdateProfileField(profileField);
 
-        RaiseDomainEvent(UserUpdatedEvent.Create(Id, FullName, Email));
+        RaiseDomainEvent(UserUpdatedEvent.Create(Id, FullName, Email, Role.ToString()));
 
         return Result.Success();
     }
