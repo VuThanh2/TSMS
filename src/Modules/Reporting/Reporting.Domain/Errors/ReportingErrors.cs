@@ -10,4 +10,8 @@ public static class ReportingErrors {
     public static readonly Error CourseStatisticsNotFound =
         Error.Create("Reporting.CourseStatisticsNotFound",
             "Course statistics projection has not been initialized for this course.");
+    
+    public static readonly Error NotCourseOwner =
+        Error.Create("Reporting.NotCourseOwner",
+            "Lecturer is not the owner of this course.");
 }

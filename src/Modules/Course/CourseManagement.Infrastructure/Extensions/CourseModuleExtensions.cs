@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Reporting.Application.Common.Interfaces;
 using SharedKernel.Abstractions;
 
 namespace CourseManagement.Infrastructure.Extensions;
@@ -35,6 +36,7 @@ public static class CourseModuleExtensions {
         // Cross-BC services — mỗi interface một concrete class riêng.
         services.AddScoped<ICourseLookupService, CourseQueryService>();
         services.AddScoped<ICourseEnrollmentService, CourseEnrollmentService>();
+        services.AddScoped<ICourseReportingService, CourseReportingService>();
  
         services.AddScoped<UpdateCourseStatusJobService>();
  

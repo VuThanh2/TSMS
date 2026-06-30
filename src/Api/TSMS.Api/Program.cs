@@ -2,6 +2,7 @@ using CourseManagement.Infrastructure.Extensions;
 using EnrollmentManagement.Infrastructure.Extensions;
 using EnrollmentManagement.Infrastructure.Services;
 using Identity.Infrastructure.Extensions;
+using Reporting.Infrastructure.Extensions;
 using TSMS.Api.Extensions;
 using TSMS.Api.Middleware;
 
@@ -11,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddCourseModule(builder.Configuration);
 builder.Services.AddEnrollmentModule(builder.Configuration);
+builder.Services.AddReportingModule(builder.Configuration);
 
 // ── Cross-cutting
 builder.Services.AddApiServices(builder.Configuration);

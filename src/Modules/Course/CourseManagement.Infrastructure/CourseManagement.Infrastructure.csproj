@@ -5,6 +5,7 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\SharedInfrastructure\SharedInfrastructure.csproj" />
     <ProjectReference Include="..\..\Identity\Identity.Application\Identity.Application.csproj" />
     <ProjectReference Include="..\..\Enrollment\EnrollmentManagement.Application\EnrollmentManagement.Application.csproj" />
+    <ProjectReference Include="..\..\Reporting\Reporting.Application\Reporting.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

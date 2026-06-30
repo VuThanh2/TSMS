@@ -6,6 +6,8 @@ using FluentValidation;
 using Identity.Infrastructure.Extensions;
 using Identity.Presentation.Controllers;
 using MediatR;
+using Reporting.Infrastructure.Extensions;
+using Reporting.Presentation.Controllers;
 
 namespace TSMS.Api.Extensions;
 
@@ -18,7 +20,8 @@ public static class ServiceCollectionExtensions {
             // Scan Presentation assemblies để đăng ký controllers từ từng module.
             .AddApplicationPart(typeof(AuthenticationController).Assembly)
             .AddApplicationPart(typeof(CourseController).Assembly)
-            .AddApplicationPart(typeof(EnrollmentsController).Assembly);
+            .AddApplicationPart(typeof(EnrollmentsController).Assembly)
+            .AddApplicationPart(typeof(ReportingController).Assembly);
         services.AddCorsPolicy(configuration);
         services.AddMediatRWithValidation();
 
@@ -50,8 +53,8 @@ public static class ServiceCollectionExtensions {
             cfg.RegisterServicesFromAssemblies(
                 IdentityModuleExtensions.ApplicationAssembly,
                 CourseModuleExtensions.ApplicationAssembly, 
-                EnrollmentModuleExtensions.ApplicationAssembly
-                // ReportingModuleExtensions.ApplicationAssembly
+                EnrollmentModuleExtensions.ApplicationAssembly,
+                ReportingModuleExtensions.ApplicationAssembly
             );
 
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
@@ -62,7 +65,7 @@ public static class ServiceCollectionExtensions {
             IdentityModuleExtensions.ApplicationAssembly,
             CourseModuleExtensions.ApplicationAssembly,
             EnrollmentModuleExtensions.ApplicationAssembly,
-            // ReportingModuleExtensions.ApplicationAssembly
+            ReportingModuleExtensions.ApplicationAssembly
         ], includeInternalTypes: true);
     }
 }
