@@ -45,7 +45,10 @@ public static class CourseModuleExtensions {
 
     /// Registers the recurring Hangfire job for automatic course status transitions.
     public static void RegisterCourseJobs(this WebApplication app) {
-        RecurringJob.AddOrUpdate<UpdateCourseStatusJobService>(
+        using var scope = app.Services.CreateScope();
+        var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+ 
+        recurringJobManager.AddOrUpdate<UpdateCourseStatusJobService>(
             recurringJobId: "update-course-status",
             methodCall: job => job.ExecuteAsync(CancellationToken.None),
             cronExpression: "5 0 * * *");

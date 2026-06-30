@@ -1,16 +1,27 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace CourseManagement.Infrastructure.Persistence;
 
-/// Design-time factory for EF Core CLI tools (dotnet ef migrations add / database update).
-/// Only used by tooling — not registered in DI.
+// Chỉ dùng lúc design-time (dotnet ef migrations/database update).
+// EF Tools gọi factory này thay vì DI container khi không resolve được DbContext.
 public class CourseDbContextFactory : IDesignTimeDbContextFactory<CourseDbContext> {
     public CourseDbContext CreateDbContext(string[] args) {
-        var options = new DbContextOptionsBuilder<CourseDbContext>()
-            .UseSqlServer("Server=localhost,1433;Database=TSMS_Course;User Id=sa;Password=Tsms2026@@;TrustServerCertificate=True;")
-            .Options;
+        // Đọc config từ TSMS.Api — nơi chứa appsettings.json và appsettings.Development.json.
+        var basePath = Path.Combine(Directory.GetCurrentDirectory());
 
-        return new CourseDbContext(options);
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(basePath)
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile("appsettings.Development.json", optional: true)
+            .Build();
+
+        var connectionString = configuration.GetConnectionString("CourseDb");
+
+        var optionsBuilder = new DbContextOptionsBuilder<CourseDbContext>();
+        optionsBuilder.UseSqlServer(connectionString);
+
+        return new CourseDbContext(optionsBuilder.Options);
     }
 }

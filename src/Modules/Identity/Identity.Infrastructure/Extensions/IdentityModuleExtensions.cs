@@ -17,6 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using EnrollmentManagement.Application.Common.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace Identity.Infrastructure.Extensions;
 
@@ -34,16 +35,23 @@ public static class IdentityModuleExtensions {
         services.AddIdentityCore();
         services.AddJwtAuthentication(configuration);
         services.AddRepositoriesAndServices();
+        services.AddDefaultAdminOptions(configuration);
 
         return services;
     }
 
-    // Seed roles sau khi app đã build — gọi từ Program.cs
+    // Seed roles + tài khoản Admin mặc định sau khi app đã build — gọi từ Program.cs
     public static async Task SeedIdentityDataAsync(this WebApplication app) {
         using var scope = app.Services.CreateScope();
-        var roleManager = scope.ServiceProvider
-            .GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        var provider = scope.ServiceProvider;
+ 
+        var roleManager = provider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
         await IdentityDataSeeder.SeedRolesAsync(roleManager);
+ 
+        var userManager = provider.GetRequiredService<UserManager<Identity.Domain.Entities.AppUser>>();
+        var adminOptions = provider.GetRequiredService<DefaultAdminOptions>();
+        var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("IdentitySeed");
+        await IdentityDataSeeder.SeedAdminAsync(userManager, adminOptions, logger);
     }
 
     // ── Private helpers 
@@ -114,5 +122,15 @@ public static class IdentityModuleExtensions {
         services.AddScoped<IStudentEnrollmentService, StudentEnrollmentService>();
  
         services.AddScoped<ITokenService, TokenService>();
+    }
+    
+    private static void AddDefaultAdminOptions(
+        this IServiceCollection services,
+        IConfiguration configuration) {
+        var adminOptions = configuration
+            .GetSection(DefaultAdminOptions.SectionName)
+            .Get<DefaultAdminOptions>() ?? new DefaultAdminOptions();
+ 
+        services.AddSingleton(adminOptions);
     }
 }

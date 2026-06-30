@@ -7,6 +7,9 @@
     <Project Path="src/BuildingBlocks/SharedInfrastructure/SharedInfrastructure.csproj" />
     <Project Path="src/BuildingBlocks/SharedKernel/SharedKernel.csproj" />
   </Folder>
+  <Folder Name="/src/Migrator/">
+    <Project Path="src/Migrator/TSMS.DbMigrator/TSMS.DbMigrator.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/" />
   <Folder Name="/src/Modules/CourseManagement/">
     <Project Path="src/Modules/Course/CourseManagement.Application/CourseManagement.Application.csproj" />

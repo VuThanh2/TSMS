@@ -53,13 +53,13 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course> {
         builder.Property(c => c.CreatedAt)
             .IsRequired();
 
-        // ClassSessions collection — map via backing field _classSessions.
-        builder.HasMany<ClassSession>("_classSessions")
+        // ClassSessions collection — map qua property công khai, đọc/ghi qua backing field _classSessions.
+        builder.HasMany(c => c.ClassSessions)
             .WithOne()
             .HasForeignKey(s => s.CourseId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Navigation("_classSessions")
+        builder.Navigation(c => c.ClassSessions)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

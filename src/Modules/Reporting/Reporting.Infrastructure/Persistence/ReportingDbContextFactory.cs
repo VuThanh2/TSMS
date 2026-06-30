@@ -1,16 +1,27 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace Reporting.Infrastructure.Persistence;
 
-// Chỉ dùng cho EF Core design-time tooling (dotnet ef migrations add).
-// Không được đăng ký vào DI container.
+// Chỉ dùng lúc design-time (dotnet ef migrations/database update).
+// EF Tools gọi factory này thay vì DI container khi không resolve được DbContext.
 public class ReportingDbContextFactory : IDesignTimeDbContextFactory<ReportingDbContext> {
     public ReportingDbContext CreateDbContext(string[] args) {
-        var options = new DbContextOptionsBuilder<ReportingDbContext>()
-            .UseSqlServer("Server=localhost,1433;Database=TSMS_Reporting;User Id=sa;Password=YourPassword123!;TrustServerCertificate=True")
-            .Options;
+        // Đọc config từ TSMS.Api — nơi chứa appsettings.json và appsettings.Development.json.
+        var basePath = Path.Combine(Directory.GetCurrentDirectory());
 
-        return new ReportingDbContext(options);
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(basePath)
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile("appsettings.Development.json", optional: true)
+            .Build();
+
+        var connectionString = configuration.GetConnectionString("ReportingDb");
+
+        var optionsBuilder = new DbContextOptionsBuilder<ReportingDbContext>();
+        optionsBuilder.UseSqlServer(connectionString);
+
+        return new ReportingDbContext(optionsBuilder.Options);
     }
 }

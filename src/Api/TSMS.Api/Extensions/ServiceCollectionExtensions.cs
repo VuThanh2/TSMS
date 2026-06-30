@@ -1,12 +1,16 @@
 using CourseManagement.Infrastructure.Extensions;
+using CourseManagement.Infrastructure.Persistence;
 using CourseManagement.Presentation.Controllers;
 using EnrollmentManagement.Infrastructure.Extensions;
+using EnrollmentManagement.Infrastructure.Persistence;
 using EnrollmentManagement.Presentation.Controllers;
 using FluentValidation;
+using Hangfire;
 using Identity.Infrastructure.Extensions;
+using Identity.Infrastructure.Persistence;
 using Identity.Presentation.Controllers;
-using MediatR;
 using Reporting.Infrastructure.Extensions;
+using Reporting.Infrastructure.Persistence;
 using Reporting.Presentation.Controllers;
 
 namespace TSMS.Api.Extensions;
@@ -24,11 +28,34 @@ public static class ServiceCollectionExtensions {
             .AddApplicationPart(typeof(ReportingController).Assembly);
         services.AddCorsPolicy(configuration);
         services.AddMediatRWithValidation();
+        services.AddHangfireServices(configuration);
+        services.AddHealthCheckServices();
 
         return services;
     }
 
     // ── Private helpers
+    
+    private static void AddHealthCheckServices(this IServiceCollection services) {
+        services.AddHealthChecks()
+            .AddDbContextCheck<IdentityDbContext>(name: "IdentityDb")
+            .AddDbContextCheck<CourseDbContext>(name: "CourseDb")
+            .AddDbContextCheck<EnrollmentDbContext>(name: "EnrollmentDb")
+            .AddDbContextCheck<ReportingDbContext>(name: "ReportingDb");
+    }
+    
+    private static void AddHangfireServices(
+        this IServiceCollection services,
+        IConfiguration configuration) {
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UseSqlServerStorage(configuration.GetConnectionString("CourseDb")));
+ 
+        services.AddHangfireServer();
+    }
+    
     private static void AddCorsPolicy(
         this IServiceCollection services,
         IConfiguration configuration) {

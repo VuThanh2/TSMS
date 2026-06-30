@@ -38,13 +38,13 @@ public class EnrollmentConfiguration : IEntityTypeConfiguration<Domain.Entities.
         builder.Property(e => e.EnrolledAt)
             .IsRequired();
 
-        // EnrolledSessions collection — owned by Enrollment, map via backing field.
-        builder.HasMany<EnrolledSession>("_enrolledSessions")
+        // EnrolledSessions collection — owned by Enrollment, map qua property công khai.
+        builder.HasMany(e => e.EnrolledSessions)
             .WithOne()
             .HasForeignKey(s => s.EnrollmentId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Navigation("_enrolledSessions")
+        builder.Navigation(e => e.EnrolledSessions)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         // Unique constraint: 1 Student chỉ đăng ký 1 Course một lần.
