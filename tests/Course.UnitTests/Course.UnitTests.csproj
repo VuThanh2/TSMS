@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Modules\Course\Course.Domain\Course.Domain.csproj" />
-    <ProjectReference Include="..\..\src\Modules\Course\Course.Application\Course.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Course\CourseManagement.Domain\CourseManagement.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Course\CourseManagement.Application\CourseManagement.Application.csproj" />
   </ItemGroup>
 
 </Project>

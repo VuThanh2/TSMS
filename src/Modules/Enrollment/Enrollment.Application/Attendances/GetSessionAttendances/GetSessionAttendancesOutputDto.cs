@@ -1,6 +1,0 @@
-namespace Enrollment.Application.Attendances.GetSessionAttendances;
-
-public class GetSessionAttendancesOutputDto
-{
-    
-}

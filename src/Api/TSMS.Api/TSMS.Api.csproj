@@ -7,23 +7,28 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageReference Include="MediatR" Version="12.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\Modules\Course\Course.Infrastructure\Course.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\Modules\Enrollment\Enrollment.Infrastructure\Enrollment.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Course\CourseManagement.Infrastructure\CourseManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Enrollment\EnrollmentManagement.Infrastructure\EnrollmentManagement.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Reporting\Reporting.Infrastructure\Reporting.Infrastructure.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\SharedInfrastructure\SharedInfrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Identity.Presentation\Identity.Presentation.csproj" />
-    <ProjectReference Include="..\..\Modules\Course\Course.Presentation\Course.Presentation.csproj" />
-    <ProjectReference Include="..\..\Modules\Enrollment\Enrollment.Presentation\Enrollment.Presentation.csproj" />
+    <ProjectReference Include="..\..\Modules\Course\CourseManagement.Presentation\CourseManagement.Presentation.csproj" />
+    <ProjectReference Include="..\..\Modules\Enrollment\EnrollmentManagement.Presentation\EnrollmentManagement.Presentation.csproj" />
     <ProjectReference Include="..\..\Modules\Reporting\Reporting.Presentation\Reporting.Presentation.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>
