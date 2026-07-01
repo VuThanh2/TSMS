@@ -17,6 +17,7 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("course")
                 .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
@@ -50,7 +51,7 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
                     b.HasIndex("CourseId", "SessionDate", "SessionType")
                         .IsUnique();
 
-                    b.ToTable("ClassSessions", (string)null);
+                    b.ToTable("ClassSessions", "course");
                 });
 
             modelBuilder.Entity("CourseManagement.Domain.Entities.Course", b =>
@@ -94,7 +95,7 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Courses", (string)null);
+                    b.ToTable("Courses", "course");
                 });
 
             modelBuilder.Entity("SharedInfrastructure.Outbox.OutboxMessage", b =>
@@ -122,7 +123,7 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OutboxMessages");
+                    b.ToTable("OutboxMessages", "course");
                 });
 
             modelBuilder.Entity("CourseManagement.Domain.Entities.ClassSession", b =>

@@ -4,6 +4,7 @@ using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Reporting.Infrastructure.Persistence;
+using SharedInfrastructure.Persistence;
 
 namespace TSMS.DbMigrator;
 
@@ -18,7 +19,7 @@ public static class Program {
 
         results.Add(MigrateContext("IdentityDb", connectionString => {
             var options = new DbContextOptionsBuilder<IdentityDbContext>()
-                .UseSqlServer(connectionString)
+                .UseTsmsSqlServer(connectionString, TsmsSchemas.Identity)
                 .Options;
             using var context = new IdentityDbContext(options);
             context.Database.Migrate();
@@ -26,7 +27,7 @@ public static class Program {
 
         results.Add(MigrateContext("CourseDb", connectionString => {
             var options = new DbContextOptionsBuilder<CourseDbContext>()
-                .UseSqlServer(connectionString)
+                .UseTsmsSqlServer(connectionString, TsmsSchemas.Course)
                 .Options;
             using var context = new CourseDbContext(options);
             context.Database.Migrate();
@@ -34,7 +35,7 @@ public static class Program {
 
         results.Add(MigrateContext("EnrollmentDb", connectionString => {
             var options = new DbContextOptionsBuilder<EnrollmentDbContext>()
-                .UseSqlServer(connectionString)
+                .UseTsmsSqlServer(connectionString, TsmsSchemas.Enrollment)
                 .Options;
             using var context = new EnrollmentDbContext(options);
             context.Database.Migrate();
@@ -42,7 +43,7 @@ public static class Program {
 
         results.Add(MigrateContext("ReportingDb", connectionString => {
             var options = new DbContextOptionsBuilder<ReportingDbContext>()
-                .UseSqlServer(connectionString)
+                .UseTsmsSqlServer(connectionString, TsmsSchemas.Reporting)
                 .Options;
             using var context = new ReportingDbContext(options);
             context.Database.Migrate();

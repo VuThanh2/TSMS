@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using SharedInfrastructure.Persistence;
 
 namespace Identity.Infrastructure.Persistence;
 
@@ -20,7 +21,7 @@ public class IdentityDbContextFactory : IDesignTimeDbContextFactory<IdentityDbCo
         var connectionString = configuration.GetConnectionString("IdentityDb");
 
         var optionsBuilder = new DbContextOptionsBuilder<IdentityDbContext>();
-        optionsBuilder.UseSqlServer(connectionString);
+        optionsBuilder.UseTsmsSqlServer(connectionString!, TsmsSchemas.Identity);
 
         return new IdentityDbContext(optionsBuilder.Options);
     }

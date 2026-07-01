@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using SharedInfrastructure.Persistence;
 
 namespace EnrollmentManagement.Infrastructure.Persistence;
 
@@ -20,7 +21,7 @@ public class EnrollmentDbContextFactory : IDesignTimeDbContextFactory<Enrollment
         var connectionString = configuration.GetConnectionString("EnrollmentDb");
 
         var optionsBuilder = new DbContextOptionsBuilder<EnrollmentDbContext>();
-        optionsBuilder.UseSqlServer(connectionString);
+        optionsBuilder.UseTsmsSqlServer(connectionString!, TsmsSchemas.Enrollment);
 
         return new EnrollmentDbContext(optionsBuilder.Options);
     }

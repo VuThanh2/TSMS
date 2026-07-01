@@ -2,6 +2,7 @@ using Identity.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using SharedInfrastructure.Persistence;
 
 namespace Identity.Infrastructure.Persistence;
 
@@ -21,6 +22,8 @@ public class IdentityDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, 
     protected override void OnModelCreating(ModelBuilder builder) {
         // Phải gọi base trước để Identity configure các tables của nó
         base.OnModelCreating(builder);
+
+        builder.HasDefaultSchema(TsmsSchemas.Identity);
 
         // Apply tất cả IEntityTypeConfiguration trong assembly này
         builder.ApplyConfigurationsFromAssembly(typeof(IdentityDbContext).Assembly);

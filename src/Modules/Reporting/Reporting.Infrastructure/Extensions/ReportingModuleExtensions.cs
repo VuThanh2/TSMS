@@ -6,6 +6,7 @@ using Reporting.Domain.Repositories;
 using Reporting.Infrastructure.EventHandlers;
 using Reporting.Infrastructure.Persistence;
 using Reporting.Infrastructure.Repositories;
+using SharedInfrastructure.Persistence;
 
 namespace Reporting.Infrastructure.Extensions;
 
@@ -17,7 +18,7 @@ public static class ReportingModuleExtensions {
         this IServiceCollection services,
         IConfiguration configuration) {
         services.AddDbContext<ReportingDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("ReportingDb")));
+            options.UseTsmsSqlServer(configuration.GetConnectionString("ReportingDb")!, TsmsSchemas.Reporting));
 
         services.AddScoped<IReportingRepository, ReportingRepository>();
 

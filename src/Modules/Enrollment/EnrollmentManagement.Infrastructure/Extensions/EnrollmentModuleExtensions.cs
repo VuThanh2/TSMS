@@ -7,6 +7,7 @@ using EnrollmentManagement.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SharedInfrastructure.Persistence;
 using SharedKernel.Abstractions;
 
 namespace EnrollmentManagement.Infrastructure.Extensions;
@@ -19,7 +20,7 @@ public static class EnrollmentModuleExtensions {
         this IServiceCollection services,
         IConfiguration configuration) {
         services.AddDbContext<EnrollmentDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("EnrollmentDb")));
+            options.UseTsmsSqlServer(configuration.GetConnectionString("EnrollmentDb")!, TsmsSchemas.Enrollment));
 
         services.AddScoped<IEnrollmentUnitOfWork>(sp => sp.GetRequiredService<EnrollmentDbContext>());
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();

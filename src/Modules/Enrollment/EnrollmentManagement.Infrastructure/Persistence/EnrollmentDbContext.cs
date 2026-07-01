@@ -17,6 +17,7 @@ public class EnrollmentDbContext : BaseDbContext, IEnrollmentUnitOfWork  {
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.HasDefaultSchema(TsmsSchemas.Enrollment);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EnrollmentDbContext).Assembly);
     }
 

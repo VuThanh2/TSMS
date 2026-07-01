@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Reporting.Domain.ReadModels;
+using SharedInfrastructure.Persistence;
 
 namespace Reporting.Infrastructure.Persistence;
 
@@ -16,6 +17,7 @@ public class ReportingDbContext : DbContext {
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.HasDefaultSchema(TsmsSchemas.Reporting);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ReportingDbContext).Assembly);
     }
 }

@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Reporting.Application.Common.Interfaces;
+using SharedInfrastructure.Persistence;
 using SharedKernel.Abstractions;
 
 namespace CourseManagement.Infrastructure.Extensions;
@@ -25,7 +26,7 @@ public static class CourseModuleExtensions {
         this IServiceCollection services,
         IConfiguration configuration) {
         services.AddDbContext<CourseDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("CourseDb"))); 
+            options.UseTsmsSqlServer(configuration.GetConnectionString("CourseDb")!, TsmsSchemas.Course));
  
         services.AddScoped<ICourseUnitOfWork>(sp => sp.GetRequiredService<CourseDbContext>());
         services.AddScoped<ICourseRepository, CourseRepository>();

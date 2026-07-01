@@ -18,6 +18,7 @@ public class CourseDbContext : BaseDbContext, ICourseUnitOfWork {
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.HasDefaultSchema(TsmsSchemas.Course);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CourseDbContext).Assembly);
     }
 

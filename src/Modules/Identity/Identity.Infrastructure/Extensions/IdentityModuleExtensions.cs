@@ -18,6 +18,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using EnrollmentManagement.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
+using SharedInfrastructure.Persistence;
 
 namespace Identity.Infrastructure.Extensions;
 
@@ -60,7 +61,7 @@ public static class IdentityModuleExtensions {
         this IServiceCollection services,
         IConfiguration configuration) {
         services.AddDbContext<IdentityDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("IdentityDb")));
+            options.UseTsmsSqlServer(configuration.GetConnectionString("IdentityDb")!, TsmsSchemas.Identity));
     }
 
     private static void AddIdentityCore(this IServiceCollection services) {

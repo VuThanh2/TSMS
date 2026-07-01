@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using SharedInfrastructure.Persistence;
 
 namespace Reporting.Infrastructure.Persistence;
 
@@ -20,7 +21,7 @@ public class ReportingDbContextFactory : IDesignTimeDbContextFactory<ReportingDb
         var connectionString = configuration.GetConnectionString("ReportingDb");
 
         var optionsBuilder = new DbContextOptionsBuilder<ReportingDbContext>();
-        optionsBuilder.UseSqlServer(connectionString);
+        optionsBuilder.UseTsmsSqlServer(connectionString!, TsmsSchemas.Reporting);
 
         return new ReportingDbContext(optionsBuilder.Options);
     }

@@ -17,6 +17,7 @@ namespace Reporting.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("reporting")
                 .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
@@ -68,7 +69,7 @@ namespace Reporting.Infrastructure.Persistence.Migrations
                     b.HasIndex("StudentId", "CourseId")
                         .IsUnique();
 
-                    b.ToTable("CourseAttendanceReports", (string)null);
+                    b.ToTable("CourseAttendanceReports", "reporting");
                 });
 
             modelBuilder.Entity("Reporting.Domain.ReadModels.CourseScoreDistributionView", b =>
@@ -107,7 +108,7 @@ namespace Reporting.Infrastructure.Persistence.Migrations
                     b.HasIndex("CourseId", "ScoreGroup")
                         .IsUnique();
 
-                    b.ToTable("CourseScoreDistributions", (string)null);
+                    b.ToTable("CourseScoreDistributions", "reporting");
                 });
 
             modelBuilder.Entity("Reporting.Domain.ReadModels.CourseStatisticsView", b =>
@@ -156,7 +157,7 @@ namespace Reporting.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("LecturerId");
 
-                    b.ToTable("CourseStatistics", (string)null);
+                    b.ToTable("CourseStatistics", "reporting");
                 });
 
             modelBuilder.Entity("Reporting.Domain.ReadModels.StudentGradeReportView", b =>
@@ -193,7 +194,7 @@ namespace Reporting.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("StudentGradeReports", (string)null);
+                    b.ToTable("StudentGradeReports", "reporting");
                 });
 
             modelBuilder.Entity("Reporting.Domain.ReadModels.StudentPersonalSummaryView", b =>
@@ -233,7 +234,7 @@ namespace Reporting.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentPersonalSummaries", (string)null);
+                    b.ToTable("StudentPersonalSummaries", "reporting");
                 });
 #pragma warning restore 612, 618
         }

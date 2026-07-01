@@ -12,14 +12,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnrollmentManagement.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EnrollmentDbContext))]
-    [Migration("20260630075831_InitialEnrollment")]
-    partial class InitialEnrollment
+    [Migration("20260701072123_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("enrollment")
                 .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
@@ -56,7 +57,7 @@ namespace EnrollmentManagement.Infrastructure.Persistence.Migrations
                     b.HasIndex("StudentId", "ClassSessionId")
                         .IsUnique();
 
-                    b.ToTable("Attendances", (string)null);
+                    b.ToTable("Attendances", "enrollment");
                 });
 
             modelBuilder.Entity("EnrollmentManagement.Domain.Entities.EnrolledSession", b =>
@@ -82,7 +83,7 @@ namespace EnrollmentManagement.Infrastructure.Persistence.Migrations
                     b.HasIndex("EnrollmentId", "ClassSessionId")
                         .IsUnique();
 
-                    b.ToTable("EnrolledSessions", (string)null);
+                    b.ToTable("EnrolledSessions", "enrollment");
                 });
 
             modelBuilder.Entity("EnrollmentManagement.Domain.Entities.Enrollment", b =>
@@ -115,7 +116,7 @@ namespace EnrollmentManagement.Infrastructure.Persistence.Migrations
                     b.HasIndex("StudentId", "CourseId")
                         .IsUnique();
 
-                    b.ToTable("Enrollments", (string)null);
+                    b.ToTable("Enrollments", "enrollment");
                 });
 
             modelBuilder.Entity("SharedInfrastructure.Outbox.OutboxMessage", b =>
@@ -143,7 +144,7 @@ namespace EnrollmentManagement.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OutboxMessages");
+                    b.ToTable("OutboxMessages", "enrollment");
                 });
 
             modelBuilder.Entity("EnrollmentManagement.Domain.Entities.EnrolledSession", b =>

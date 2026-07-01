@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using SharedInfrastructure.Persistence;
 
 namespace CourseManagement.Infrastructure.Persistence;
 
@@ -20,7 +21,7 @@ public class CourseDbContextFactory : IDesignTimeDbContextFactory<CourseDbContex
         var connectionString = configuration.GetConnectionString("CourseDb");
 
         var optionsBuilder = new DbContextOptionsBuilder<CourseDbContext>();
-        optionsBuilder.UseSqlServer(connectionString);
+        optionsBuilder.UseTsmsSqlServer(connectionString!, TsmsSchemas.Course);
 
         return new CourseDbContext(optionsBuilder.Options);
     }

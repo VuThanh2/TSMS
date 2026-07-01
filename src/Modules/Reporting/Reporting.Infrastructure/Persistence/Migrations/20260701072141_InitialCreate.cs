@@ -6,13 +6,17 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Reporting.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialReporting : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "reporting");
+
             migrationBuilder.CreateTable(
                 name: "CourseAttendanceReports",
+                schema: "reporting",
                 columns: table => new
                 {
                     EnrollmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -33,6 +37,7 @@ namespace Reporting.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "CourseScoreDistributions",
+                schema: "reporting",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -51,6 +56,7 @@ namespace Reporting.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "CourseStatistics",
+                schema: "reporting",
                 columns: table => new
                 {
                     CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -72,6 +78,7 @@ namespace Reporting.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "StudentGradeReports",
+                schema: "reporting",
                 columns: table => new
                 {
                     EnrollmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -89,6 +96,7 @@ namespace Reporting.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "StudentPersonalSummaries",
+                schema: "reporting",
                 columns: table => new
                 {
                     StudentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -108,33 +116,39 @@ namespace Reporting.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_CourseAttendanceReports_CourseId",
+                schema: "reporting",
                 table: "CourseAttendanceReports",
                 column: "CourseId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CourseAttendanceReports_StudentId_CourseId",
+                schema: "reporting",
                 table: "CourseAttendanceReports",
                 columns: new[] { "StudentId", "CourseId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_CourseScoreDistributions_CourseId_ScoreGroup",
+                schema: "reporting",
                 table: "CourseScoreDistributions",
                 columns: new[] { "CourseId", "ScoreGroup" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_CourseStatistics_LecturerId",
+                schema: "reporting",
                 table: "CourseStatistics",
                 column: "LecturerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StudentGradeReports_CourseId",
+                schema: "reporting",
                 table: "StudentGradeReports",
                 column: "CourseId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StudentPersonalSummaries_StudentId",
+                schema: "reporting",
                 table: "StudentPersonalSummaries",
                 column: "StudentId");
         }
@@ -143,19 +157,24 @@ namespace Reporting.Infrastructure.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CourseAttendanceReports");
+                name: "CourseAttendanceReports",
+                schema: "reporting");
 
             migrationBuilder.DropTable(
-                name: "CourseScoreDistributions");
+                name: "CourseScoreDistributions",
+                schema: "reporting");
 
             migrationBuilder.DropTable(
-                name: "CourseStatistics");
+                name: "CourseStatistics",
+                schema: "reporting");
 
             migrationBuilder.DropTable(
-                name: "StudentGradeReports");
+                name: "StudentGradeReports",
+                schema: "reporting");
 
             migrationBuilder.DropTable(
-                name: "StudentPersonalSummaries");
+                name: "StudentPersonalSummaries",
+                schema: "reporting");
         }
     }
 }

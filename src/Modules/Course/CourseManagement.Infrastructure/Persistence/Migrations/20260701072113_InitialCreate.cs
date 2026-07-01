@@ -6,13 +6,17 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CourseManagement.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCourse : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "course");
+
             migrationBuilder.CreateTable(
                 name: "Courses",
+                schema: "course",
                 columns: table => new
                 {
                     CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -32,6 +36,7 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "OutboxMessages",
+                schema: "course",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -48,6 +53,7 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "ClassSessions",
+                schema: "course",
                 columns: table => new
                 {
                     ClassSessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -62,6 +68,7 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_ClassSessions_Courses_CourseId",
                         column: x => x.CourseId,
+                        principalSchema: "course",
                         principalTable: "Courses",
                         principalColumn: "CourseId",
                         onDelete: ReferentialAction.Cascade);
@@ -69,22 +76,37 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClassSessions_CourseId_SessionDate_SessionType",
+                schema: "course",
                 table: "ClassSessions",
                 columns: new[] { "CourseId", "SessionDate", "SessionType" },
                 unique: true);
+            
+            migrationBuilder.Sql(@"
+                ALTER TABLE [course].[Courses]
+                ADD CONSTRAINT [FK_Courses_AspNetUsers_LecturerId]
+                FOREIGN KEY ([LecturerId]) REFERENCES [identity].[AspNetUsers]([Id])
+                ON DELETE NO ACTION;
+            ");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql(@"
+                ALTER TABLE [course].[Courses] DROP CONSTRAINT [FK_Courses_AspNetUsers_LecturerId];
+            ");
+            
             migrationBuilder.DropTable(
-                name: "ClassSessions");
+                name: "ClassSessions",
+                schema: "course");
 
             migrationBuilder.DropTable(
-                name: "OutboxMessages");
+                name: "OutboxMessages",
+                schema: "course");
 
             migrationBuilder.DropTable(
-                name: "Courses");
+                name: "Courses",
+                schema: "course");
         }
     }
 }
