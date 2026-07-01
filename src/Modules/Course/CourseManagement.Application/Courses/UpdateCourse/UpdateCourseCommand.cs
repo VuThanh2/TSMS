@@ -21,13 +21,13 @@ public sealed class UpdateCourseCommandHandler
     private readonly ICourseRepository _courseRepository;
     private readonly ILecturerLookupService _lecturerLookupService;
     private readonly IEnrollmentCourseService _enrollmentCourseService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICourseUnitOfWork _unitOfWork;
 
     public UpdateCourseCommandHandler(
         ICourseRepository courseRepository,
         ILecturerLookupService lecturerLookupService,
         IEnrollmentCourseService enrollmentCourseService,
-        IUnitOfWork unitOfWork) {
+        ICourseUnitOfWork unitOfWork) {
         _courseRepository = courseRepository;
         _lecturerLookupService = lecturerLookupService;
         _enrollmentCourseService = enrollmentCourseService;

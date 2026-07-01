@@ -20,12 +20,11 @@ public class CourseRepository : ICourseRepository {
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 
-    /// Required before calling any ClassSession mutation method on the aggregate.
     public async Task<Course?> GetByIdWithSessionsAsync(
         Guid id,
         CancellationToken cancellationToken = default) {
         return await _context.Courses
-            .Include("_classSessions")
+            .Include(c => c.ClassSessions)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
     
@@ -99,5 +98,9 @@ public class CourseRepository : ICourseRepository {
 
     public void Update(Course course) {
         _context.Courses.Update(course);
+    }
+    
+    public void AddClassSession(ClassSession classSession) {
+        _context.ClassSessions.Add(classSession);
     }
 }

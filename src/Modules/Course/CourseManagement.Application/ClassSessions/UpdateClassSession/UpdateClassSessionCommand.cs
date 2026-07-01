@@ -1,3 +1,4 @@
+using CourseManagement.Application.Common.Interfaces;
 using CourseManagement.Domain.Errors;
 using CourseManagement.Domain.Repositories;
 using CourseManagement.Domain.ValueObjects;
@@ -16,11 +17,11 @@ public sealed record UpdateClassSessionCommand(
 public sealed class UpdateClassSessionCommandHandler
     : IRequestHandler<UpdateClassSessionCommand, Result<UpdateClassSessionOutputDto>> {
     private readonly ICourseRepository _courseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICourseUnitOfWork _unitOfWork;
 
     public UpdateClassSessionCommandHandler(
         ICourseRepository courseRepository,
-        IUnitOfWork unitOfWork) {
+        ICourseUnitOfWork unitOfWork) {
         _courseRepository = courseRepository;
         _unitOfWork = unitOfWork;
     }
@@ -48,7 +49,6 @@ public sealed class UpdateClassSessionCommandHandler
         if (updateResult.IsFailure)
             return Result.Failure<UpdateClassSessionOutputDto>(updateResult.Error);
 
-        _courseRepository.Update(course);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var session = course.ClassSessions.First(s => s.Id == request.ClassSessionId);

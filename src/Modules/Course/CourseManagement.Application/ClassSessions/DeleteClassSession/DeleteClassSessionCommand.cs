@@ -1,3 +1,4 @@
+using CourseManagement.Application.Common.Interfaces;
 using CourseManagement.Domain.Errors;
 using CourseManagement.Domain.Repositories;
 using MediatR;
@@ -13,11 +14,11 @@ public sealed record DeleteClassSessionCommand(
 public sealed class DeleteClassSessionCommandHandler
     : IRequestHandler<DeleteClassSessionCommand, Result> {
     private readonly ICourseRepository _courseRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICourseUnitOfWork _unitOfWork;
 
     public DeleteClassSessionCommandHandler(
         ICourseRepository courseRepository,
-        IUnitOfWork unitOfWork) {
+        ICourseUnitOfWork unitOfWork) {
         _courseRepository = courseRepository;
         _unitOfWork = unitOfWork;
     }
@@ -37,7 +38,6 @@ public sealed class DeleteClassSessionCommandHandler
         if (removeResult.IsFailure)
             return removeResult;
 
-        _courseRepository.Update(course);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

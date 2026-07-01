@@ -1,3 +1,4 @@
+using EnrollmentManagement.Domain.Entities;
 using EnrollmentManagement.Domain.Repositories;
 using EnrollmentManagement.Domain.ValueObjects;
 using EnrollmentManagement.Infrastructure.Persistence;
@@ -12,41 +13,30 @@ public class EnrollmentRepository : IEnrollmentRepository {
         _context = context;
     }
 
-    public async Task<Domain.Entities.Enrollment?> GetByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default) {
-        // Include EnrolledSessions vì hầu hết operations đều cần chúng
-        // (AdjustSession, validation). Load luôn để tránh lazy loading.
+    public async Task<Enrollment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) {
         return await _context.Enrollments
-            .Include("_enrolledSessions")
+            .Include(e => e.EnrolledSessions)
             .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
-    public async Task<Domain.Entities.Enrollment?> GetByStudentAndCourseAsync(
-        Guid studentId,
-        Guid courseId,
-        CancellationToken cancellationToken = default) {
+    public async Task<Enrollment?> GetByStudentAndCourseAsync(
+        Guid studentId, Guid courseId, CancellationToken cancellationToken = default) {
         return await _context.Enrollments
-            .Include("_enrolledSessions")
-            .FirstOrDefaultAsync(
-                e => e.StudentId == studentId && e.CourseId == courseId,
-                cancellationToken);
+            .Include(e => e.EnrolledSessions)
+            .FirstOrDefaultAsync(e => e.StudentId == studentId && e.CourseId == courseId, cancellationToken);
     }
 
-    public async Task<List<Domain.Entities.Enrollment>> GetByCourseIdAsync(
-        Guid courseId,
-        CancellationToken cancellationToken = default) {
+    public async Task<List<Enrollment>> GetByCourseIdAsync(Guid courseId, CancellationToken cancellationToken = default) {
         return await _context.Enrollments
+            .Include(e => e.EnrolledSessions)
             .Where(e => e.CourseId == courseId)
             .OrderBy(e => e.EnrolledAt)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Domain.Entities.Enrollment>> GetByStudentIdAsync(
-        Guid studentId,
-        CancellationToken cancellationToken = default) {
+    public async Task<List<Enrollment>> GetByStudentIdAsync(Guid studentId, CancellationToken cancellationToken = default) {
         return await _context.Enrollments
-            .Include("_enrolledSessions")
+            .Include(e => e.EnrolledSessions)
             .Where(e => e.StudentId == studentId)
             .OrderByDescending(e => e.EnrolledAt)
             .ToListAsync(cancellationToken);

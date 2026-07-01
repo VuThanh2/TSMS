@@ -1,4 +1,5 @@
 using System.Reflection;
+using EnrollmentManagement.Application.Common.Interfaces;
 using EnrollmentManagement.Domain.Repositories;
 using EnrollmentManagement.Infrastructure.Persistence;
 using EnrollmentManagement.Infrastructure.Repositories;
@@ -20,7 +21,7 @@ public static class EnrollmentModuleExtensions {
         services.AddDbContext<EnrollmentDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("EnrollmentDb")));
 
-        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<EnrollmentDbContext>());
+        services.AddScoped<IEnrollmentUnitOfWork>(sp => sp.GetRequiredService<EnrollmentDbContext>());
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 

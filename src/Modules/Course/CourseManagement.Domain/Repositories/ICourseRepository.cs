@@ -35,4 +35,6 @@ public interface ICourseRepository {
 
     void Add(Course course);
     void Update(Course course);
+    
+    void AddClassSession(ClassSession classSession);
 }

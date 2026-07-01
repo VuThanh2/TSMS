@@ -25,9 +25,9 @@ public static class CourseModuleExtensions {
         this IServiceCollection services,
         IConfiguration configuration) {
         services.AddDbContext<CourseDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("CourseDb")));
+            options.UseSqlServer(configuration.GetConnectionString("CourseDb"))); 
  
-        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CourseDbContext>());
+        services.AddScoped<ICourseUnitOfWork>(sp => sp.GetRequiredService<CourseDbContext>());
         services.AddScoped<ICourseRepository, CourseRepository>();
  
         // Internal service — dùng cho CourseManagement Application handlers.

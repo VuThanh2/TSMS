@@ -20,13 +20,13 @@ public sealed class GradeStudentCommandHandler
     private readonly IEnrollmentRepository _enrollmentRepository;
     private readonly ICourseEnrollmentService _courseEnrollmentService;
     private readonly INotificationService _notificationService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IEnrollmentUnitOfWork _unitOfWork;
 
     public GradeStudentCommandHandler(
         IEnrollmentRepository enrollmentRepository,
         ICourseEnrollmentService courseEnrollmentService,
         INotificationService notificationService,
-        IUnitOfWork unitOfWork) {
+        IEnrollmentUnitOfWork unitOfWork) {
         _enrollmentRepository = enrollmentRepository;
         _courseEnrollmentService = courseEnrollmentService;
         _notificationService = notificationService;

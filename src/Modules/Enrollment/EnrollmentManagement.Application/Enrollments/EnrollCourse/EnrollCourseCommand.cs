@@ -22,14 +22,14 @@ public sealed class EnrollCourseCommandHandler
     private readonly IAttendanceRepository _attendanceRepository;
     private readonly ICourseEnrollmentService _courseEnrollmentService;
     private readonly IStudentEnrollmentService _studentEnrollmentService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IEnrollmentUnitOfWork _unitOfWork;
 
     public EnrollCourseCommandHandler(
         IEnrollmentRepository enrollmentRepository,
         IAttendanceRepository attendanceRepository,
         ICourseEnrollmentService courseEnrollmentService,
         IStudentEnrollmentService studentEnrollmentService,
-        IUnitOfWork unitOfWork) {
+        IEnrollmentUnitOfWork unitOfWork) {
         _enrollmentRepository = enrollmentRepository;
         _attendanceRepository = attendanceRepository;
         _courseEnrollmentService = courseEnrollmentService;

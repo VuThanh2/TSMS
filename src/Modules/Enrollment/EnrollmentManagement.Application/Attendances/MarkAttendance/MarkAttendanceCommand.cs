@@ -19,12 +19,12 @@ public sealed class MarkAttendanceCommandHandler
     : IRequestHandler<MarkAttendanceCommand, Result<MarkAttendanceOutputDto>> {
     private readonly IAttendanceRepository _attendanceRepository;
     private readonly ICourseEnrollmentService _courseEnrollmentService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IEnrollmentUnitOfWork _unitOfWork;
 
     public MarkAttendanceCommandHandler(
         IAttendanceRepository attendanceRepository,
         ICourseEnrollmentService courseEnrollmentService,
-        IUnitOfWork unitOfWork) {
+        IEnrollmentUnitOfWork unitOfWork) {
         _attendanceRepository = attendanceRepository;
         _courseEnrollmentService = courseEnrollmentService;
         _unitOfWork = unitOfWork;

@@ -21,12 +21,12 @@ public sealed class AdjustSessionCommandHandler
     : IRequestHandler<AdjustSessionCommand, Result<AdjustSessionOutputDto>> {
     private readonly IEnrollmentRepository _enrollmentRepository;
     private readonly ICourseEnrollmentService _courseEnrollmentService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IEnrollmentUnitOfWork _unitOfWork;
 
     public AdjustSessionCommandHandler(
         IEnrollmentRepository enrollmentRepository,
         ICourseEnrollmentService courseEnrollmentService,
-        IUnitOfWork unitOfWork) {
+        IEnrollmentUnitOfWork unitOfWork) {
         _enrollmentRepository = enrollmentRepository;
         _courseEnrollmentService = courseEnrollmentService;
         _unitOfWork = unitOfWork;

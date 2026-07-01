@@ -17,13 +17,13 @@ public sealed class ReplaceLecturerCommandHandler
     private readonly ICourseRepository _courseRepository;
     private readonly ILecturerLookupService _lecturerLookupService;
     private readonly ICourseQueryService _courseQueryService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICourseUnitOfWork _unitOfWork;
 
     public ReplaceLecturerCommandHandler(
         ICourseRepository courseRepository,
         ILecturerLookupService lecturerLookupService,
         ICourseQueryService courseQueryService,
-        IUnitOfWork unitOfWork) {
+        ICourseUnitOfWork unitOfWork) {
         _courseRepository = courseRepository;
         _lecturerLookupService = lecturerLookupService;
         _courseQueryService = courseQueryService;
