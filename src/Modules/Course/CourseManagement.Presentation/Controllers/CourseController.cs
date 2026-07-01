@@ -3,7 +3,6 @@ using CourseManagement.Application.Courses.CreateCourse;
 using CourseManagement.Application.Courses.GetAvailableCourses;
 using CourseManagement.Application.Courses.GetCourseById;
 using CourseManagement.Application.Courses.GetCourses;
-using CourseManagement.Application.Courses.GetMyCourses;
 using CourseManagement.Application.Courses.ReplaceLecturer;
 using CourseManagement.Application.Courses.UpdateCourse;
 using MediatR;
@@ -23,24 +22,33 @@ public class CourseController : ControllerBase {
     }
 
     // GET /api/courses?page=&pageSize=
-    // Admin/Student: xem tất cả. Lecturer: tự filter theo lecturerId của mình. 
+    // Chỉ Admin. Trả về toàn bộ Course không lọc theo status.
     [HttpGet]
-    [Authorize(Roles = "Admin,Lecturer,Student")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetCourses(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default) {
-        Guid? lecturerId = null;
+        var result = await _sender.Send(
+            new GetCoursesQuery(null, null, LecturerId: null, page, pageSize),
+            cancellationToken);
  
-        if (User.IsInRole("Lecturer")) {
-            var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)
-                        ?? User.FindFirstValue("sub");
+        return Ok(result.Value);
+    }
+    
+    // GET /api/courses/my-courses
+    // Chỉ Lecturer. Lọc tự động theo lecturerId từ token.
+    [HttpGet("my-courses")]
+    [Authorize(Roles = "Lecturer")]
+    public async Task<IActionResult> GetMyLecturingCourses(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default) {
+        var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? User.FindFirstValue("sub");
  
-            if (claim is null || !Guid.TryParse(claim, out var id))
-                return Unauthorized();
- 
-            lecturerId = id;
-        }
+        if (claim is null || !Guid.TryParse(claim, out var lecturerId))
+            return Unauthorized();
  
         var result = await _sender.Send(
             new GetCoursesQuery(null, null, lecturerId, page, pageSize),
@@ -66,22 +74,6 @@ public class CourseController : ControllerBase {
         var result = await _sender.Send(
             new GetAvailableCoursesQuery(studentId, page, pageSize),
             cancellationToken);
-
-        return Ok(result.Value);
-    }
-
-    // GET /api/courses/my
-    // Student xem danh sách courses đã đăng ký kèm điểm số.
-    [HttpGet("my")]
-    [Authorize(Roles = "Student")]
-    public async Task<IActionResult> GetMyCourses(CancellationToken cancellationToken) {
-        var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue("sub");
-
-        if (claim is null || !Guid.TryParse(claim, out var studentId))
-            return Unauthorized();
-
-        var result = await _sender.Send(new GetMyCoursesQuery(studentId), cancellationToken);
 
         return Ok(result.Value);
     }

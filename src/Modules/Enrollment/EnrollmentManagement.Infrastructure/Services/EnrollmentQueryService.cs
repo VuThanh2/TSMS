@@ -37,20 +37,6 @@ public class EnrollmentQueryService :
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyDictionary<Guid, decimal?>> GetGradesByCourseAsync(
-        Guid studentId,
-        CancellationToken cancellationToken = default) {
-        var enrollments = await _context.Enrollments
-            .Where(e => e.StudentId == studentId)
-            .Select(e => new {
-                e.CourseId,
-                GradeValue = e.Grade == null ? (decimal?)null : e.Grade.Value
-            })
-            .ToListAsync(cancellationToken);
-
-        return enrollments.ToDictionary(e => e.CourseId, e => e.GradeValue);
-    }
-
     // ── Identity.Application.IEnrollmentLookupService
 
     // Chỉ trả về courseIds mà Student đang Active enroll — đúng data Enrollment BC sở hữu.
