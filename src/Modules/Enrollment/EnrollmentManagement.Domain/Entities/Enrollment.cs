@@ -45,8 +45,8 @@ public class Enrollment : AggregateRoot {
         if (sessions.Count != 2)
             return Result.Failure<Enrollment>(EnrollmentErrors.InvalidSessionCount);
  
-        if (sessions[0].SessionType == sessions[1].SessionType)
-            return Result.Failure<Enrollment>(EnrollmentErrors.DuplicateSessionType);
+        if (sessions[0].ClassSessionId == sessions[1].ClassSessionId)
+            return Result.Failure<Enrollment>(EnrollmentErrors.DuplicateSession);
  
         var enrollment = new Enrollment {
             Id = Guid.NewGuid(),

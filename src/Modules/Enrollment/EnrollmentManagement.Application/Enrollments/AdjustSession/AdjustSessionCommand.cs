@@ -21,14 +21,17 @@ public sealed class AdjustSessionCommandHandler
     : IRequestHandler<AdjustSessionCommand, Result<AdjustSessionOutputDto>> {
     private readonly IEnrollmentRepository _enrollmentRepository;
     private readonly ICourseEnrollmentService _courseEnrollmentService;
+    private readonly IScheduleConflictChecker _scheduleConflictChecker;
     private readonly IEnrollmentUnitOfWork _unitOfWork;
 
     public AdjustSessionCommandHandler(
         IEnrollmentRepository enrollmentRepository,
         ICourseEnrollmentService courseEnrollmentService,
+        IScheduleConflictChecker scheduleConflictChecker,
         IEnrollmentUnitOfWork unitOfWork) {
         _enrollmentRepository = enrollmentRepository;
         _courseEnrollmentService = courseEnrollmentService;
+        _scheduleConflictChecker = scheduleConflictChecker;
         _unitOfWork = unitOfWork;
     }
 
@@ -60,9 +63,19 @@ public sealed class AdjustSessionCommandHandler
 
         if (!Enum.TryParse<SessionType>(newSessionLookup.SessionType, out var newSessionType))
             return Result.Failure<AdjustSessionOutputDto>(EnrollmentErrors.SessionNotInCourse);
+        
+        // Precondition 4: Ca mới không được trùng ngày/ca với Course khác Student đã đăng ký.
+        var candidateSlots = new List<(DateOnly SessionDate, string SessionType)> {
+            (newSessionLookup.SessionDate, newSessionLookup.SessionType)
+        };
+ 
+        var hasConflict = await _scheduleConflictChecker.HasConflictAsync(
+            request.StudentId, enrollment.CourseId, candidateSlots, cancellationToken);
+ 
+        if (hasConflict)
+            return Result.Failure<AdjustSessionOutputDto>(EnrollmentErrors.ScheduleConflict);
 
-        // Domain behaviour — guards bên trong: oldSession tồn tại, không trùng newSession,
-        // không trùng SessionType với session còn lại.
+        // Domain behaviour — guards bên trong: oldSession tồn tại, không trùng newSession
         var adjustResult = enrollment.AdjustSession(
             request.OldSessionId,
             request.NewSessionId,

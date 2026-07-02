@@ -21,26 +21,30 @@ public class CourseController : ControllerBase {
         _sender = sender;
     }
 
-    // GET /api/courses?page=&pageSize=
-    // Chỉ Admin. Trả về toàn bộ Course không lọc theo status.
+    // GET /api/courses?page=&pageSize=&keyword=&status=
+    // Chỉ Admin. Trả về toàn bộ Course, hỗ trợ search theo tên và filter theo status.
     [HttpGet]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetCourses(
+        [FromQuery] string? keyword = null,
+        [FromQuery] string? status = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default) {
         var result = await _sender.Send(
-            new GetCoursesQuery(null, null, LecturerId: null, page, pageSize),
+            new GetCoursesQuery(keyword, status, LecturerId: null, page, pageSize),
             cancellationToken);
  
         return Ok(result.Value);
     }
     
-    // GET /api/courses/my-courses
-    // Chỉ Lecturer. Lọc tự động theo lecturerId từ token.
+    // GET /api/courses/my-courses?page=&pageSize=&keyword=&status=
+    // Chỉ Lecturer. Lọc tự động theo lecturerId từ token, hỗ trợ search + filter status.
     [HttpGet("my-courses")]
     [Authorize(Roles = "Lecturer")]
     public async Task<IActionResult> GetMyLecturingCourses(
+        [FromQuery] string? keyword = null,
+        [FromQuery] string? status = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default) {
@@ -51,7 +55,7 @@ public class CourseController : ControllerBase {
             return Unauthorized();
  
         var result = await _sender.Send(
-            new GetCoursesQuery(null, null, lecturerId, page, pageSize),
+            new GetCoursesQuery(keyword, status, lecturerId, page, pageSize),
             cancellationToken);
  
         return Ok(result.Value);

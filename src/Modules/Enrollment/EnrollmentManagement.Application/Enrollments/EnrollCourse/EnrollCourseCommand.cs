@@ -22,6 +22,7 @@ public sealed class EnrollCourseCommandHandler
     private readonly IAttendanceRepository _attendanceRepository;
     private readonly ICourseEnrollmentService _courseEnrollmentService;
     private readonly IStudentEnrollmentService _studentEnrollmentService;
+    private readonly IScheduleConflictChecker _scheduleConflictChecker;
     private readonly IEnrollmentUnitOfWork _unitOfWork;
 
     public EnrollCourseCommandHandler(
@@ -29,11 +30,13 @@ public sealed class EnrollCourseCommandHandler
         IAttendanceRepository attendanceRepository,
         ICourseEnrollmentService courseEnrollmentService,
         IStudentEnrollmentService studentEnrollmentService,
+        IScheduleConflictChecker scheduleConflictChecker,
         IEnrollmentUnitOfWork unitOfWork) {
         _enrollmentRepository = enrollmentRepository;
         _attendanceRepository = attendanceRepository;
         _courseEnrollmentService = courseEnrollmentService;
         _studentEnrollmentService = studentEnrollmentService;
+        _scheduleConflictChecker = scheduleConflictChecker;
         _unitOfWork = unitOfWork;
     }
 
@@ -88,6 +91,17 @@ public sealed class EnrollCourseCommandHandler
 
             sessionPairs.Add((sessionId, sessionType));
         }
+        
+        // Precondition 6: 2 ca học không được trùng ngày/ca với Course khác Student đã đăng ký.
+        var candidateSlots = request.SessionIds
+            .Select(id => (sessionMap[id].SessionDate, sessionMap[id].SessionType))
+            .ToList();
+ 
+        var hasConflict = await _scheduleConflictChecker.HasConflictAsync(
+            request.StudentId, request.CourseId, candidateSlots, cancellationToken);
+ 
+        if (hasConflict)
+            return Result.Failure<EnrollCourseOutputDto>(EnrollmentErrors.ScheduleConflict);
 
         var studentFullName = await _studentEnrollmentService.GetFullNameAsync(
             request.StudentId, cancellationToken) ?? string.Empty;

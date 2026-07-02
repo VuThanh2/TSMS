@@ -1,12 +1,16 @@
 using Identity.Application.Common.Mappers;
 using Identity.Domain.Repositories;
+using Identity.Domain.ValueObjects;
 using MediatR;
 using SharedKernel.Primitives;
 
 namespace Identity.Application.Users.GetUsers;
 
-public sealed record GetUsersQuery(int Page, int PageSize)
-    : IRequest<Result<PagedList<GetUsersOutputDto>>>;
+public sealed record GetUsersQuery(
+    string? Keyword,
+    string? Role,
+    int Page,
+    int PageSize) : IRequest<Result<PagedList<GetUsersOutputDto>>>;
 
 public sealed class GetUsersQueryHandler
     : IRequestHandler<GetUsersQuery, Result<PagedList<GetUsersOutputDto>>> {
@@ -19,15 +23,20 @@ public sealed class GetUsersQueryHandler
     public async Task<Result<PagedList<GetUsersOutputDto>>> Handle(
         GetUsersQuery request,
         CancellationToken cancellationToken) {
+        UserRole? roleFilter = null;
+        if (!string.IsNullOrWhiteSpace(request.Role)
+            && Enum.TryParse<UserRole>(request.Role, ignoreCase: true, out var parsed))
+            roleFilter = parsed;
+ 
         var (items, totalCount) = await _userRepository.GetPagedAsync(
-            keyword: null,
-            role: null,
+            keyword: request.Keyword,
+            role: roleFilter,
             page: request.Page,
             pageSize: request.PageSize,
             cancellationToken: cancellationToken);
-
+ 
         var dtos = items.Select(UserMapper.ToGetUsersOutputDto).ToList();
-
+ 
         return Result.Success(PagedList<GetUsersOutputDto>.Create(
             dtos, request.Page, request.PageSize, totalCount));
     }

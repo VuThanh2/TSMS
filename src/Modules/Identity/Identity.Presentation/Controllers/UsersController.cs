@@ -21,15 +21,17 @@ public class UsersController : ControllerBase {
         _sender = sender;
     }
 
-    // GET /api/users?page=&pageSize=
+    // GET /api/users?page=&pageSize=&search=&role=
     [HttpGet]
     public async Task<IActionResult> GetUsers(
+        [FromQuery] string? search = null,
+        [FromQuery] string? role = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default) {
         var result = await _sender.Send(
-            new GetUsersQuery(page, pageSize), cancellationToken);
-
+            new GetUsersQuery(search, role, page, pageSize), cancellationToken);
+ 
         return Ok(result.Value);
     }
 
