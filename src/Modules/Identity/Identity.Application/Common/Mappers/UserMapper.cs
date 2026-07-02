@@ -1,3 +1,4 @@
+using Identity.Application.Users.GetActiveLecturers;
 using Identity.Application.Users.GetUserById;
 using Identity.Application.Users.GetUsers;
 using Identity.Application.Users.UpdateUser;
@@ -32,6 +33,12 @@ public static class UserMapper {
             Email: user.Email!,
             Role: user.Role.ToString(),
             Profile: BuildProfile(user));
+    
+    public static LecturerOptionDto ToLecturerOptionDto(AppUser user) =>
+        new(
+            UserId: user.Id,
+            FullName: user.FullName,
+            Email: user.Email!);
 
     // profile null nếu Admin, có giá trị nếu Lecturer hoặc Student.
     private static UserProfileDto? BuildProfile(AppUser user) =>

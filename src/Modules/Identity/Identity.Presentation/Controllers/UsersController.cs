@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Identity.Application.Users.CreateUser;
+using Identity.Application.Users.GetActiveLecturers;
 using Identity.Application.Users.GetUserById;
 using Identity.Application.Users.GetUsers;
 using Identity.Application.Users.ImportUsersCsv;
@@ -31,6 +32,20 @@ public class UsersController : ControllerBase {
         CancellationToken cancellationToken = default) {
         var result = await _sender.Send(
             new GetUsersQuery(search, role, page, pageSize), cancellationToken);
+ 
+        return Ok(result.Value);
+    }
+    
+    // GET /api/users/lecturers?keyword=&page=&pageSize= — Lecturer đang Active,
+    // hỗ trợ search theo tên/email, phục vụ Modal chọn Lecturer (Create Course, Replace Lecturer).
+    [HttpGet("lecturers")]
+    public async Task<IActionResult> GetActiveLecturers(
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default) {
+        var result = await _sender.Send(
+            new GetActiveLecturersQuery(search, page, pageSize), cancellationToken);
  
         return Ok(result.Value);
     }

@@ -31,6 +31,7 @@ public sealed class GetUsersQueryHandler
         var (items, totalCount) = await _userRepository.GetPagedAsync(
             keyword: request.Keyword,
             role: roleFilter,
+            isActive: null,
             page: request.Page,
             pageSize: request.PageSize,
             cancellationToken: cancellationToken);

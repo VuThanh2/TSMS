@@ -1,4 +1,5 @@
 using EnrollmentManagement.Application.Common.Interfaces;
+using EnrollmentManagement.Infrastructure.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
 namespace EnrollmentManagement.Infrastructure.Services;
@@ -6,11 +7,11 @@ namespace EnrollmentManagement.Infrastructure.Services;
 // Gửi real-time notification đến Student qua SignalR khi Lecturer chấm / cập nhật điểm.
 public class SignalRNotificationService : INotificationService {
     private readonly IHubContext<GradeHub> _hubContext;
-
+ 
     public SignalRNotificationService(IHubContext<GradeHub> hubContext) {
         _hubContext = hubContext;
     }
-
+ 
     // Gửi event "GradeUpdated" đến group của Student (group name = studentId string).
     public async Task NotifyGradeUpdatedAsync(
         Guid studentId,
@@ -27,8 +28,3 @@ public class SignalRNotificationService : INotificationService {
             }, cancellationToken);
     }
 }
-
-// Marker class cho IHubContext injection.
-// Hub thực sự được implement ở EnrollmentManagement.Presentation.
-// Đặt ở đây để Infrastructure không phụ thuộc vào Presentation assembly.
-public sealed class GradeHub : Hub { }
