@@ -41,17 +41,15 @@ public sealed class RemoveWeeklySlotCommandHandler
         if (isInUse)
             return Result.Failure(CourseErrors.WeeklySlotInUse);
 
-        var futureSessionsBeforeRemove = course.ClassSessions
-            .Where(s => s.WeeklySlotId == request.WeeklySlotId && !s.IsPast())
-            .ToList();
-
         // Domain enforces: Completed immutable, slot tồn tại, tối thiểu 2 WeeklySlot phải còn lại.
+        // ClassSession tương lai bị soft-cancel (IsCancelled = true), không xóa vật lý —
+        // EF change tracking tự lưu thay đổi trên các entity đã tracked từ GetByIdWithSessionsAsync,
+        // không cần gọi thêm repository method nào.
         var removeResult = course.RemoveWeeklySlot(request.WeeklySlotId);
 
         if (removeResult.IsFailure)
             return removeResult;
 
-        _courseRepository.RemoveClassSessions(futureSessionsBeforeRemove);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

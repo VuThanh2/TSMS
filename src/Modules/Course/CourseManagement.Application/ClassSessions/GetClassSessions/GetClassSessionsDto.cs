@@ -6,4 +6,5 @@ public sealed record GetClassSessionsOutputDto(
     DateOnly SessionDate,
     string DayOfWeek,
     string SessionType,
-    bool IsPast);
+    bool IsPast,
+    bool IsCancelled);

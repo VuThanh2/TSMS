@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CourseManagement.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(CourseDbContext))]
-    [Migration("20260703033247_InitialCreate")]
+    [Migration("20260703080201_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -40,6 +40,11 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
+
+                    b.Property<bool>("IsCancelled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<DateOnly>("SessionDate")
                         .HasColumnType("date");

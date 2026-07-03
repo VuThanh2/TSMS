@@ -1,9 +1,9 @@
 using FluentValidation;
 
-namespace CourseManagement.Application.ClassSessions.DeleteClassSession;
+namespace CourseManagement.Application.ClassSessions.CancelClassSession;
 
-public sealed class DeleteClassSessionCommandValidator : AbstractValidator<DeleteClassSessionCommand> {
-    public DeleteClassSessionCommandValidator() {
+public sealed class CancelClassSessionCommandValidator : AbstractValidator<CancelClassSessionCommand> {
+    public CancelClassSessionCommandValidator() {
         RuleFor(x => x.CourseId)
             .NotEmpty().WithMessage("CourseId is required.");
 

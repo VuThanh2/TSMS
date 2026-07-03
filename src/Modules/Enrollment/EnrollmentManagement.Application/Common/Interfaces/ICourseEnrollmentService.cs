@@ -24,6 +24,12 @@ public interface ICourseEnrollmentService {
         IReadOnlyList<Guid> courseIds,
         CancellationToken cancellationToken = default);
 
+    // Lấy 1 ClassSession cụ thể — dùng để check IsCancelled trước khi cho phép MarkAttendance
+    // (Lecturer không được điểm danh cho buổi đã bị hủy, vd nghỉ lễ).
+    Task<ClassSessionLookup?> GetClassSessionAsync(
+        Guid classSessionId,
+        CancellationToken cancellationToken = default);
+
     // Lấy tất cả ClassSessions của course kèm SessionType.
     // Dùng cho: enrich TotalSessionsInCourse của StudentEnrolledEvent (đếm TOÀN BỘ course,
     // không lọc theo slot Student chọn).
@@ -65,7 +71,8 @@ public sealed record ClassSessionLookup(
     Guid CourseId,
     Guid WeeklySlotId,
     DateOnly SessionDate,
-    string SessionType);
+    string SessionType,
+    bool IsCancelled);
 
 public sealed record CourseLookup(
     Guid CourseId,

@@ -61,7 +61,8 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
                     WeeklySlotId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SessionDate = table.Column<DateOnly>(type: "date", nullable: false),
                     DayOfWeek = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
-                    SessionType = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false)
+                    SessionType = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    IsCancelled = table.Column<bool>(type: "bit", nullable: false, defaultValue: false)
                 },
                 constraints: table =>
                 {
@@ -120,7 +121,7 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
             migrationBuilder.Sql(@"
                 ALTER TABLE [course].[Courses]
                 ADD CONSTRAINT [FK_Courses_AspNetUsers_LecturerId]
-                FOREIGN KEY ([LecturerId]) REFERENCES [identity].[AspNetUsers]([Id])
+                FOREIGN KEY ([LecturerId]) REFERENCES [identity].AspNetUsers
                 ON DELETE NO ACTION;
             ");
         }

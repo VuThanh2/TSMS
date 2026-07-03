@@ -11,5 +11,6 @@ public static class ClassSessionMapper {
             SessionDate: session.SessionDate,
             DayOfWeek: session.DayOfWeek.ToString(),
             SessionType: session.SessionType.ToString(),
-            IsPast: session.IsPast());
+            IsPast: session.IsPast(),
+            IsCancelled: session.IsCancelled);
 }

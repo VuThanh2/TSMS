@@ -29,6 +29,14 @@ public class CourseRepository : ICourseRepository {
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 
+    public async Task<Course?> GetByIdWithWeeklySlotsAsync(
+        Guid id,
+        CancellationToken cancellationToken = default) {
+        return await _context.Courses
+            .Include(c => c.WeeklySlots)
+            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Course>> GetByIdsAsync(
         IEnumerable<Guid> ids,
         CancellationToken cancellationToken = default) {
@@ -111,9 +119,5 @@ public class CourseRepository : ICourseRepository {
 
     public void AddClassSessions(IEnumerable<ClassSession> classSessions) {
         _context.ClassSessions.AddRange(classSessions);
-    }
-
-    public void RemoveClassSessions(IEnumerable<ClassSession> classSessions) {
-        _context.ClassSessions.RemoveRange(classSessions);
     }
 }

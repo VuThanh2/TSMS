@@ -36,6 +36,10 @@ public class ClassSessionConfiguration : IEntityTypeConfiguration<ClassSession> 
             .HasMaxLength(10)
             .IsRequired();
 
+        builder.Property(s => s.IsCancelled)
+            .HasDefaultValue(false)
+            .IsRequired();
+
         // Unique constraint: no two sessions with same date + type in the same course.
         builder.HasIndex(s => new { s.CourseId, s.SessionDate, s.SessionType })
             .IsUnique();

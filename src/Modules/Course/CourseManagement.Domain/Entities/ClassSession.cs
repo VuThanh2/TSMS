@@ -4,24 +4,21 @@ using SharedKernel.Primitives;
 
 namespace CourseManagement.Domain.Entities;
 
-// 1 buổi học cụ thể (có SessionDate thật), được sinh tự động từ 1 WeeklySlot
-// Không còn tạo ClassSession rời rạc trực tiếp — luôn phải thông qua WeeklySlot
-// để đảm bảo invariant "Student chọn 1 slot = áp dụng cho mọi buổi cùng slot đó".
+// 1 buổi học cụ thể (có ngày thật), được sinh tự động từ 1 WeeklySlot khi Admin AddWeeklySlot()
+// hoặc khi Course gia hạn EndDate (UpdateInfo()). Không tạo ClassSession rời rạc trực tiếp nữa.
 public class ClassSession : Entity {
     public Guid CourseId { get; private set; }
-
-    // FK tới WeeklySlot sinh ra buổi học này — dùng để nhóm ClassSession theo lịch lặp lại hàng tuần.
     public Guid WeeklySlotId { get; private set; }
-
     public DateOnly SessionDate { get; private set; }
     public DayOfWeek DayOfWeek { get; private set; }
     public SessionType SessionType { get; private set; }
+    
+    // Buổi bị hủy vẫn giữ nguyên trong lịch sử, chỉ đánh dấu để không tính điểm danh.
+    public bool IsCancelled { get; private set; }
 
     // Required by EF Core.
     private ClassSession() { }
 
-    // Chỉ gọi nội bộ từ Course aggregate (qua AddWeeklySlot/regenerate) — không public
-    // để tránh tạo ClassSession không gắn với WeeklySlot nào.
     internal static ClassSession Create(
         Guid courseId,
         Guid weeklySlotId,
@@ -33,24 +30,31 @@ public class ClassSession : Entity {
             WeeklySlotId = weeklySlotId,
             SessionDate = sessionDate,
             DayOfWeek = sessionDate.DayOfWeek,
-            SessionType = sessionType
+            SessionType = sessionType,
+            IsCancelled = false
         };
     }
 
-    /// Returns true if this session has already passed relative to today.
-    /// Convention: today's session is NOT considered past (date-only comparison).
     public bool IsPast() {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         return SessionDate < today;
     }
 
-    // Dời ngày 1 buổi CỤ THỂ (vd nghỉ lễ dời lịch) — không đổi WeeklySlotId gốc,
-    // vẫn thuộc cùng 1 khung giờ lặp lại hàng tuần.
+    // Dời ngày 1 buổi cụ thể (vd nghỉ lễ dời lịch) — không đổi WeeklySlotId gốc.
     // Caller (Course aggregate) phải validate: not past, no duplicate, trong DateRange.
     internal Result Update(DateOnly newSessionDate, SessionType newSessionType) {
         SessionDate = newSessionDate;
         DayOfWeek = newSessionDate.DayOfWeek;
         SessionType = newSessionType;
+
+        return Result.Success();
+    }
+
+    // Hủy buổi học (vd nghỉ lễ) — soft state, KHÔNG xóa row. Attendance đã tạo sẵn cho buổi
+    // này được giữ nguyên (không bị chạm), Enrollment BC tự lọc IsCancelled ở điểm đọc/ghi
+    // (MarkAttendance từ chối cập nhật buổi đã hủy) thông qua ICourseEnrollmentService.
+    internal Result Cancel() {
+        IsCancelled = true;
 
         return Result.Success();
     }

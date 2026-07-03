@@ -38,6 +38,11 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
 
+                    b.Property<bool>("IsCancelled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<DateOnly>("SessionDate")
                         .HasColumnType("date");
 

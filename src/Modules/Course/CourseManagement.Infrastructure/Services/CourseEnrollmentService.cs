@@ -70,6 +70,21 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<ClassSessionLookup?> GetClassSessionAsync(
+        Guid classSessionId,
+        CancellationToken cancellationToken = default) {
+        return await _context.ClassSessions
+            .Where(s => s.Id == classSessionId)
+            .Select(s => new ClassSessionLookup(
+                s.Id,
+                s.CourseId,
+                s.WeeklySlotId,
+                s.SessionDate,
+                s.SessionType.ToString(),
+                s.IsCancelled))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsAsync(
         Guid courseId,
         CancellationToken cancellationToken = default) {
@@ -82,7 +97,8 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
                 s.CourseId,
                 s.WeeklySlotId,
                 s.SessionDate,
-                s.SessionType.ToString()))
+                s.SessionType.ToString(),
+                s.IsCancelled))
             .ToListAsync(cancellationToken);
     }
 
@@ -98,7 +114,8 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
                 s.CourseId,
                 s.WeeklySlotId,
                 s.SessionDate,
-                s.SessionType.ToString()))
+                s.SessionType.ToString(),
+                s.IsCancelled))
             .ToListAsync(cancellationToken);
     }
 
@@ -132,7 +149,8 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
                 s.CourseId,
                 s.WeeklySlotId,
                 s.SessionDate,
-                s.SessionType.ToString()))
+                s.SessionType.ToString(),
+                s.IsCancelled))
             .ToListAsync(cancellationToken);
     }
 }

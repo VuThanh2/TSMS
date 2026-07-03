@@ -82,4 +82,9 @@ public static class EnrollmentErrors {
     public static readonly Error AttendanceNotFound =
         Error.Create("Enrollment.AttendanceNotFound",
             "Attendance record was not found.");
+
+    // Buổi học đã bị Admin hủy (vd nghỉ lễ) — không cho phép điểm danh cho buổi không diễn ra.
+    public static readonly Error SessionCancelled =
+        Error.Create("Enrollment.SessionCancelled",
+            "Cannot mark attendance for a class session that has been cancelled.");
 }

@@ -1,4 +1,5 @@
 using CourseManagement.Application.WeeklySlots.AddWeeklySlot;
+using CourseManagement.Application.WeeklySlots.GetWeeklySlots;
 using CourseManagement.Application.WeeklySlots.RemoveWeeklySlot;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -14,6 +15,22 @@ public class WeeklySlotsController : ControllerBase {
 
     public WeeklySlotsController(ISender sender) {
         _sender = sender;
+    }
+
+    // GET /api/courses/{courseId}/weekly-slots
+    // Trả về đúng granularity "khung giờ lặp lại hàng tuần" (2-vài item)
+    [HttpGet]
+    [Authorize(Roles = "Admin,Lecturer,Student")]
+    public async Task<IActionResult> GetWeeklySlots(
+        Guid courseId,
+        CancellationToken cancellationToken) {
+        var result = await _sender.Send(
+            new GetWeeklySlotsQuery(courseId), cancellationToken);
+
+        if (result.IsFailure)
+            return NotFound(new { result.Error.Code, result.Error.Message });
+
+        return Ok(result.Value);
     }
 
     // POST /api/courses/{courseId}/weekly-slots

@@ -2,21 +2,20 @@ using CourseManagement.Application.Common.Interfaces;
 using CourseManagement.Domain.Errors;
 using CourseManagement.Domain.Repositories;
 using MediatR;
-using SharedKernel.Abstractions;
 using SharedKernel.Primitives;
 
-namespace CourseManagement.Application.ClassSessions.DeleteClassSession;
+namespace CourseManagement.Application.ClassSessions.CancelClassSession;
 
-public sealed record DeleteClassSessionCommand(
+public sealed record CancelClassSessionCommand(
     Guid CourseId,
     Guid ClassSessionId) : IRequest<Result>;
 
-public sealed class DeleteClassSessionCommandHandler
-    : IRequestHandler<DeleteClassSessionCommand, Result> {
+public sealed class CancelClassSessionCommandHandler
+    : IRequestHandler<CancelClassSessionCommand, Result> {
     private readonly ICourseRepository _courseRepository;
     private readonly ICourseUnitOfWork _unitOfWork;
 
-    public DeleteClassSessionCommandHandler(
+    public CancelClassSessionCommandHandler(
         ICourseRepository courseRepository,
         ICourseUnitOfWork unitOfWork) {
         _courseRepository = courseRepository;
@@ -24,7 +23,7 @@ public sealed class DeleteClassSessionCommandHandler
     }
 
     public async Task<Result> Handle(
-        DeleteClassSessionCommand request,
+        CancelClassSessionCommand request,
         CancellationToken cancellationToken) {
         var course = await _courseRepository.GetByIdWithSessionsAsync(
             request.CourseId, cancellationToken);
@@ -32,11 +31,13 @@ public sealed class DeleteClassSessionCommandHandler
         if (course is null)
             return Result.Failure(CourseErrors.NotFound);
 
-        // Domain enforces: session exists, not past, min 2 sessions must remain.
-        var removeResult = course.RemoveClassSession(request.ClassSessionId);
+        // Domain enforces: session exists, not past, chưa bị hủy trước đó.
+        // Soft-cancel — không xóa vật lý, EF change tracking tự lưu thay đổi IsCancelled
+        // trên entity đã tracked, không cần gọi thêm repository method nào.
+        var cancelResult = course.CancelClassSession(request.ClassSessionId);
 
-        if (removeResult.IsFailure)
-            return removeResult;
+        if (cancelResult.IsFailure)
+            return cancelResult;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

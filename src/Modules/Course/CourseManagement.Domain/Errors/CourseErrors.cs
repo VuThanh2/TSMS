@@ -78,6 +78,10 @@ public static class CourseErrors {
         Error.Create("Course.CannotModifyPastClassSession",
             "A class session that has already passed cannot be modified or deleted.");
 
+    public static readonly Error ClassSessionAlreadyCancelled =
+        Error.Create("Course.ClassSessionAlreadyCancelled",
+            "This class session has already been cancelled.");
+
     // ── WeeklySlot
     public static readonly Error DuplicateWeeklySlot =
         Error.Create("Course.DuplicateWeeklySlot",

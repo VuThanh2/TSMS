@@ -1,4 +1,4 @@
-using CourseManagement.Application.ClassSessions.DeleteClassSession;
+using CourseManagement.Application.ClassSessions.CancelClassSession;
 using CourseManagement.Application.ClassSessions.GetClassSessions;
 using CourseManagement.Application.ClassSessions.UpdateClassSession;
 using MediatR;
@@ -56,18 +56,19 @@ public class ClassSessionsController : ControllerBase {
 
         return Ok(result.Value);
     }
-
-    // DELETE /api/courses/{courseId}/sessions/{sessionId}
-    // Hủy 1 buổi cụ thể (vd nghỉ lễ) — các tuần khác cùng WeeklySlot vẫn diễn ra bình thường.
-    // Muốn hủy cả khung giờ lặp lại, dùng DELETE /weekly-slots/{weeklySlotId} thay vì API này.
+    
+    // Giữ nguyên verb DELETE cho quen thuộc REST (loại buổi này khỏi lịch hoạt động), nhưng bên
+    // trong là soft-cancel (IsCancelled = true) — KHÔNG xóa vật lý, vì Attendance có thể đã
+    // pre-populate sẵn tham chiếu tới buổi này. Muốn hủy cả khung giờ lặp lại, dùng
+    // DELETE /weekly-slots/{weeklySlotId} thay vì API này.
     [HttpDelete("{sessionId:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteClassSession(
+    public async Task<IActionResult> CancelClassSession(
         Guid courseId,
         Guid sessionId,
         CancellationToken cancellationToken) {
         var result = await _sender.Send(
-            new DeleteClassSessionCommand(courseId, sessionId),
+            new CancelClassSessionCommand(courseId, sessionId),
             cancellationToken);
 
         if (result.IsFailure)

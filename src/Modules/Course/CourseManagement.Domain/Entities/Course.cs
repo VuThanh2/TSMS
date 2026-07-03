@@ -166,6 +166,8 @@ public class Course : AggregateRoot {
 
     /// Xóa 1 WeeklySlot. Chỉ xóa các ClassSession TƯƠNG LAI của slot này — buổi đã qua
     /// giữ nguyên để bảo toàn lịch sử điểm danh. Enforces tối thiểu 2 WeeklySlot phải còn lại.
+    /// Pre-condition Application Layer phải đảm bảo: không còn Enrollment nào đang dùng slot này
+    /// (cross-BC check qua IEnrollmentCourseService.IsWeeklySlotInUseAsync).
     public Result RemoveWeeklySlot(Guid weeklySlotId) {
         if (Status == CourseStatus.Completed)
             return Result.Failure(CourseErrors.CompletedCourseIsImmutable);
@@ -182,7 +184,7 @@ public class Course : AggregateRoot {
             .ToList();
 
         foreach (var session in futureSessions)
-            _classSessions.Remove(session);
+            session.Cancel();
 
         _weeklySlots.Remove(slot);
 
@@ -230,7 +232,7 @@ public class Course : AggregateRoot {
 
     /// Hủy 1 buổi CỤ THỂ (vd nghỉ lễ) mà không xóa cả WeeklySlot — các tuần khác vẫn diễn ra bình thường.
     /// Không còn enforce "tối thiểu 2 ClassSession" — rule đó giờ thuộc về WeeklySlot (RemoveWeeklySlot).
-    public Result RemoveClassSession(Guid classSessionId) {
+    public Result CancelClassSession(Guid classSessionId) {
         var session = _classSessions.FirstOrDefault(s => s.Id == classSessionId);
         if (session is null)
             return Result.Failure(CourseErrors.ClassSessionNotFound);
@@ -238,9 +240,14 @@ public class Course : AggregateRoot {
         if (session.IsPast())
             return Result.Failure(CourseErrors.CannotModifyPastClassSession);
 
-        _classSessions.Remove(session);
+        if (session.IsCancelled)
+            return Result.Failure(CourseErrors.ClassSessionAlreadyCancelled);
 
-        RaiseDomainEvent(ClassSessionRemovedEvent.Create(Id, classSessionId));
+        var cancelResult = session.Cancel();
+        if (cancelResult.IsFailure)
+            return cancelResult;
+
+        RaiseDomainEvent(ClassSessionCancelledEvent.Create(Id, classSessionId));
 
         return Result.Success();
     }
@@ -268,16 +275,17 @@ public class Course : AggregateRoot {
     }
 
     /// Đồng bộ ClassSession khi EndDate thay đổi:
-    ///   - Rút ngắn: bỏ các buổi TƯƠNG LAI vượt EndDate mới (buổi đã qua luôn được giữ).
+    ///   - Rút ngắn: HỦY (soft-cancel) các buổi TƯƠNG LAI vượt EndDate mới — buổi đã qua luôn được giữ.
+    ///     Không hard-delete vì các buổi này có thể đã có Attendance pre-populate sẵn từ Enrollment
+    ///     đang Active (khác với RemoveWeeklySlot, chỉ chạy được khi KHÔNG còn Enrollment nào dùng slot).
     ///   - Gia hạn: sinh thêm buổi mới cho từng WeeklySlot hiện có, từ EndDate cũ đến EndDate mới.
     private void RegenerateSessionsForNewEndDate(DateOnly oldEndDate, DateOnly newEndDate) {
         if (newEndDate < oldEndDate) {
-            var sessionsToRemove = _classSessions
-                .Where(s => s.SessionDate > newEndDate && !s.IsPast())
-                .ToList();
+            var sessionsToCancel = _classSessions
+                .Where(s => s.SessionDate > newEndDate && !s.IsPast() && !s.IsCancelled);
 
-            foreach (var session in sessionsToRemove)
-                _classSessions.Remove(session);
+            foreach (var session in sessionsToCancel)
+                session.Cancel();
 
             return;
         }
