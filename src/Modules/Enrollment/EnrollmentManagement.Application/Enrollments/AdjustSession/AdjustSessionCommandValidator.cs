@@ -10,12 +10,12 @@ public sealed class AdjustSessionCommandValidator : AbstractValidator<AdjustSess
         RuleFor(x => x.StudentId)
             .NotEmpty().WithMessage("StudentId is required.");
 
-        RuleFor(x => x.OldSessionId)
-            .NotEmpty().WithMessage("OldSessionId is required.");
+        RuleFor(x => x.OldWeeklySlotId)
+            .NotEmpty().WithMessage("OldWeeklySlotId is required.");
 
-        RuleFor(x => x.NewSessionId)
-            .NotEmpty().WithMessage("NewSessionId is required.")
-            .NotEqual(x => x.OldSessionId)
-            .WithMessage("NewSessionId must differ from OldSessionId.");
+        RuleFor(x => x.NewWeeklySlotId)
+            .NotEmpty().WithMessage("NewWeeklySlotId is required.")
+            .NotEqual(x => x.OldWeeklySlotId)
+            .WithMessage("NewWeeklySlotId must differ from OldWeeklySlotId.");
     }
 }

@@ -58,6 +58,7 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
                 {
                     ClassSessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WeeklySlotId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SessionDate = table.Column<DateOnly>(type: "date", nullable: false),
                     DayOfWeek = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
                     SessionType = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false)
@@ -74,11 +75,46 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "WeeklySlots",
+                schema: "course",
+                columns: table => new
+                {
+                    WeeklySlotId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DayOfWeek = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
+                    SessionType = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WeeklySlots", x => x.WeeklySlotId);
+                    table.ForeignKey(
+                        name: "FK_WeeklySlots_Courses_CourseId",
+                        column: x => x.CourseId,
+                        principalSchema: "course",
+                        principalTable: "Courses",
+                        principalColumn: "CourseId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_ClassSessions_CourseId_SessionDate_SessionType",
                 schema: "course",
                 table: "ClassSessions",
                 columns: new[] { "CourseId", "SessionDate", "SessionType" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClassSessions_WeeklySlotId",
+                schema: "course",
+                table: "ClassSessions",
+                column: "WeeklySlotId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WeeklySlots_CourseId_DayOfWeek_SessionType",
+                schema: "course",
+                table: "WeeklySlots",
+                columns: new[] { "CourseId", "DayOfWeek", "SessionType" },
                 unique: true);
             
             migrationBuilder.Sql(@"
@@ -102,6 +138,10 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "OutboxMessages",
+                schema: "course");
+
+            migrationBuilder.DropTable(
+                name: "WeeklySlots",
                 schema: "course");
 
             migrationBuilder.DropTable(

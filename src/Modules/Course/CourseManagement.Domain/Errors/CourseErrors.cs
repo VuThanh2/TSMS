@@ -78,7 +78,19 @@ public static class CourseErrors {
         Error.Create("Course.CannotModifyPastClassSession",
             "A class session that has already passed cannot be modified or deleted.");
 
-    public static readonly Error MinimumClassSessionsRequired =
-        Error.Create("Course.MinimumClassSessionsRequired",
-            "A course must have at least 2 class sessions. Cannot delete the last two.");
+    // ── WeeklySlot
+    public static readonly Error DuplicateWeeklySlot =
+        Error.Create("Course.DuplicateWeeklySlot",
+            "A weekly slot with the same day of week and session type already exists in this course.");
+
+    public static readonly Error WeeklySlotNotFound =
+        Error.Create("Course.WeeklySlotNotFound", "Weekly slot was not found.");
+
+    public static readonly Error MinimumWeeklySlotsRequired =
+        Error.Create("Course.MinimumWeeklySlotsRequired",
+            "A course must have at least 2 weekly slots. Cannot remove the last two.");
+
+    public static readonly Error WeeklySlotInUse =
+        Error.Create("Course.WeeklySlotInUse",
+            "Cannot remove a weekly slot that students are currently enrolled in.");
 }

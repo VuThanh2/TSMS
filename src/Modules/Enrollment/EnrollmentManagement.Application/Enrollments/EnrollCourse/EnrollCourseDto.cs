@@ -2,7 +2,7 @@ namespace EnrollmentManagement.Application.Enrollments.EnrollCourse;
 
 public sealed record EnrollCourseInputDto(
     Guid CourseId,
-    IReadOnlyList<Guid> SessionIds);
+    IReadOnlyList<Guid> WeeklySlotIds);
 
 public sealed record EnrollCourseOutputDto(
     Guid EnrollmentId,
@@ -13,6 +13,6 @@ public sealed record EnrollCourseOutputDto(
 
 public sealed record EnrolledSessionOutputDto(
     Guid EnrolledSessionId,
-    Guid ClassSessionId,
+    Guid WeeklySlotId,
     string DayOfWeek,
     string SessionType);

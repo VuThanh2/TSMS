@@ -46,7 +46,12 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
+                    b.Property<Guid>("WeeklySlotId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("WeeklySlotId");
 
                     b.HasIndex("CourseId", "SessionDate", "SessionType")
                         .IsUnique();
@@ -98,6 +103,34 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
                     b.ToTable("Courses", "course");
                 });
 
+            modelBuilder.Entity("CourseManagement.Domain.Entities.WeeklySlot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("WeeklySlotId");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DayOfWeek")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<string>("SessionType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId", "DayOfWeek", "SessionType")
+                        .IsUnique();
+
+                    b.ToTable("WeeklySlots", "course");
+                });
+
             modelBuilder.Entity("SharedInfrastructure.Outbox.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -135,9 +168,20 @@ namespace CourseManagement.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("CourseManagement.Domain.Entities.WeeklySlot", b =>
+                {
+                    b.HasOne("CourseManagement.Domain.Entities.Course", null)
+                        .WithMany("WeeklySlots")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CourseManagement.Domain.Entities.Course", b =>
                 {
                     b.Navigation("ClassSessions");
+
+                    b.Navigation("WeeklySlots");
                 });
 #pragma warning restore 612, 618
         }

@@ -37,7 +37,8 @@ public class EnrollmentsController : ControllerBase {
     }
 
     // POST /api/enrollments
-    // Student đăng ký một Course và chọn đúng 2 ca học.
+    // Student đăng ký một Course và chọn đúng 2 WeeklySlot (khung giờ lặp lại hàng tuần
+    // cho cả kỳ, không phải 2 buổi học cụ thể).
     [HttpPost]
     [Authorize(Roles = "Student")]
     public async Task<IActionResult> EnrollCourse(
@@ -47,7 +48,7 @@ public class EnrollmentsController : ControllerBase {
         if (studentId is null) return Unauthorized();
 
         var result = await _sender.Send(
-            new EnrollCourseCommand(studentId.Value, dto.CourseId, dto.SessionIds),
+            new EnrollCourseCommand(studentId.Value, dto.CourseId, dto.WeeklySlotIds),
             cancellationToken);
 
         if (result.IsFailure) {
@@ -63,7 +64,7 @@ public class EnrollmentsController : ControllerBase {
     }
 
     // PUT /api/enrollments/{enrollmentId}/sessions
-    // Student điều chỉnh lại ca học đã chọn trong một Course đã đăng ký.
+    // Student điều chỉnh lại 1 WeeklySlot đã chọn trong một Course đã đăng ký.
     [HttpPut("{enrollmentId:guid}/sessions")]
     [Authorize(Roles = "Student")]
     public async Task<IActionResult> AdjustSession(
@@ -73,16 +74,12 @@ public class EnrollmentsController : ControllerBase {
         var studentId = GetCurrentUserId();
         if (studentId is null) return Unauthorized();
 
-        // InputDto chứa [oldSessionId, newSessionId].
-        if (dto.SessionIds.Count != 2)
-            return BadRequest(new { Code = "Enrollment.InvalidSessionCount", Message = "Exactly 2 session IDs required: [oldSessionId, newSessionId]." });
-
         var result = await _sender.Send(
             new AdjustSessionCommand(
                 enrollmentId,
                 studentId.Value,
-                OldSessionId: dto.SessionIds[0],
-                NewSessionId: dto.SessionIds[1]),
+                dto.OldWeeklySlotId,
+                dto.NewWeeklySlotId),
             cancellationToken);
 
         if (result.IsFailure) {

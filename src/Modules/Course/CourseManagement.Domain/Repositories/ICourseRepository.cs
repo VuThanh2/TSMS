@@ -6,10 +6,10 @@ namespace CourseManagement.Domain.Repositories;
 public interface ICourseRepository {
     Task<Course?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
-    /// Loads Course with its ClassSessions collection eager-loaded.
-    /// Required for any operation that mutates ClassSessions.
+    /// Loads Course with its WeeklySlots + ClassSessions collections eager-loaded.
+    /// Required for any operation that mutates WeeklySlots/ClassSessions.
     Task<Course?> GetByIdWithSessionsAsync(Guid id, CancellationToken cancellationToken = default);
-    
+
     /// Batch fetch by IDs — avoids N+1 when loading multiple courses at once.
     Task<IReadOnlyList<Course>> GetByIdsAsync(
         IEnumerable<Guid> ids,
@@ -35,6 +35,14 @@ public interface ICourseRepository {
 
     void Add(Course course);
     void Update(Course course);
-    
+
+    void AddWeeklySlot(WeeklySlot weeklySlot);
+
     void AddClassSession(ClassSession classSession);
+
+    /// Dùng khi AddWeeklySlot sinh hàng loạt ClassSession, hoặc khi gia hạn EndDate (UpdateInfo).
+    void AddClassSessions(IEnumerable<ClassSession> classSessions);
+
+    /// Dùng khi RemoveWeeklySlot hoặc rút ngắn EndDate — dọn các ClassSession tương lai bị hủy.
+    void RemoveClassSessions(IEnumerable<ClassSession> classSessions);
 }

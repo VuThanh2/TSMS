@@ -12,6 +12,7 @@ public class Course : AggregateRoot {
     private DateOnly _startDate;
     private DateOnly _endDate;
 
+    private readonly List<WeeklySlot> _weeklySlots = [];
     private readonly List<ClassSession> _classSessions = [];
 
     public Guid LecturerId { get; private set; }
@@ -23,22 +24,24 @@ public class Course : AggregateRoot {
     public int MaxCapacity { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
+    public IReadOnlyList<WeeklySlot> WeeklySlots => _weeklySlots.AsReadOnly();
     public IReadOnlyList<ClassSession> ClassSessions => _classSessions.AsReadOnly();
 
     // Required by EF Core.
     private Course() { }
 
-    /// Creates a new Course in Upcoming status.
+    /// Creates a new Course in Upcoming status. Chưa có WeeklySlot nào — Admin phải
+    /// gọi AddWeeklySlot() tối thiểu 2 lần sau khi tạo (rule: tối thiểu 2 ca/tuần).
     public static Result<Course> Create(
         Guid lecturerId,
         CourseName courseName,
         string? description,
         DateRange dateRange,
         int maxCapacity,
-        string lecturerName) {            // ← thêm parameter
+        string lecturerName) {
         if (maxCapacity <= 0)
             return Result.Failure<Course>(CourseErrors.MaxCapacityMustBePositive);
- 
+
         var course = new Course {
             Id = Guid.NewGuid(),
             LecturerId = lecturerId,
@@ -50,11 +53,11 @@ public class Course : AggregateRoot {
             MaxCapacity = maxCapacity,
             CreatedAt = DateTime.UtcNow
         };
- 
+
         course.RaiseDomainEvent(CourseCreatedEvent.Create(
-            course.Id, course.LecturerId, course._courseName, lecturerName,  // ← thêm lecturerName
+            course.Id, course.LecturerId, course._courseName, lecturerName,
             course._startDate, course._endDate, course.MaxCapacity));
- 
+
         return Result.Success(course);
     }
 
@@ -72,22 +75,28 @@ public class Course : AggregateRoot {
         if (newMaxCapacity <= 0)
             return Result.Failure(CourseErrors.MaxCapacityMustBePositive);
 
-        // EndDate must not precede the latest ClassSession date.
-        var latestSession = _classSessions
+        // EndDate mới không được đứng trước buổi học ĐÃ QUA gần nhất — bảo toàn lịch sử điểm danh.
+        // (Buổi tương lai vượt EndDate mới sẽ tự động bị dọn ở RegenerateSessionsForNewEndDate.)
+        var latestPastSession = _classSessions
+            .Where(s => s.IsPast())
             .OrderByDescending(s => s.SessionDate)
             .FirstOrDefault();
 
-        if (latestSession is not null && newEndDate < latestSession.SessionDate)
+        if (latestPastSession is not null && newEndDate < latestPastSession.SessionDate)
             return Result.Failure(CourseErrors.EndDatePrecedesExistingClassSession);
 
         var dateRangeResult = DateRange.WithNewEndDate(_startDate, newEndDate);
         if (dateRangeResult.IsFailure)
             return Result.Failure(dateRangeResult.Error);
 
+        var oldEndDate = _endDate;
+
         _courseName = newCourseName.Value;
         Description = string.IsNullOrWhiteSpace(newDescription) ? null : newDescription.Trim();
         _endDate = dateRangeResult.Value.EndDate;
         MaxCapacity = newMaxCapacity;
+
+        RegenerateSessionsForNewEndDate(oldEndDate, _endDate);
 
         RaiseDomainEvent(CourseUpdatedEvent.Create(Id, _courseName, _endDate, MaxCapacity));
 
@@ -101,18 +110,18 @@ public class Course : AggregateRoot {
     public Result ReplaceLecturer(Guid newLecturerId, string newLecturerName) {
         if (Status == CourseStatus.Completed)
             return Result.Failure(CourseErrors.CompletedCourseIsImmutable);
-        
+
         if (newLecturerId == LecturerId)
             return Result.Failure(CourseErrors.LecturerAlreadyAssigned);
 
         var previousLecturerId = LecturerId;
         LecturerId = newLecturerId;
- 
+
         RaiseDomainEvent(LecturerReplacedEvent.Create(Id, previousLecturerId, newLecturerId, newLecturerName));
- 
+
         return Result.Success();
     }
-    
+
     /// Called exclusively by the Background Job
     public Result TransitionStatus(CourseStatus targetStatus) {
         var isValid = (Status, targetStatus) switch {
@@ -131,26 +140,59 @@ public class Course : AggregateRoot {
         return Result.Success();
     }
 
-    public Result<ClassSession> AddClassSession(DateOnly sessionDate, SessionType sessionType) {
+    // ── WeeklySlot behaviour
+
+    /// Tạo 1 WeeklySlot mới và SINH TOÀN BỘ ClassSession tương ứng từ StartDate đến EndDate
+    /// của Course. Đây là cách duy nhất để thêm buổi học vào Course.
+    public Result<WeeklySlot> AddWeeklySlot(DayOfWeek dayOfWeek, SessionType sessionType) {
         if (Status == CourseStatus.Completed)
-            return Result.Failure<ClassSession>(CourseErrors.CompletedCourseIsImmutable);
+            return Result.Failure<WeeklySlot>(CourseErrors.CompletedCourseIsImmutable);
 
-        if (sessionDate < _startDate || sessionDate > _endDate)
-            return Result.Failure<ClassSession>(CourseErrors.ClassSessionOutsideDateRange);
-
-        var hasDuplicate = _classSessions.Any(s =>
-            s.SessionDate == sessionDate && s.SessionType == sessionType);
-
+        var hasDuplicate = _weeklySlots.Any(s => s.DayOfWeek == dayOfWeek && s.SessionType == sessionType);
         if (hasDuplicate)
-            return Result.Failure<ClassSession>(CourseErrors.DuplicateClassSession);
+            return Result.Failure<WeeklySlot>(CourseErrors.DuplicateWeeklySlot);
 
-        var session = ClassSession.Create(Id, sessionDate, sessionType);
-        _classSessions.Add(session);
+        var slot = WeeklySlot.Create(Id, dayOfWeek, sessionType);
+        _weeklySlots.Add(slot);
 
-        RaiseDomainEvent(ClassSessionAddedEvent.Create(Id, session.Id, sessionDate, sessionType));
+        var generatedSessions = GenerateClassSessions(slot, _startDate, _endDate);
+        _classSessions.AddRange(generatedSessions);
 
-        return Result.Success(session);
+        RaiseDomainEvent(WeeklySlotAddedEvent.Create(
+            Id, slot.Id, dayOfWeek, sessionType, generatedSessions.Count));
+
+        return Result.Success(slot);
     }
+
+    /// Xóa 1 WeeklySlot. Chỉ xóa các ClassSession TƯƠNG LAI của slot này — buổi đã qua
+    /// giữ nguyên để bảo toàn lịch sử điểm danh. Enforces tối thiểu 2 WeeklySlot phải còn lại.
+    public Result RemoveWeeklySlot(Guid weeklySlotId) {
+        if (Status == CourseStatus.Completed)
+            return Result.Failure(CourseErrors.CompletedCourseIsImmutable);
+
+        var slot = _weeklySlots.FirstOrDefault(s => s.Id == weeklySlotId);
+        if (slot is null)
+            return Result.Failure(CourseErrors.WeeklySlotNotFound);
+
+        if (_weeklySlots.Count <= 2)
+            return Result.Failure(CourseErrors.MinimumWeeklySlotsRequired);
+
+        var futureSessions = _classSessions
+            .Where(s => s.WeeklySlotId == weeklySlotId && !s.IsPast())
+            .ToList();
+
+        foreach (var session in futureSessions)
+            _classSessions.Remove(session);
+
+        _weeklySlots.Remove(slot);
+
+        RaiseDomainEvent(WeeklySlotRemovedEvent.Create(
+            Id, weeklySlotId, futureSessions.Select(s => s.Id).ToList()));
+
+        return Result.Success();
+    }
+
+    // ── Single ClassSession behaviour (override 1 buổi cụ thể, vd nghỉ lễ dời lịch)
 
     public Result UpdateClassSession(
         Guid classSessionId,
@@ -185,8 +227,9 @@ public class Course : AggregateRoot {
 
         return Result.Success();
     }
-    
-    /// Enforces: session exists, not past, minimum 2 sessions must remain.
+
+    /// Hủy 1 buổi CỤ THỂ (vd nghỉ lễ) mà không xóa cả WeeklySlot — các tuần khác vẫn diễn ra bình thường.
+    /// Không còn enforce "tối thiểu 2 ClassSession" — rule đó giờ thuộc về WeeklySlot (RemoveWeeklySlot).
     public Result RemoveClassSession(Guid classSessionId) {
         var session = _classSessions.FirstOrDefault(s => s.Id == classSessionId);
         if (session is null)
@@ -195,13 +238,55 @@ public class Course : AggregateRoot {
         if (session.IsPast())
             return Result.Failure(CourseErrors.CannotModifyPastClassSession);
 
-        if (_classSessions.Count <= 2)
-            return Result.Failure(CourseErrors.MinimumClassSessionsRequired);
-
         _classSessions.Remove(session);
 
         RaiseDomainEvent(ClassSessionRemovedEvent.Create(Id, classSessionId));
 
         return Result.Success();
+    }
+
+    // ── Private helpers
+
+    /// Sinh danh sách ClassSession cho 1 WeeklySlot, trải từ fromDate đến toDate (inclusive),
+    /// mỗi 7 ngày 1 buổi đúng theo DayOfWeek của slot.
+    private static List<ClassSession> GenerateClassSessions(WeeklySlot slot, DateOnly fromDate, DateOnly toDate) {
+        var sessions = new List<ClassSession>();
+
+        if (fromDate > toDate)
+            return sessions;
+
+        var current = fromDate;
+        while (current.DayOfWeek != slot.DayOfWeek)
+            current = current.AddDays(1);
+
+        while (current <= toDate) {
+            sessions.Add(ClassSession.Create(slot.CourseId, slot.Id, current, slot.SessionType));
+            current = current.AddDays(7);
+        }
+
+        return sessions;
+    }
+
+    /// Đồng bộ ClassSession khi EndDate thay đổi:
+    ///   - Rút ngắn: bỏ các buổi TƯƠNG LAI vượt EndDate mới (buổi đã qua luôn được giữ).
+    ///   - Gia hạn: sinh thêm buổi mới cho từng WeeklySlot hiện có, từ EndDate cũ đến EndDate mới.
+    private void RegenerateSessionsForNewEndDate(DateOnly oldEndDate, DateOnly newEndDate) {
+        if (newEndDate < oldEndDate) {
+            var sessionsToRemove = _classSessions
+                .Where(s => s.SessionDate > newEndDate && !s.IsPast())
+                .ToList();
+
+            foreach (var session in sessionsToRemove)
+                _classSessions.Remove(session);
+
+            return;
+        }
+
+        if (newEndDate > oldEndDate) {
+            foreach (var slot in _weeklySlots) {
+                var newSessions = GenerateClassSessions(slot, oldEndDate.AddDays(1), newEndDate);
+                _classSessions.AddRange(newSessions);
+            }
+        }
     }
 }

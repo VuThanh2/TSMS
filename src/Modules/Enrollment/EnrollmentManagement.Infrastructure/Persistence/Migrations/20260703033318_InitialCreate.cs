@@ -72,7 +72,7 @@ namespace EnrollmentManagement.Infrastructure.Persistence.Migrations
                 {
                     EnrolledSessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     EnrollmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ClassSessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WeeklySlotId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SessionType = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false)
                 },
                 constraints: table =>
@@ -101,10 +101,10 @@ namespace EnrollmentManagement.Infrastructure.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_EnrolledSessions_EnrollmentId_ClassSessionId",
+                name: "IX_EnrolledSessions_EnrollmentId_WeeklySlotId",
                 schema: "enrollment",
                 table: "EnrolledSessions",
-                columns: new[] { "EnrollmentId", "ClassSessionId" },
+                columns: new[] { "EnrollmentId", "WeeklySlotId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -119,27 +119,27 @@ namespace EnrollmentManagement.Infrastructure.Persistence.Migrations
                 ADD CONSTRAINT [FK_Enrollments_AspNetUsers_StudentId]
                 FOREIGN KEY ([StudentId]) REFERENCES [identity].[AspNetUsers]([Id])
                 ON DELETE NO ACTION;
-
+             
                 ALTER TABLE [enrollment].[Enrollments]
                 ADD CONSTRAINT [FK_Enrollments_Courses_CourseId]
                 FOREIGN KEY ([CourseId]) REFERENCES [course].[Courses]([CourseId])
                 ON DELETE NO ACTION;
-
+             
                 ALTER TABLE [enrollment].[EnrolledSessions]
-                ADD CONSTRAINT [FK_EnrolledSessions_ClassSessions_ClassSessionId]
-                FOREIGN KEY ([ClassSessionId]) REFERENCES [course].[ClassSessions]([ClassSessionId])
+                ADD CONSTRAINT [FK_EnrolledSessions_WeeklySlots_WeeklySlotId]
+                FOREIGN KEY ([WeeklySlotId]) REFERENCES [course].[WeeklySlots]([WeeklySlotId])
                 ON DELETE NO ACTION;
-
+             
                 ALTER TABLE [enrollment].[Attendances]
                 ADD CONSTRAINT [FK_Attendances_AspNetUsers_StudentId]
                 FOREIGN KEY ([StudentId]) REFERENCES [identity].[AspNetUsers]([Id])
                 ON DELETE NO ACTION;
-
+             
                 ALTER TABLE [enrollment].[Attendances]
                 ADD CONSTRAINT [FK_Attendances_ClassSessions_ClassSessionId]
                 FOREIGN KEY ([ClassSessionId]) REFERENCES [course].[ClassSessions]([ClassSessionId])
                 ON DELETE NO ACTION;
-
+             
                 ALTER TABLE [enrollment].[Attendances]
                 ADD CONSTRAINT [FK_Attendances_Courses_CourseId]
                 FOREIGN KEY ([CourseId]) REFERENCES [course].[Courses]([CourseId])
@@ -154,7 +154,7 @@ namespace EnrollmentManagement.Infrastructure.Persistence.Migrations
                 ALTER TABLE [enrollment].[Attendances] DROP CONSTRAINT [FK_Attendances_Courses_CourseId];
                 ALTER TABLE [enrollment].[Attendances] DROP CONSTRAINT [FK_Attendances_ClassSessions_ClassSessionId];
                 ALTER TABLE [enrollment].[Attendances] DROP CONSTRAINT [FK_Attendances_AspNetUsers_StudentId];
-                ALTER TABLE [enrollment].[EnrolledSessions] DROP CONSTRAINT [FK_EnrolledSessions_ClassSessions_ClassSessionId];
+                ALTER TABLE [enrollment].[EnrolledSessions] DROP CONSTRAINT [FK_EnrolledSessions_WeeklySlots_WeeklySlotId];
                 ALTER TABLE [enrollment].[Enrollments] DROP CONSTRAINT [FK_Enrollments_Courses_CourseId];
                 ALTER TABLE [enrollment].[Enrollments] DROP CONSTRAINT [FK_Enrollments_AspNetUsers_StudentId];
             ");

@@ -20,7 +20,7 @@ public sealed class ScheduleConflictChecker : IScheduleConflictChecker {
     public async Task<bool> HasConflictAsync(
         Guid studentId,
         Guid excludeCourseId,
-        IReadOnlyList<(DateOnly SessionDate, string SessionType)> candidateSlots,
+        IReadOnlyList<(DayOfWeek DayOfWeek, string SessionType)> candidateSlots,
         CancellationToken cancellationToken = default) {
         var otherEnrollments = (await _enrollmentRepository.GetByStudentIdAsync(studentId, cancellationToken))
             .Where(e => e.CourseId != excludeCourseId)
@@ -34,17 +34,19 @@ public sealed class ScheduleConflictChecker : IScheduleConflictChecker {
             .Distinct()
             .ToList();
 
-        var otherSessions = await _courseEnrollmentService.GetClassSessionsByCourseIdsAsync(
+        // Lấy toàn bộ WeeklySlot của các Course khác Student đang học trong 1 lần gọi (tránh N+1) —
+        // so khớp theo (DayOfWeek, SessionType) vì trùng lịch là trùng LẶP LẠI HÀNG TUẦN, không phải 1 ngày cụ thể.
+        var otherCourseSlots = await _courseEnrollmentService.GetWeeklySlotsByCourseIdsAsync(
             otherCourseIds, cancellationToken);
 
-        var occupiedClassSessionIds = otherEnrollments
+        var occupiedWeeklySlotIds = otherEnrollments
             .SelectMany(e => e.EnrolledSessions)
-            .Select(es => es.ClassSessionId)
+            .Select(es => es.WeeklySlotId)
             .ToHashSet();
 
-        var occupiedSlots = otherSessions
-            .Where(s => occupiedClassSessionIds.Contains(s.ClassSessionId))
-            .Select(s => (s.SessionDate, s.SessionType))
+        var occupiedSlots = otherCourseSlots
+            .Where(s => occupiedWeeklySlotIds.Contains(s.WeeklySlotId))
+            .Select(s => (DayOfWeek: Enum.Parse<DayOfWeek>(s.DayOfWeek), s.SessionType))
             .ToHashSet();
 
         return candidateSlots.Any(occupiedSlots.Contains);

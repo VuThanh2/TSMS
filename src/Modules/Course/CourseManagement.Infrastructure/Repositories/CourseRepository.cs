@@ -24,10 +24,11 @@ public class CourseRepository : ICourseRepository {
         Guid id,
         CancellationToken cancellationToken = default) {
         return await _context.Courses
+            .Include(c => c.WeeklySlots)
             .Include(c => c.ClassSessions)
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
-    
+
     public async Task<IReadOnlyList<Course>> GetByIdsAsync(
         IEnumerable<Guid> ids,
         CancellationToken cancellationToken = default) {
@@ -99,8 +100,20 @@ public class CourseRepository : ICourseRepository {
     public void Update(Course course) {
         _context.Courses.Update(course);
     }
-    
+
+    public void AddWeeklySlot(WeeklySlot weeklySlot) {
+        _context.WeeklySlots.Add(weeklySlot);
+    }
+
     public void AddClassSession(ClassSession classSession) {
         _context.ClassSessions.Add(classSession);
+    }
+
+    public void AddClassSessions(IEnumerable<ClassSession> classSessions) {
+        _context.ClassSessions.AddRange(classSessions);
+    }
+
+    public void RemoveClassSessions(IEnumerable<ClassSession> classSessions) {
+        _context.ClassSessions.RemoveRange(classSessions);
     }
 }

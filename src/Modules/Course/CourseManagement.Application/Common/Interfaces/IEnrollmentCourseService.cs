@@ -9,4 +9,8 @@ public interface IEnrollmentCourseService {
     Task<IReadOnlyList<Guid>> GetEnrolledCourseIdsAsync(
         Guid studentId,
         CancellationToken cancellationToken = default);
+
+    /// Returns true if any active Enrollment currently references this WeeklySlotId.
+    /// Dùng làm precondition trước khi RemoveWeeklySlot — không cho xóa slot đang có Student học.
+    Task<bool> IsWeeklySlotInUseAsync(Guid weeklySlotId, CancellationToken cancellationToken = default);
 }

@@ -53,6 +53,15 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course> {
         builder.Property(c => c.CreatedAt)
             .IsRequired();
 
+        // WeeklySlots collection — định nghĩa lịch lặp lại hàng tuần, map qua property công khai.
+        builder.HasMany(c => c.WeeklySlots)
+            .WithOne()
+            .HasForeignKey(s => s.CourseId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(c => c.WeeklySlots)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         // ClassSessions collection — map qua property công khai, đọc/ghi qua backing field _classSessions.
         builder.HasMany(c => c.ClassSessions)
             .WithOne()

@@ -6,8 +6,10 @@ namespace EnrollmentManagement.Domain.Entities;
 public class EnrolledSession : Entity {
     public Guid EnrollmentId { get; private set; }
 
-    // FK trỏ sang ClassSession của CourseManagement BC (cross-BC reference by Id).
-    public Guid ClassSessionId { get; private set; }
+    // FK trỏ sang WeeklySlot của CourseManagement BC (cross-BC reference by Id).
+    // Trỏ tới khung giờ LẶP LẠI HÀNG TUẦN, KHÔNG phải 1 ClassSession cụ thể —
+    // vì Student đăng ký học cho CẢ KỲ, không phải chỉ 1 buổi.
+    public Guid WeeklySlotId { get; private set; }
 
     public SessionType SessionType { get; private set; }
 
@@ -16,19 +18,19 @@ public class EnrolledSession : Entity {
 
     internal static EnrolledSession Create(
         Guid enrollmentId,
-        Guid classSessionId,
+        Guid weeklySlotId,
         SessionType sessionType) {
         return new EnrolledSession {
             Id = Guid.NewGuid(),
             EnrollmentId = enrollmentId,
-            ClassSessionId = classSessionId,
+            WeeklySlotId = weeklySlotId,
             SessionType = sessionType
         };
     }
 
     // Cập nhật khi Student điều chỉnh ca học (AdjustSession).
-    internal void Adjust(Guid newClassSessionId, SessionType newSessionType) {
-        ClassSessionId = newClassSessionId;
+    internal void Adjust(Guid newWeeklySlotId, SessionType newSessionType) {
+        WeeklySlotId = newWeeklySlotId;
         SessionType = newSessionType;
     }
 }

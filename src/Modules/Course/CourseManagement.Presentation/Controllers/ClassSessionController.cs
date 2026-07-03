@@ -1,4 +1,3 @@
-using CourseManagement.Application.ClassSessions.AddClassSession;
 using CourseManagement.Application.ClassSessions.DeleteClassSession;
 using CourseManagement.Application.ClassSessions.GetClassSessions;
 using CourseManagement.Application.ClassSessions.UpdateClassSession;
@@ -8,6 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CourseManagement.Presentation.Controllers;
 
+// Tạo buổi học mới đã chuyển sang WeeklySlotsController (POST /weekly-slots) — 1 lần thêm
+// sinh hàng loạt ClassSession cho cả kỳ, thay vì tạo từng buổi rời rạc như trước.
+// Controller này chỉ còn thao tác trên buổi học ĐÃ TỒN TẠI: xem, dời ngày 1 buổi cụ thể
+// (vd nghỉ lễ), hoặc hủy 1 buổi cụ thể mà không ảnh hưởng cả WeeklySlot.
 [ApiController]
 [Route("api/courses/{courseId:guid}/sessions")]
 [Authorize]
@@ -33,26 +36,8 @@ public class ClassSessionsController : ControllerBase {
         return Ok(result.Value);
     }
 
-    // POST /api/courses/{courseId}/sessions
-    [HttpPost]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> AddClassSession(
-        Guid courseId,
-        [FromBody] AddClassSessionInputDto dto,
-        CancellationToken cancellationToken) {
-        var result = await _sender.Send(
-            new AddClassSessionCommand(courseId, dto.SessionDate, dto.SessionType),
-            cancellationToken);
-
-        if (result.IsFailure)
-            return result.Error.Code == "Course.NotFound"
-                ? NotFound(new { result.Error.Code, result.Error.Message })
-                : BadRequest(new { result.Error.Code, result.Error.Message });
-
-        return Created(string.Empty, result.Value);
-    }
-
     // PUT /api/courses/{courseId}/sessions/{sessionId}
+    // Dời ngày 1 buổi cụ thể (vd nghỉ lễ) — không ảnh hưởng WeeklySlot gốc.
     [HttpPut("{sessionId:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateClassSession(
@@ -73,6 +58,8 @@ public class ClassSessionsController : ControllerBase {
     }
 
     // DELETE /api/courses/{courseId}/sessions/{sessionId}
+    // Hủy 1 buổi cụ thể (vd nghỉ lễ) — các tuần khác cùng WeeklySlot vẫn diễn ra bình thường.
+    // Muốn hủy cả khung giờ lặp lại, dùng DELETE /weekly-slots/{weeklySlotId} thay vì API này.
     [HttpDelete("{sessionId:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteClassSession(

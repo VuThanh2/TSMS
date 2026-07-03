@@ -7,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 namespace EnrollmentManagement.Infrastructure.Services;
 
 // Implement 2 cross-BC interfaces — Enrollment BC sở hữu Enrollment data:
-//   - CourseManagement.Application.IEnrollmentLookupService : Course BC consume.
-//   - Identity.Application.IEnrollmentLookupService         : Identity BC consume.
+//   - CourseManagement.Application.IEnrollmentCourseService : Course BC consume.
+//   - Identity.Application.IEnrollmentIdentityService        : Identity BC consume.
 public class EnrollmentQueryService :
     IEnrollmentCourseService,
     IEnrollmentIdentityService {
@@ -19,7 +19,7 @@ public class EnrollmentQueryService :
         _context = context;
     }
 
-    // ── CourseManagement.Application.IEnrollmentLookupService
+    // ── CourseManagement.Application.IEnrollmentCourseService
 
     public async Task<int> GetEnrollmentCountAsync(
         Guid courseId,
@@ -37,7 +37,17 @@ public class EnrollmentQueryService :
             .ToListAsync(cancellationToken);
     }
 
-    // ── Identity.Application.IEnrollmentLookupService
+    // Dùng làm precondition trước khi Course BC cho phép RemoveWeeklySlot — không cho xóa
+    // slot đang có Student enroll (Enrollment BC sở hữu dữ liệu EnrolledSession).
+    public async Task<bool> IsWeeklySlotInUseAsync(
+        Guid weeklySlotId,
+        CancellationToken cancellationToken = default) {
+        return await _context.Enrollments
+            .AnyAsync(e => e.EnrolledSessions.Any(s => s.WeeklySlotId == weeklySlotId),
+                cancellationToken);
+    }
+
+    // ── Identity.Application.IEnrollmentIdentityService
 
     // Chỉ trả về courseIds mà Student đang Active enroll — đúng data Enrollment BC sở hữu.
     // Identity Application handler tự check CourseStatus qua ICourseLookupService.AreAnyActiveAsync.
