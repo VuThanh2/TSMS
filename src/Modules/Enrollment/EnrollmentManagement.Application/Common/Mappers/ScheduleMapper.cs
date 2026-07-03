@@ -16,7 +16,8 @@ public static class ScheduleMapper {
             ClassSessionId: session.ClassSessionId,
             SessionDate: session.SessionDate,
             DayOfWeek: session.SessionDate.DayOfWeek.ToString(),
-            SessionType: session.SessionType);
+            SessionType: session.SessionType,
+            IsCancelled: session.IsCancelled);
 
     // ── GetStudentSchedule
 
@@ -35,5 +36,6 @@ public static class ScheduleMapper {
             SessionDate: session.SessionDate,
             DayOfWeek: session.SessionDate.DayOfWeek.ToString(),
             SessionType: sessionType,
+            IsCancelled: session.IsCancelled,
             AttendanceStatus: attendanceStatus);
 }
