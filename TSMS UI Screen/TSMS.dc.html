@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: Inter, -apple-system, sans-serif; background: #FFF7F0; color: #1C1B1A; -webkit-font-smoothing: antialiased; }
+  ::placeholder { color: #8A847E; }
+  input:focus, select:focus, button:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(244,93,72,0.30); }
+  @keyframes tsmsModalIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+  @keyframes tsmsScrimIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes tsmsToastIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  @keyframes tsmsSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; } }
+</style>
+</helmet>
+
+<sc-if value="{{ showLogin }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh;display:grid;grid-template-columns:1.05fr 0.95fr;">
+  <div style="display:flex;align-items:center;justify-content:center;padding:48px;">
+    <div style="width:100%;max-width:400px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:40px;">
+        <div style="width:36px;height:36px;border-radius:10px;background:#F45D48;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:17px;">T</div>
+        <span style="font-size:19px;font-weight:700;letter-spacing:-0.01em;">TSMS</span>
+      </div>
+      <h1 style="font-size:34px;font-weight:700;letter-spacing:-0.02em;line-height:1.1;margin:0 0 8px;">Welcome back</h1>
+      <p style="font-size:16px;color:#5C5854;margin:0 0 32px;line-height:1.5;">Sign in to manage your courses, schedules and grades.</p>
+
+      <sc-if value="{{ showResetPanel }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:tsmsModalIn 220ms cubic-bezier(0.34,1.56,0.64,1);">
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Email</label>
+          <input value="{{ email }}" onInput="{{ onEmail }}" placeholder="you@university.edu" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;background:#fff;margin-bottom:18px;" />
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">New password</label>
+          <input type="password" placeholder="At least 8 characters" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;background:#fff;margin-bottom:18px;" />
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Confirm new password</label>
+          <input type="password" placeholder="Re-enter password" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;background:#fff;margin-bottom:24px;" />
+          <button onClick="{{ doReset }}" style="width:100%;height:48px;background:#F45D48;color:#fff;border:none;border-radius:8px;font:600 16px Inter;cursor:pointer;transition:background 120ms;" style-hover="background:#E04A36;">Reset password</button>
+          <button onClick="{{ backToLogin }}" style="width:100%;height:44px;background:none;color:#5C5854;border:none;font:500 15px Inter;cursor:pointer;margin-top:8px;">Back to sign in</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showLoginPanel }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Email</label>
+          <input value="{{ email }}" onInput="{{ onEmail }}" placeholder="you@university.edu" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;background:#fff;margin-bottom:18px;" />
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;">
+            <label style="font-size:14px;font-weight:600;">Password</label>
+            <button onClick="{{ toReset }}" style="background:none;border:none;color:#F45D48;font:600 13px Inter;cursor:pointer;padding:0;">Forgot password?</button>
+          </div>
+          <input type="password" value="{{ password }}" onInput="{{ onPassword }}" placeholder="Enter your password" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;background:#fff;margin-bottom:24px;" />
+          <button onClick="{{ doLogin }}" style="width:100%;height:48px;background:#F45D48;color:#fff;border:none;border-radius:8px;font:600 16px Inter;cursor:pointer;transition:background 120ms;" style-hover="background:#E04A36;">Sign in</button>
+          <div style="margin-top:28px;padding-top:22px;border-top:1px solid #E8DDD3;">
+            <p style="font-size:13px;color:#8A847E;margin:0 0 12px;font-weight:500;">Demo — sign in as a role</p>
+            <div style="display:flex;gap:8px;">
+              <button onClick="{{ loginAdmin }}" style="flex:1;height:40px;background:#FBEDE4;border:1px solid #E8DDD3;border-radius:8px;font:600 14px Inter;color:#1C1B1A;cursor:pointer;">Admin</button>
+              <button onClick="{{ loginLecturer }}" style="flex:1;height:40px;background:#fff;border:1px solid #E8DDD3;border-radius:8px;font:600 14px Inter;color:#8A847E;cursor:pointer;">Lecturer</button>
+              <button onClick="{{ loginStudent }}" style="flex:1;height:40px;background:#fff;border:1px solid #E8DDD3;border-radius:8px;font:600 14px Inter;color:#8A847E;cursor:pointer;">Student</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+  <div style="background:linear-gradient(155deg,#F45D48 0%,#E04A36 100%);position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:56px;">
+    <div style="position:absolute;top:-80px;right:-80px;width:360px;height:360px;border-radius:9999px;background:rgba(255,255,255,0.08);"></div>
+    <div style="position:absolute;top:120px;right:180px;width:180px;height:180px;border-radius:9999px;background:rgba(255,255,255,0.06);"></div>
+    <div style="position:relative;color:#fff;max-width:400px;">
+      <div style="font-size:28px;font-weight:700;letter-spacing:-0.02em;line-height:1.25;margin-bottom:16px;">Schedules, enrollment and grades — calm and legible.</div>
+      <div style="font-size:15px;line-height:1.6;color:rgba(255,255,255,0.85);">A warm, human-centered academic scheduling system that feels like a helpful advisor, not a bureaucratic portal.</div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ authed }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:248px 1fr;min-height:100vh;">
+  <!-- Sidebar -->
+  <aside style="background:#FFFFFF;border-right:1px solid #E8DDD3;padding:24px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;">
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 8px 24px;">
+      <div style="width:34px;height:34px;border-radius:10px;background:#F45D48;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;">T</div>
+      <span style="font-size:18px;font-weight:700;letter-spacing:-0.01em;">TSMS</span>
+    </div>
+    <div style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#8A847E;padding:8px 12px 8px;">{{ roleLabel }}</div>
+    <nav style="display:flex;flex-direction:column;gap:2px;">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+        <button onClick="{{ n.onClick }}" style="{{ n.style }};" style-hover="{{ n.hoverStyle }};">
+          <span style="width:8px;height:8px;border-radius:9999px;background:{{ n.dot }};flex:none;"></span>
+          {{ n.label }}
+        </button>
+      </sc-for>
+    </nav>
+    <div style="margin-top:auto;padding-top:16px;border-top:1px solid #E8DDD3;">
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 8px;">
+        <div style="width:36px;height:36px;border-radius:9999px;background:#FBEDE4;border:1px solid #E8DDD3;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:#5C5854;">{{ userInitials }}</div>
+        <div style="min-width:0;">
+          <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ userName }}</div>
+          <div style="font-size:12px;color:#8A847E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ userEmail }}</div>
+        </div>
+      </div>
+      <button onClick="{{ doLogout }}" style="width:100%;height:38px;margin-top:8px;background:none;border:1px solid #E8DDD3;border-radius:8px;font:600 14px Inter;color:#5C5854;cursor:pointer;transition:all 120ms;" style-hover="background:#FBEDE4;color:#1C1B1A;">Log out</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main style="min-width:0;display:flex;flex-direction:column;max-height:100vh;overflow-y:auto;">
+
+    <!-- DASHBOARD / COURSE GRID -->
+    <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:40px 48px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:16px;">
+        <div>
+          <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 6px;">Courses</h1>
+          <p style="font-size:15px;color:#5C5854;margin:0;">{{ courseCountLabel }}</p>
+        </div>
+      <sc-if value="{{ canCreateCourse }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ openCreateCourse }}" style="height:44px;background:#F45D48;color:#fff;border:none;border-radius:8px;padding:0 18px;font:600 15px Inter;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background 120ms;" style-hover="background:#E04A36;">
+          <span style="font-size:19px;line-height:1;">+</span> Create course
+        </button>
+      </sc-if>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+        <input value="{{ courseSearch }}" onInput="{{ onCourseSearch }}" placeholder="Search by course name…" style="flex:1;min-width:240px;height:44px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;background:#fff;" />
+        <div style="display:flex;gap:6px;background:#fff;border:1px solid #E8DDD3;border-radius:8px;padding:4px;">
+          <sc-for list="{{ statusFilters }}" as="f" hint-placeholder-count="4">
+            <button onClick="{{ f.onClick }}" style="{{ f.style }};">{{ f.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;box-shadow:0 1px 3px rgba(28,27,26,0.08),0 1px 2px rgba(28,27,26,0.04);overflow:hidden;">
+        <div style="display:grid;grid-template-columns:2.4fr 1.4fr 1fr 1fr 0.8fr;padding:14px 24px;border-bottom:1px solid #E8DDD3;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;">
+          <div>Course</div><div>Lecturer</div><div>Status</div><div>Capacity</div><div style="text-align:right;">Schedule</div>
+        </div>
+        <sc-for list="{{ courseRows }}" as="c" hint-placeholder-count="6">
+          <div onClick="{{ c.onOpen }}" style="display:grid;grid-template-columns:2.4fr 1.4fr 1fr 1fr 0.8fr;align-items:center;padding:0 24px;height:56px;border-bottom:1px solid #F1E7DD;cursor:pointer;transition:background 120ms;" style-hover="background:#FBEDE4;">
+            <div style="min-width:0;padding-right:12px;">
+              <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.name }}</div>
+              <div style="font-size:13px;color:#8A847E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.dates }}</div>
+            </div>
+            <div style="font-size:14px;color:#5C5854;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;">{{ c.lecturer }}</div>
+            <div><span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:9999px;font-size:12.5px;font-weight:600;background:{{ c.statusBg }};color:{{ c.statusColor }};"><span style="width:6px;height:6px;border-radius:9999px;background:{{ c.statusColor }};"></span>{{ c.statusLabel }}</span></div>
+            <div style="font-family:'Roboto Mono',monospace;font-size:14px;font-weight:500;color:#1C1B1A;">{{ c.capacity }}</div>
+            <div style="text-align:right;font-size:13px;color:#8A847E;">{{ c.sessionCount }} sessions</div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noCourses }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:56px;text-align:center;color:#8A847E;font-size:15px;">No courses match your search.</div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- COURSE DETAIL -->
+    <sc-if value="{{ isCourseDetail }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;max-width:1040px;">
+      <button onClick="{{ backToDashboard }}" style="background:none;border:none;color:#5C5854;font:600 14px Inter;cursor:pointer;padding:0;margin-bottom:18px;display:flex;align-items:center;gap:6px;">← Back to courses</button>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px;">
+        <div style="min-width:0;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;">
+            <h1 style="font-size:30px;font-weight:700;letter-spacing:-0.02em;margin:0;">{{ detailName }}</h1>
+            <span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:9999px;font-size:12.5px;font-weight:600;background:{{ detailStatusBg }};color:{{ detailStatusColor }};"><span style="width:6px;height:6px;border-radius:9999px;background:{{ detailStatusColor }};"></span>{{ detailStatusLabel }}</span>
+          </div>
+          <p style="font-size:15px;color:#5C5854;margin:0;line-height:1.6;max-width:620px;">{{ detailDesc }}</p>
+        </div>
+        <sc-if value="{{ canManageCourse }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;gap:8px;flex:none;">
+          <button onClick="{{ openReplaceLecturer }}" style="height:40px;background:#fff;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:600 14px Inter;color:#1C1B1A;cursor:pointer;">Replace lecturer</button>
+          <button onClick="{{ openEditCourse }}" style="height:40px;background:#fff;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:600 14px Inter;color:#1C1B1A;cursor:pointer;">Edit course</button>
+        </div>
+        </sc-if>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;">
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;padding:18px 20px;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;margin-bottom:8px;">Lecturer</div>
+          <div style="font-size:16px;font-weight:600;">{{ detailLecturer }}</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;padding:18px 20px;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;margin-bottom:8px;">Enrolled</div>
+          <div style="font-size:16px;font-weight:600;font-family:'Roboto Mono',monospace;">{{ detailCapacity }}</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;padding:18px 20px;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;margin-bottom:8px;">Start</div>
+          <div style="font-size:16px;font-weight:600;font-family:'Roboto Mono',monospace;">{{ detailStart }}</div>
+        </div>
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;padding:18px 20px;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;margin-bottom:8px;">End</div>
+          <div style="font-size:16px;font-weight:600;font-family:'Roboto Mono',monospace;">{{ detailEnd }}</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h2 style="font-size:20px;font-weight:600;letter-spacing:-0.01em;margin:0;">Class sessions</h2>
+        <sc-if value="{{ canManageCourse }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ openAddSession }}" style="height:38px;background:#F45D48;color:#fff;border:none;border-radius:8px;padding:0 14px;font:600 14px Inter;cursor:pointer;display:flex;align-items:center;gap:6px;" style-hover="background:#E04A36;"><span style="font-size:17px;line-height:1;">+</span> Add session</button>
+        </sc-if>
+      </div>
+      <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(28,27,26,0.08);padding:16px;">
+        <div style="display:grid;grid-template-columns:56px repeat(7,1fr);gap:8px;align-items:center;">
+          <div></div>
+          <sc-for list="{{ courseWeekDayHeaders }}" as="d" hint-placeholder-count="7"><div style="text-align:center;font-size:12px;font-weight:600;color:#8A847E;text-transform:uppercase;letter-spacing:0.04em;">{{ d.label }}</div></sc-for>
+          <div style="font-size:12px;font-weight:700;color:#8A847E;">AM</div>
+          <sc-for list="{{ courseWeekAM }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.onClick }}" style="{{ c.style }};">{{ c.label }}</button></sc-for>
+          <div style="font-size:12px;font-weight:700;color:#8A847E;">PM</div>
+          <sc-for list="{{ courseWeekPM }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.onClick }}" style="{{ c.style }};">{{ c.label }}</button></sc-for>
+        </div>
+      </div>
+      <sc-if value="{{ canManageCourse }}" hint-placeholder-val="{{ true }}">
+      <p style="font-size:13px;color:#8A847E;margin:12px 2px 0;">Click a day &amp; shift to edit the weekly pattern. Sessions repeat every week from start to end date.</p>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <!-- USERS -->
+    <sc-if value="{{ isUsers }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:16px;">
+        <div>
+          <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 6px;">Users</h1>
+          <p style="font-size:15px;color:#5C5854;margin:0;">{{ userCountLabel }}</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onClick="{{ openImportCsv }}" style="height:44px;background:#fff;border:1px solid #D8C9BB;border-radius:8px;padding:0 16px;font:600 15px Inter;color:#1C1B1A;cursor:pointer;">Import CSV</button>
+          <button onClick="{{ openCreateUser }}" style="height:44px;background:#F45D48;color:#fff;border:none;border-radius:8px;padding:0 18px;font:600 15px Inter;cursor:pointer;display:flex;align-items:center;gap:8px;" style-hover="background:#E04A36;"><span style="font-size:19px;line-height:1;">+</span> Create user</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+        <input value="{{ userSearch }}" onInput="{{ onUserSearch }}" placeholder="Search by name or email…" style="flex:1;min-width:240px;height:44px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;background:#fff;" />
+        <div style="display:flex;gap:6px;background:#fff;border:1px solid #E8DDD3;border-radius:8px;padding:4px;">
+          <sc-for list="{{ roleFilters }}" as="f" hint-placeholder-count="4">
+            <button onClick="{{ f.onClick }}" style="{{ f.style }};">{{ f.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;box-shadow:0 1px 3px rgba(28,27,26,0.08);overflow:hidden;">
+        <div style="display:grid;grid-template-columns:2fr 2.2fr 1fr 1fr 1.1fr;padding:14px 24px;border-bottom:1px solid #E8DDD3;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;">
+          <div>Name</div><div>Email</div><div>Role</div><div>Status</div><div style="text-align:right;">Actions</div>
+        </div>
+        <sc-for list="{{ userRows }}" as="u" hint-placeholder-count="7">
+          <div style="display:grid;grid-template-columns:2fr 2.2fr 1fr 1fr 1.1fr;align-items:center;padding:0 24px;height:56px;border-bottom:1px solid #F1E7DD;">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;padding-right:12px;">
+              <div style="width:32px;height:32px;border-radius:9999px;background:#FBEDE4;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#5C5854;flex:none;">{{ u.initials }}</div>
+              <span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ u.name }}</span>
+            </div>
+            <div style="font-size:14px;color:#5C5854;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;font-family:'Roboto Mono',monospace;">{{ u.email }}</div>
+            <div><span style="display:inline-flex;height:24px;align-items:center;padding:0 10px;border-radius:9999px;font-size:12.5px;font-weight:600;background:#F3EEE9;color:#5C5854;">{{ u.role }}</span></div>
+            <div><span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font-size:12.5px;font-weight:600;background:{{ u.statusBg }};color:{{ u.statusColor }};"><span style="width:6px;height:6px;border-radius:9999px;background:{{ u.statusColor }};"></span>{{ u.statusLabel }}</span></div>
+            <div style="display:flex;gap:6px;justify-content:flex-end;">
+              <button onClick="{{ u.onEdit }}" style="height:32px;background:#fff;border:1px solid #E8DDD3;border-radius:7px;padding:0 12px;font:600 13px Inter;color:#1C1B1A;cursor:pointer;">Edit</button>
+              <button onClick="{{ u.onToggle }}" style="{{ u.toggleStyle }};">{{ u.toggleLabel }}</button>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noUsers }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:56px;text-align:center;color:#8A847E;font-size:15px;">No users match your search.</div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- STATISTICS -->
+    <sc-if value="{{ isStatistics }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;">
+      <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 6px;">Course statistics</h1>
+      <p style="font-size:15px;color:#5C5854;margin:0 0 28px;">Enrollment and grade overview across all courses.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(28,27,26,0.08);">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px;">Students enrolled per course</div>
+          <div style="font-size:13px;color:#8A847E;margin-bottom:24px;">Each column is one course</div>
+          <div style="display:flex;align-items:flex-end;gap:10px;height:180px;border-bottom:1px solid #E8DDD3;padding:0 4px;">
+            <sc-for list="{{ enrollBars }}" as="b" hint-placeholder-count="7">
+              <div style="flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0;">
+                <span style="font-size:12px;font-weight:600;font-family:'Roboto Mono',monospace;color:#5C5854;margin-bottom:6px;">{{ b.value }}</span>
+                <div style="width:100%;max-width:36px;border-radius:6px 6px 0 0;background:#F45D48;height:{{ b.pct }};"></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:10px;padding:0 4px;margin-top:8px;">
+            <sc-for list="{{ enrollBars }}" as="b" hint-placeholder-count="7">
+              <div style="flex:1;min-width:0;text-align:center;font-size:11px;line-height:1.3;color:#8A847E;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ b.name }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(28,27,26,0.08);">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px;">Average score per course</div>
+          <div style="font-size:13px;color:#8A847E;margin-bottom:24px;">Each column is one course (0–10)</div>
+          <div style="display:flex;align-items:flex-end;gap:10px;height:180px;border-bottom:1px solid #E8DDD3;padding:0 4px;">
+            <sc-for list="{{ avgBars }}" as="b" hint-placeholder-count="7">
+              <div style="flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0;">
+                <span style="font-size:12px;font-weight:600;font-family:'Roboto Mono',monospace;color:#5C5854;margin-bottom:6px;">{{ b.value }}</span>
+                <div style="width:100%;max-width:36px;border-radius:6px 6px 0 0;background:#1E875F;height:{{ b.pct }};"></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:10px;padding:0 4px;margin-top:8px;">
+            <sc-for list="{{ avgBars }}" as="b" hint-placeholder-count="7">
+              <div style="flex:1;min-width:0;text-align:center;font-size:11px;line-height:1.3;color:#8A847E;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{{ b.name }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;box-shadow:0 1px 3px rgba(28,27,26,0.08);overflow:hidden;">
+        <div style="display:grid;grid-template-columns:2.4fr 1fr 1.2fr 1.2fr;padding:14px 24px;border-bottom:1px solid #E8DDD3;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;">
+          <div>Course</div><div>Status</div><div style="text-align:right;">Enrolled</div><div style="text-align:right;">Avg score</div>
+        </div>
+        <sc-for list="{{ statRows }}" as="c" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:2.4fr 1fr 1.2fr 1.2fr;align-items:center;padding:0 24px;height:54px;border-bottom:1px solid #F1E7DD;">
+            <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;">{{ c.name }}</div>
+            <div><span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font-size:12.5px;font-weight:600;background:{{ c.statusBg }};color:{{ c.statusColor }};"><span style="width:6px;height:6px;border-radius:9999px;background:{{ c.statusColor }};"></span>{{ c.statusLabel }}</span></div>
+            <div style="text-align:right;font-family:'Roboto Mono',monospace;font-size:14px;font-weight:500;">{{ c.enrolled }}</div>
+            <div style="text-align:right;font-family:'Roboto Mono',monospace;font-size:14px;font-weight:600;color:{{ c.avgColor }};">{{ c.avg }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- REPORT GRID -->
+    <sc-if value="{{ isReports }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;">
+      <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 6px;">Reports</h1>
+      <p style="font-size:15px;color:#5C5854;margin:0 0 28px;">Select a course to view its grade, attendance and score reports.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+        <sc-for list="{{ reportCards }}" as="c" hint-placeholder-count="6">
+          <button onClick="{{ c.onOpen }}" style="text-align:left;background:#fff;border:1px solid #E8DDD3;border-radius:20px;padding:22px;cursor:pointer;box-shadow:0 1px 3px rgba(28,27,26,0.08);transition:transform 220ms cubic-bezier(0.34,1.56,0.64,1),box-shadow 220ms;" style-hover="transform:translateY(-2px);box-shadow:0 8px 24px rgba(28,27,26,0.12);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+              <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font-size:12px;font-weight:600;background:{{ c.statusBg }};color:{{ c.statusColor }};"><span style="width:6px;height:6px;border-radius:9999px;background:{{ c.statusColor }};"></span>{{ c.statusLabel }}</span>
+              <span style="color:#8A847E;font-size:18px;">→</span>
+            </div>
+            <div style="font-size:17px;font-weight:600;letter-spacing:-0.01em;margin-bottom:14px;line-height:1.3;">{{ c.name }}</div>
+            <div style="display:flex;gap:20px;">
+              <div><div style="font-size:12px;color:#8A847E;margin-bottom:2px;">Students</div><div style="font-family:'Roboto Mono',monospace;font-size:16px;font-weight:600;">{{ c.students }}</div></div>
+              <div><div style="font-size:12px;color:#8A847E;margin-bottom:2px;">Avg score</div><div style="font-family:'Roboto Mono',monospace;font-size:16px;font-weight:600;">{{ c.avg }}</div></div>
+            </div>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- REPORT DETAIL -->
+    <sc-if value="{{ isReportDetail }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;max-width:1000px;">
+      <button onClick="{{ backToReports }}" style="background:none;border:none;color:#5C5854;font:600 14px Inter;cursor:pointer;padding:0;margin-bottom:18px;display:flex;align-items:center;gap:6px;">← Back to reports</button>
+      <h1 style="font-size:28px;font-weight:700;letter-spacing:-0.02em;margin:0 0 20px;">{{ reportName }}</h1>
+      <div style="display:flex;gap:4px;border-bottom:1px solid #E8DDD3;margin-bottom:24px;">
+        <sc-for list="{{ reportTabs }}" as="t" hint-placeholder-count="3">
+          <button onClick="{{ t.onClick }}" style="{{ t.style }};">{{ t.label }}</button>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ tabGrades }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(28,27,26,0.08);">
+          <div style="display:grid;grid-template-columns:2fr 2.4fr 1fr;padding:14px 24px;border-bottom:1px solid #E8DDD3;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;"><div>Student</div><div>Email</div><div style="text-align:right;">Score</div></div>
+          <sc-for list="{{ gradeRows }}" as="r" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:2fr 2.4fr 1fr;align-items:center;padding:0 24px;height:52px;border-bottom:1px solid #F1E7DD;">
+              <div style="font-size:15px;font-weight:600;">{{ r.name }}</div>
+              <div style="font-size:14px;color:#5C5854;font-family:'Roboto Mono',monospace;">{{ r.email }}</div>
+              <div style="text-align:right;font-family:'Roboto Mono',monospace;font-size:15px;font-weight:600;color:{{ r.color }};">{{ r.grade }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabAttendance }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(28,27,26,0.08);">
+          <div style="display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 1fr;padding:14px 24px;border-bottom:1px solid #E8DDD3;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;"><div>Student</div><div style="text-align:center;">Present</div><div style="text-align:center;">Excused</div><div style="text-align:center;">Absent</div><div style="text-align:right;">Rate</div></div>
+          <sc-for list="{{ attendanceRows }}" as="r" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 1fr;align-items:center;padding:0 24px;height:52px;border-bottom:1px solid #F1E7DD;">
+              <div style="font-size:15px;font-weight:600;">{{ r.name }}</div>
+              <div style="text-align:center;font-family:'Roboto Mono',monospace;font-size:14px;font-weight:600;color:#1E875F;">{{ r.present }}</div>
+              <div style="text-align:center;font-family:'Roboto Mono',monospace;font-size:14px;font-weight:600;color:#E5A20B;">{{ r.excused }}</div>
+              <div style="text-align:center;font-family:'Roboto Mono',monospace;font-size:14px;font-weight:600;color:#D7372C;">{{ r.absent }}</div>
+              <div style="text-align:right;font-family:'Roboto Mono',monospace;font-size:14px;font-weight:600;">{{ r.rate }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ tabDist }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(28,27,26,0.08);display:flex;gap:48px;align-items:center;">
+          <div style="width:200px;height:200px;border-radius:9999px;flex:none;background:{{ pieGradient }};position:relative;">
+            <div style="position:absolute;inset:52px;background:#fff;border-radius:9999px;display:flex;flex-direction:column;align-items:center;justify-content:center;"><span style="font-size:12px;color:#8A847E;">Graded</span><span style="font-size:24px;font-weight:700;font-family:'Roboto Mono',monospace;">{{ pieTotal }}</span></div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+            <sc-for list="{{ distRows }}" as="d" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="width:14px;height:14px;border-radius:4px;background:{{ d.color }};flex:none;"></span>
+                <span style="font-size:15px;font-weight:600;flex:1;">{{ d.label }}</span>
+                <span style="font-size:13px;color:#8A847E;">{{ d.range }}</span>
+                <span style="font-family:'Roboto Mono',monospace;font-size:15px;font-weight:600;width:64px;text-align:right;">{{ d.count }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <!-- GRADING LIST (Lecturer) -->
+    <sc-if value="{{ isGradingList }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;">
+      <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 6px;">Grading</h1>
+      <p style="font-size:15px;color:#5C5854;margin:0 0 28px;">Select a course to enter or update student grades.</p>
+      <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;box-shadow:0 1px 3px rgba(28,27,26,0.08);overflow:hidden;">
+        <div style="display:grid;grid-template-columns:2.6fr 1fr 1fr 1fr;padding:14px 24px;border-bottom:1px solid #E8DDD3;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;"><div>Course</div><div>Status</div><div style="text-align:right;">Students</div><div style="text-align:right;">Avg score</div></div>
+        <sc-for list="{{ gradingCourses }}" as="c" hint-placeholder-count="4">
+          <div onClick="{{ c.onOpen }}" style="display:grid;grid-template-columns:2.6fr 1fr 1fr 1fr;align-items:center;padding:0 24px;height:56px;border-bottom:1px solid #F1E7DD;cursor:pointer;transition:background 120ms;" style-hover="background:#FBEDE4;">
+            <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;">{{ c.name }}</div>
+            <div><span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font-size:12.5px;font-weight:600;background:{{ c.statusBg }};color:{{ c.statusColor }};"><span style="width:6px;height:6px;border-radius:9999px;background:{{ c.statusColor }};"></span>{{ c.statusLabel }}</span></div>
+            <div style="text-align:right;font-family:'Roboto Mono',monospace;font-size:14px;font-weight:500;">{{ c.students }}</div>
+            <div style="text-align:right;font-family:'Roboto Mono',monospace;font-size:14px;font-weight:600;">{{ c.avg }}</div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noGradingCourses }}" hint-placeholder-val="{{ false }}"><div style="padding:56px;text-align:center;color:#8A847E;font-size:15px;">You aren't assigned to any courses yet.</div></sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- GRADING ROSTER (Lecturer) -->
+    <sc-if value="{{ isGradingRoster }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;max-width:920px;">
+      <button onClick="{{ backToGrading }}" style="background:none;border:none;color:#5C5854;font:600 14px Inter;cursor:pointer;padding:0;margin-bottom:18px;display:flex;align-items:center;gap:6px;">← Back to grading</button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap;">
+        <h1 style="font-size:28px;font-weight:700;letter-spacing:-0.02em;margin:0;">{{ gradeCourseName }}</h1>
+        <span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:9999px;font-size:12.5px;font-weight:600;background:{{ gradeCourseStatusBg }};color:{{ gradeCourseStatusColor }};"><span style="width:6px;height:6px;border-radius:9999px;background:{{ gradeCourseStatusColor }};"></span>{{ gradeCourseStatusLabel }}</span>
+      </div>
+      <p style="font-size:14px;color:#8A847E;margin:0 0 22px;">Grades range 0–10. Saving a grade emails the student automatically.</p>
+      <input value="{{ rosterSearch }}" onInput="{{ onRosterSearch }}" placeholder="Search student by name or email…" style="width:100%;max-width:360px;height:44px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;background:#fff;margin-bottom:20px;" />
+      <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;box-shadow:0 1px 3px rgba(28,27,26,0.08);overflow:hidden;">
+        <div style="display:grid;grid-template-columns:2fr 2.4fr 1.6fr;padding:14px 24px;border-bottom:1px solid #E8DDD3;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;"><div>Student</div><div>Email</div><div style="text-align:right;">Grade</div></div>
+        <sc-for list="{{ rosterGradeRows }}" as="r" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:2fr 2.4fr 1.6fr;align-items:center;padding:0 24px;height:62px;border-bottom:1px solid #F1E7DD;">
+            <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;">{{ r.name }}</div>
+            <div style="font-size:14px;color:#5C5854;font-family:'Roboto Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;">{{ r.email }}</div>
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;">
+              <span style="width:8px;height:8px;border-radius:9999px;background:{{ r.dotColor }};flex:none;"></span>
+              <input value="{{ r.value }}" onInput="{{ r.onInput }}" style="{{ r.inputStyle }};" />
+              <button onClick="{{ r.onSave }}" style="{{ r.saveStyle }};">Save</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ATTENDANCE LIST (Lecturer) -->
+    <sc-if value="{{ isAttendanceList }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;">
+      <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 6px;">Attendance</h1>
+      <p style="font-size:15px;color:#5C5854;margin:0 0 28px;">Choose a course, then a session, to mark attendance.</p>
+      <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;box-shadow:0 1px 3px rgba(28,27,26,0.08);overflow:hidden;">
+        <div style="display:grid;grid-template-columns:2.6fr 1fr 1fr 0.6fr;padding:14px 24px;border-bottom:1px solid #E8DDD3;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;"><div>Course</div><div>Status</div><div>Sessions</div><div></div></div>
+        <sc-for list="{{ attendanceCourses }}" as="c" hint-placeholder-count="3">
+          <div onClick="{{ c.onOpen }}" style="display:grid;grid-template-columns:2.6fr 1fr 1fr 0.6fr;align-items:center;padding:0 24px;height:56px;border-bottom:1px solid #F1E7DD;cursor:pointer;transition:background 120ms;" style-hover="background:#FBEDE4;">
+            <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;">{{ c.name }}</div>
+            <div><span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font-size:12.5px;font-weight:600;background:{{ c.statusBg }};color:{{ c.statusColor }};"><span style="width:6px;height:6px;border-radius:9999px;background:{{ c.statusColor }};"></span>{{ c.statusLabel }}</span></div>
+            <div style="font-size:14px;color:#5C5854;">{{ c.sessions }}</div>
+            <div style="text-align:right;color:#8A847E;font-size:18px;">→</div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noAttendanceCourses }}" hint-placeholder-val="{{ false }}"><div style="padding:56px;text-align:center;color:#8A847E;font-size:15px;">No active courses to mark yet.</div></sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ATTENDANCE MARK (Lecturer) -->
+    <sc-if value="{{ isAttendanceMark }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;max-width:880px;">
+      <button onClick="{{ backToAttendance }}" style="background:none;border:none;color:#5C5854;font:600 14px Inter;cursor:pointer;padding:0;margin-bottom:18px;display:flex;align-items:center;gap:6px;">← Back to attendance</button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <h1 style="font-size:28px;font-weight:700;letter-spacing:-0.02em;margin:0;">{{ attCourseName }}</h1>
+        <span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:9999px;font-size:12.5px;font-weight:600;background:{{ attCourseStatusBg }};color:{{ attCourseStatusColor }};"><span style="width:6px;height:6px;border-radius:9999px;background:{{ attCourseStatusColor }};"></span>{{ attCourseStatusLabel }}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <button onClick="{{ prevAttWeek }}" style="height:36px;width:36px;background:#fff;border:1px solid #D8C9BB;border-radius:8px;font:600 16px Inter;color:#5C5854;cursor:pointer;">‹</button>
+        <div style="font-size:14px;font-weight:600;color:#5C5854;">{{ attWeekLabel }}</div>
+        <button onClick="{{ nextAttWeek }}" style="height:36px;width:36px;background:#fff;border:1px solid #D8C9BB;border-radius:8px;font:600 16px Inter;color:#5C5854;cursor:pointer;">›</button>
+      </div>
+      <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(28,27,26,0.08);padding:16px;margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:44px repeat(7,1fr);gap:8px;align-items:center;">
+          <div></div>
+          <sc-for list="{{ attWeekDayHeaders }}" as="d" hint-placeholder-count="7">
+            <div style="text-align:center;">
+              <div style="font-size:11px;font-weight:600;color:#8A847E;text-transform:uppercase;letter-spacing:0.04em;">{{ d.label }}</div>
+              <div style="font-size:13px;font-weight:600;font-family:'Roboto Mono',monospace;">{{ d.num }}</div>
+            </div>
+          </sc-for>
+          <div style="font-size:12px;font-weight:700;color:#8A847E;">AM</div>
+          <sc-for list="{{ attWeekAM }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.onClick }}" style="{{ c.style }};">{{ c.label }}</button></sc-for>
+          <div style="font-size:12px;font-weight:700;color:#8A847E;">PM</div>
+          <sc-for list="{{ attWeekPM }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.onClick }}" style="{{ c.style }};">{{ c.label }}</button></sc-for>
+        </div>
+      </div>
+      <p style="font-size:14px;color:#8A847E;margin:0 0 22px;">Marking <strong style="color:#5C5854;">{{ attSessionLabel }}</strong> · each change saves on its own.</p>
+      <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;box-shadow:0 1px 3px rgba(28,27,26,0.08);overflow:hidden;">
+        <sc-for list="{{ attRosterRows }}" as="r" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;padding:0 24px;height:66px;border-bottom:1px solid #F1E7DD;gap:16px;">
+            <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:600;">{{ r.name }}</div><div style="font-size:13px;color:#8A847E;font-family:'Roboto Mono',monospace;">{{ r.email }}</div></div>
+            <div style="display:flex;border:1px solid #D8C9BB;border-radius:9px;overflow:hidden;flex:none;">
+              <sc-for list="{{ r.opts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.onClick }}" style="{{ o.style }};">{{ o.label }}</button></sc-for>
+            </div>
+            <span style="{{ r.savedStyle }};">✓ Saved</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- SCHEDULE (Lecturer & Student) -->
+    <sc-if value="{{ isSchedule }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;gap:16px;flex-wrap:wrap;">
+        <div>
+          <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 6px;">{{ scheduleTitle }}</h1>
+          <p style="font-size:15px;color:#5C5854;margin:0;">{{ scheduleSub }}</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button onClick="{{ prevWeek }}" style="width:40px;height:40px;border:1px solid #D8C9BB;background:#fff;border-radius:8px;font-size:16px;color:#5C5854;cursor:pointer;">←</button>
+          <div style="min-width:180px;text-align:center;font-size:15px;font-weight:600;">{{ weekLabel }}</div>
+          <button onClick="{{ nextWeek }}" style="width:40px;height:40px;border:1px solid #D8C9BB;background:#fff;border-radius:8px;font-size:16px;color:#5C5854;cursor:pointer;">→</button>
+          <button onClick="{{ thisWeek }}" style="height:40px;border:1px solid #D8C9BB;background:#fff;border-radius:8px;padding:0 14px;font:600 14px Inter;color:#1C1B1A;cursor:pointer;margin-left:4px;">This week</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:88px repeat(7,1fr);gap:1px;background:#E8DDD3;border:1px solid #E8DDD3;border-radius:12px;overflow:hidden;">
+        <div style="background:#FDF4EC;"></div>
+        <sc-for list="{{ scheduleDays }}" as="d" hint-placeholder-count="7">
+          <div style="background:{{ d.headBg }};padding:12px 10px;text-align:center;">
+            <div style="font-size:12px;font-weight:600;color:#8A847E;text-transform:uppercase;letter-spacing:0.04em;">{{ d.label }}</div>
+            <div style="font-size:18px;font-weight:700;font-family:'Roboto Mono',monospace;color:{{ d.numColor }};">{{ d.num }}</div>
+          </div>
+        </sc-for>
+        <div style="background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#8A847E;letter-spacing:0.04em;">AM</div>
+        <sc-for list="{{ scheduleMorning }}" as="c" hint-placeholder-count="7">
+          <div style="background:#fff;min-height:104px;padding:8px;">
+            <sc-if value="{{ c.has }}" hint-placeholder-val="{{ false }}">
+              <div style="height:100%;border-radius:10px;background:{{ c.tint }};border-left:3px solid {{ c.bar }};padding:10px;display:flex;flex-direction:column;gap:6px;">
+                <div style="font-size:13px;font-weight:600;line-height:1.3;">{{ c.name }}</div>
+                <div style="font-size:11px;color:#8A847E;margin-top:auto;">Morning</div>
+                <sc-if value="{{ c.showDot }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:5px;"><span style="width:7px;height:7px;border-radius:9999px;background:{{ c.dotColor }};flex:none;"></span><span style="font-size:11px;color:#5C5854;">{{ c.dotLabel }}</span></div></sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <div style="background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#8A847E;letter-spacing:0.04em;">PM</div>
+        <sc-for list="{{ scheduleAfternoon }}" as="c" hint-placeholder-count="7">
+          <div style="background:#fff;min-height:104px;padding:8px;">
+            <sc-if value="{{ c.has }}" hint-placeholder-val="{{ false }}">
+              <div style="height:100%;border-radius:10px;background:{{ c.tint }};border-left:3px solid {{ c.bar }};padding:10px;display:flex;flex-direction:column;gap:6px;">
+                <div style="font-size:13px;font-weight:600;line-height:1.3;">{{ c.name }}</div>
+                <div style="font-size:11px;color:#8A847E;margin-top:auto;">Afternoon</div>
+                <sc-if value="{{ c.showDot }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:5px;"><span style="width:7px;height:7px;border-radius:9999px;background:{{ c.dotColor }};flex:none;"></span><span style="font-size:11px;color:#5C5854;">{{ c.dotLabel }}</span></div></sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ scheduleShowLegend }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:18px;margin-top:16px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:13px;color:#8A847E;font-weight:600;">Attendance:</span>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:9999px;background:#1E875F;"></span><span style="font-size:13px;color:#5C5854;">Present</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:9999px;background:#E5A20B;"></span><span style="font-size:13px;color:#5C5854;">Excused</span></div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:9999px;background:#D7372C;"></span><span style="font-size:13px;color:#5C5854;">Absent</span></div>
+        </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <!-- AVAILABLE COURSES (Student) -->
+    <sc-if value="{{ isAvailable }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;">
+      <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 6px;">Available courses</h1>
+      <p style="font-size:15px;color:#5C5854;margin:0 0 28px;">Upcoming courses open for enrollment. Pick 2 sessions per week when you enroll.</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+        <sc-for list="{{ availableCards }}" as="c" hint-placeholder-count="2">
+          <div style="background:#fff;border:1px solid #E8DDD3;border-radius:20px;padding:24px;box-shadow:0 1px 3px rgba(28,27,26,0.08);display:flex;flex-direction:column;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;">
+              <div style="font-size:18px;font-weight:600;letter-spacing:-0.01em;line-height:1.3;">{{ c.name }}</div>
+              <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font-size:12px;font-weight:600;background:#DBE8F7;color:#2E73C4;flex:none;"><span style="width:6px;height:6px;border-radius:9999px;background:#2E73C4;"></span>Upcoming</span>
+            </div>
+            <p style="font-size:14px;color:#5C5854;line-height:1.55;margin:0 0 16px;">{{ c.desc }}</p>
+            <div style="display:flex;gap:24px;margin-bottom:16px;">
+              <div><div style="font-size:12px;color:#8A847E;margin-bottom:2px;">Lecturer</div><div style="font-size:14px;font-weight:600;">{{ c.lecturer }}</div></div>
+              <div><div style="font-size:12px;color:#8A847E;margin-bottom:2px;">Dates</div><div style="font-size:14px;font-weight:600;font-family:'Roboto Mono',monospace;">{{ c.dates }}</div></div>
+            </div>
+            <div style="margin-bottom:18px;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span style="color:#8A847E;">Capacity</span><span style="font-family:'Roboto Mono',monospace;font-weight:600;">{{ c.capacity }}</span></div>
+              <div style="height:8px;border-radius:9999px;background:#F1E7DD;overflow:hidden;"><div style="height:100%;width:{{ c.pct }};background:{{ c.barColor }};border-radius:9999px;"></div></div>
+            </div>
+            <button onClick="{{ c.onEnroll }}" style="{{ c.enrollStyle }}margin-top:auto;align-self:flex-start;">{{ c.enrollLabel }}</button>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ noAvailable }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;padding:56px;text-align:center;color:#8A847E;font-size:15px;">No upcoming courses available right now. Check back soon.</div></sc-if>
+    </div>
+    </sc-if>
+
+    <!-- MY COURSES (Student) -->
+    <sc-if value="{{ isMyCourses }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;">
+      <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 6px;">My courses</h1>
+      <p style="font-size:15px;color:#5C5854;margin:0 0 28px;">Courses you're enrolled in, with status and grades.</p>
+      <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;box-shadow:0 1px 3px rgba(28,27,26,0.08);overflow:hidden;">
+        <div style="display:grid;grid-template-columns:2.4fr 1.4fr 1fr 1fr 1.2fr;padding:14px 24px;border-bottom:1px solid #E8DDD3;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;"><div>Course</div><div>Lecturer</div><div>Status</div><div style="text-align:right;">Grade</div><div style="text-align:right;">Actions</div></div>
+        <sc-for list="{{ myEnrollRows }}" as="c" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:2.4fr 1.4fr 1fr 1fr 1.2fr;align-items:center;padding:0 24px;height:60px;border-bottom:1px solid #F1E7DD;">
+            <div style="min-width:0;padding-right:12px;"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.name }}</div><div style="font-size:13px;color:#8A847E;font-family:'Roboto Mono',monospace;">{{ c.dates }}</div></div>
+            <div style="font-size:14px;color:#5C5854;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;">{{ c.lecturer }}</div>
+            <div><span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font-size:12.5px;font-weight:600;background:{{ c.statusBg }};color:{{ c.statusColor }};"><span style="width:6px;height:6px;border-radius:9999px;background:{{ c.statusColor }};"></span>{{ c.statusLabel }}</span></div>
+            <div style="text-align:right;">
+              <sc-if value="{{ c.hasGrade }}" hint-placeholder-val="{{ true }}"><span style="font-family:'Roboto Mono',monospace;font-size:15px;font-weight:600;color:{{ c.gradeColor }};">{{ c.grade }}</span></sc-if>
+              <sc-if value="{{ c.noGrade }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#8A847E;">{{ c.gradeNote }}</span></sc-if>
+            </div>
+            <div style="text-align:right;"><button onClick="{{ c.onAdjust }}" style="{{ c.adjustStyle }};">Adjust session</button></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- PERSONAL SUMMARY (Student) -->
+    <sc-if value="{{ isSummary }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:40px 48px;max-width:960px;">
+      <h1 style="font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 6px;">Personal summary</h1>
+      <p style="font-size:15px;color:#5C5854;margin:0 0 28px;">Your grades and attendance across every course.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;padding:22px 24px;box-shadow:0 1px 3px rgba(28,27,26,0.08);"><div style="font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;margin-bottom:10px;">Overall GPA</div><div style="font-size:34px;font-weight:700;font-family:'Roboto Mono',monospace;color:{{ gpaColor }};">{{ gpa }}</div></div>
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;padding:22px 24px;box-shadow:0 1px 3px rgba(28,27,26,0.08);"><div style="font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;margin-bottom:10px;">Attendance rate</div><div style="font-size:34px;font-weight:700;font-family:'Roboto Mono',monospace;color:#1E875F;">{{ attRate }}</div></div>
+        <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;padding:22px 24px;box-shadow:0 1px 3px rgba(28,27,26,0.08);"><div style="font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;margin-bottom:10px;">Courses enrolled</div><div style="font-size:34px;font-weight:700;font-family:'Roboto Mono',monospace;color:#1C1B1A;">{{ enrollCount }}</div></div>
+      </div>
+      <div style="background:#fff;border:1px solid #E8DDD3;border-radius:12px;box-shadow:0 1px 3px rgba(28,27,26,0.08);overflow:hidden;">
+        <div style="display:grid;grid-template-columns:2.6fr 1.2fr 1fr 1fr;padding:14px 24px;border-bottom:1px solid #E8DDD3;font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#8A847E;"><div>Course</div><div>Status</div><div style="text-align:right;">Grade</div><div style="text-align:right;">Attendance</div></div>
+        <sc-for list="{{ summaryRows }}" as="r" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:2.6fr 1.2fr 1fr 1fr;align-items:center;padding:0 24px;height:54px;border-bottom:1px solid #F1E7DD;">
+            <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;">{{ r.name }}</div>
+            <div><span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:9999px;font-size:12.5px;font-weight:600;background:{{ r.statusBg }};color:{{ r.statusColor }};"><span style="width:6px;height:6px;border-radius:9999px;background:{{ r.statusColor }};"></span>{{ r.statusLabel }}</span></div>
+            <div style="text-align:right;font-family:'Roboto Mono',monospace;font-size:15px;font-weight:600;color:{{ r.gradeColor }};">{{ r.grade }}</div>
+            <div style="text-align:right;font-family:'Roboto Mono',monospace;font-size:14px;font-weight:600;color:#5C5854;">{{ r.rate }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+  </main>
+</div>
+
+<!-- ===== MODALS ===== -->
+<sc-if value="{{ anyModal }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ closeModal }}" style="position:fixed;inset:0;background:rgba(28,27,26,0.42);display:flex;align-items:center;justify-content:center;padding:24px;z-index:100;animation:tsmsScrimIn 160ms ease;">
+  <div onClick="{{ stop }}" style="background:#fff;border-radius:20px;padding:32px;width:100%;max-width:{{ modalWidth }};box-shadow:0 8px 24px rgba(28,27,26,0.12);animation:tsmsModalIn 220ms cubic-bezier(0.34,1.56,0.64,1);max-height:88vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;">
+      <div>
+        <h2 style="font-size:22px;font-weight:700;letter-spacing:-0.01em;margin:0 0 4px;">{{ modalTitle }}</h2>
+        <p style="font-size:14px;color:#5C5854;margin:0;">{{ modalSubtitle }}</p>
+      </div>
+      <button onClick="{{ closeModal }}" style="width:32px;height:32px;border:none;background:#F3EEE9;border-radius:8px;font-size:17px;color:#5C5854;cursor:pointer;flex:none;">✕</button>
+    </div>
+
+    <sc-if value="{{ mCreateUser }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Full name</label><input placeholder="e.g. Nguyễn Văn An" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;" /></div>
+        <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Email</label><input placeholder="an.nguyen@university.edu" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;" /></div>
+        <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Role</label>
+          <div style="display:flex;gap:8px;">
+            <sc-for list="{{ rolePicker }}" as="r" hint-placeholder-count="3"><button onClick="{{ r.onClick }}" style="{{ r.style }};">{{ r.label }}</button></sc-for>
+          </div>
+        </div>
+        <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Mật khẩu</label><input type="password" value="{{ newUserPassword }}" onInput="{{ onNewUserPassword }}" placeholder="Tối thiểu 8 ký tự" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;" /></div>
+        <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Xác nhận mật khẩu</label><input type="password" value="{{ newUserConfirmPassword }}" onInput="{{ onNewUserConfirmPassword }}" placeholder="Nhập lại mật khẩu" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;" /></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mEditUser }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Full name</label><input value="{{ editUserName }}" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;" /></div>
+        <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Email</label><input value="{{ editUserEmail }}" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;font-family:'Roboto Mono',monospace;" /></div>
+        <sc-if value="{{ editShowProfile }}" hint-placeholder-val="{{ true }}">
+          <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">{{ editProfileLabel }}</label><input value="{{ editProfileValue }}" placeholder="{{ editProfilePlaceholder }}" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;" /></div>
+        </sc-if>
+        <div style="display:flex;align-items:center;gap:10px;background:#F3EEE9;border-radius:8px;padding:12px 14px;"><span style="font-size:14px;color:#8A847E;font-weight:600;">Role</span><span style="font-size:14px;font-weight:600;">{{ editUserRole }}</span><span style="font-size:12px;color:#8A847E;margin-left:auto;">Read-only</span></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mImportCsv }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="border:2px dashed #D8C9BB;border-radius:12px;padding:32px;text-align:center;background:#FFFCF9;">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px;">Drop a CSV file here</div>
+          <div style="font-size:13px;color:#8A847E;">Columns: FullName, Email, Role</div>
+        </div>
+        <div style="border:1px solid #E8DDD3;border-radius:12px;overflow:hidden;">
+          <div style="display:flex;justify-content:space-between;padding:12px 16px;background:#FBEDE4;font-size:13px;font-weight:600;"><span>import_users.csv — 42 rows</span><span style="color:#1E875F;">38 succeeded · <span style="color:#D7372C;">4 failed</span></span></div>
+          <sc-for list="{{ csvErrors }}" as="e" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:60px 1fr;padding:10px 16px;border-top:1px solid #F1E7DD;font-size:13px;align-items:center;">
+              <span style="font-family:'Roboto Mono',monospace;font-weight:600;color:#8A847E;">Row {{ e.row }}</span>
+              <span style="color:#D7372C;">{{ e.reason }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mCreateCourse }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Course name</label><input placeholder="e.g. Cơ sở Dữ liệu" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;" /></div>
+        <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Description</label><textarea placeholder="Short description of the course…" style="width:100%;height:80px;border:1px solid #D8C9BB;border-radius:8px;padding:12px 14px;font:400 15px Inter;resize:none;"></textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Start date</label><input type="date" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;" /></div>
+          <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">End date</label><input type="date" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;" /></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Max capacity</label><input type="number" placeholder="30" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;font-family:'Roboto Mono',monospace;" /></div>
+          <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Lecturer</label>
+            <button onClick="{{ openLecturerPickerCreate }}" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:600 15px Inter;background:#fff;color:{{ createLecturerColor }};text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+              <span>{{ createLecturerLabel }}</span><span style="color:#8A847E;font-size:13px;font-weight:500;">Change</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mEditCourse }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Course name</label><input value="{{ detailName }}" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;" /></div>
+        <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Description</label><textarea style="width:100%;height:80px;border:1px solid #D8C9BB;border-radius:8px;padding:12px 14px;font:400 15px Inter;resize:none;">{{ detailDesc }}</textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">End date</label><input value="{{ detailEnd }}" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;font-family:'Roboto Mono',monospace;" /></div>
+          <div><label style="display:block;font-size:14px;font-weight:600;margin-bottom:7px;">Max capacity</label><input value="{{ detailMax }}" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;font-family:'Roboto Mono',monospace;" /></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mPickLecturer }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <sc-if value="{{ isReplaceContext }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:14px;color:#5C5854;">Currently assigned: <strong style="color:#1C1B1A;">{{ detailLecturer }}</strong></div>
+        </sc-if>
+        <input value="{{ lecturerSearch }}" onInput="{{ onLecturerSearch }}" placeholder="Search lecturer by name or department…" style="width:100%;height:44px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:400 15px Inter;background:#fff;" />
+        <div style="{{ lecturerListStyle }};">
+          <sc-for list="{{ lecturerOptions }}" as="l" hint-placeholder-count="4">
+            <button onClick="{{ l.onClick }}" style="{{ l.style }};">
+              <div style="width:36px;height:36px;border-radius:9999px;background:#FBEDE4;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#5C5854;flex:none;">{{ l.initials }}</div>
+              <div style="text-align:left;flex:1;min-width:0;">
+                <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ l.name }}</div>
+                <sc-if value="{{ l.showDept }}" hint-placeholder-val="{{ true }}"><div style="font-size:13px;color:#8A847E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ l.dept }}</div></sc-if>
+              </div>
+              <span style="{{ l.checkStyle }};">✓</span>
+            </button>
+          </sc-for>
+          <sc-if value="{{ noLecturers }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:24px;text-align:center;color:#8A847E;font-size:14px;">No lecturers match your search.</div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mSession }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="font-size:13px;color:#5C5854;line-height:1.5;">Chọn thứ &amp; ca trong tuần cho lịch học — hệ thống sẽ tự tạo/cập nhật Session cho mọi tuần từ {{ detailStart }} đến {{ detailEnd }}.</div>
+        <div style="display:grid;grid-template-columns:36px repeat(7,1fr);gap:6px;align-items:center;">
+          <div></div>
+          <sc-for list="{{ addSessionDayHeaders }}" as="d" hint-placeholder-count="7"><div style="text-align:center;font-size:12px;font-weight:700;color:#8A847E;">{{ d.label }}</div></sc-for>
+          <div style="font-size:11px;font-weight:700;color:#8A847E;">AM</div>
+          <sc-for list="{{ addSessionAM }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.onClick }}" style="{{ c.style }};">{{ c.label }}</button></sc-for>
+          <div style="font-size:11px;font-weight:700;color:#8A847E;">PM</div>
+          <sc-for list="{{ addSessionPM }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.onClick }}" style="{{ c.style }};">{{ c.label }}</button></sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mConfirm }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:15px;color:#5C5854;line-height:1.6;">{{ confirmBody }}</div>
+    </sc-if>
+
+    <sc-if value="{{ mEnroll }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:18px;">
+        <div style="background:#FBEDE4;border-radius:12px;padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;"><span style="color:#5C5854;font-weight:600;">Capacity</span><span style="font-family:'Roboto Mono',monospace;font-weight:600;">{{ enrollCapLabel }}</span></div>
+          <div style="height:8px;border-radius:9999px;background:#F1E7DD;overflow:hidden;"><div style="height:100%;width:{{ enrollPct }};background:{{ enrollBarColor }};border-radius:9999px;"></div></div>
+        </div>
+        <div>
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:10px;">Choose exactly 2 sessions</label>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button onClick="{{ openEnrollSlot0 }}" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:600 15px Inter;background:#fff;color:{{ enrollSlot0Color }};cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+              <span>{{ enrollSlot0Label }}</span><span style="color:#8A847E;font-size:13px;font-weight:500;">Change</span>
+            </button>
+            <button onClick="{{ openEnrollSlot1 }}" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:600 15px Inter;background:#fff;color:{{ enrollSlot1Color }};cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+              <span>{{ enrollSlot1Label }}</span><span style="color:#8A847E;font-size:13px;font-weight:500;">Change</span>
+            </button>
+          </div>
+        </div>
+        <div style="font-size:13px;color:#8A847E;">{{ enrollHint }}</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mAdjust }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:18px;">
+        <div>
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:10px;">Current session to change</label>
+          <button onClick="{{ openAdjustFromPicker }}" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:600 15px Inter;background:#fff;color:{{ adjustFromColor }};cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+            <span>{{ adjustFromLabel }}</span><span style="color:#8A847E;font-size:13px;font-weight:500;">Change</span>
+          </button>
+        </div>
+        <div>
+          <label style="display:block;font-size:14px;font-weight:600;margin-bottom:10px;">Switch to</label>
+          <button onClick="{{ openAdjustToPicker }}" style="width:100%;height:48px;border:1px solid #D8C9BB;border-radius:8px;padding:0 14px;font:600 15px Inter;background:#fff;color:{{ adjustToColor }};cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+            <span>{{ adjustToLabel }}</span><span style="color:#8A847E;font-size:13px;font-weight:500;">Change</span>
+          </button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mSessionPicker }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="font-size:13px;color:#8A847E;">Choose a weekday and shift from this course's schedule.</div>
+        <div style="display:grid;grid-template-columns:36px repeat(7,1fr);gap:6px;align-items:center;">
+          <div></div>
+          <sc-for list="{{ sessionPickerDayHeaders }}" as="d" hint-placeholder-count="7"><div style="text-align:center;font-size:12px;font-weight:700;color:#8A847E;">{{ d.label }}</div></sc-for>
+          <div style="font-size:11px;font-weight:700;color:#8A847E;">AM</div>
+          <sc-for list="{{ sessionPickerAM }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.onClick }}" style="{{ c.style }};">{{ c.label }}</button></sc-for>
+          <div style="font-size:11px;font-weight:700;color:#8A847E;">PM</div>
+          <sc-for list="{{ sessionPickerPM }}" as="c" hint-placeholder-count="7"><button onClick="{{ c.onClick }}" style="{{ c.style }};">{{ c.label }}</button></sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:26px;">
+      <button onClick="{{ closeModal }}" style="height:44px;background:#fff;border:1px solid #D8C9BB;border-radius:8px;padding:0 18px;font:600 15px Inter;color:#1C1B1A;cursor:pointer;">{{ cancelBtnLabel }}</button>
+      <sc-if value="{{ showPrimaryBtn }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ confirmModal }}" style="height:44px;background:{{ primaryBtnColor }};color:#fff;border:none;border-radius:8px;padding:0 20px;font:600 15px Inter;cursor:pointer;">{{ primaryBtnLabel }}</button>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- TOAST -->
+<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1C1B1A;color:#fff;padding:14px 22px;border-radius:12px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(28,27,26,0.24);z-index:200;animation:tsmsToastIn 220ms cubic-bezier(0.34,1.56,0.64,1);">
+  <span style="width:8px;height:8px;border-radius:9999px;background:#1E875F;"></span>
+  <span style="font-size:14px;font-weight:500;">{{ toast }}</span>
+</div>
+</sc-if>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;lecturerPickerLayout&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;list&quot;, &quot;options&quot;: [&quot;list&quot;, &quot;grid&quot;], &quot;tsType&quot;: &quot;'list' | 'grid'&quot;, &quot;section&quot;: &quot;Lecturer picker&quot;}, &quot;showLecturerDept&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Lecturer picker&quot;}}">
+class Component extends DCLogic {
+  state = {
+    authed: false, role: 'admin', screen: 'dashboard', modal: null,
+    email: '', password: '',
+    newUserPassword: '', newUserConfirmPassword: '',
+    courseSearch: '', courseStatus: 'All',
+    userSearch: '', userRole: 'All',
+    reportTab: 'grades',
+    selectedCourseId: 'c1', selectedReportId: 'c1', selectedUserId: 'u4',
+    newUserRole: 'Student', sessionType: 'Morning',
+    lecturerSearch: '', createLecturerId: null, pickerContext: null, sessionWeekdaySel: [],
+    gradingCourseId: null, rosterSearch: '', gradeDraft: {}, gradeCommitted: {},
+    attendanceCourseId: null, attendanceSessionIdx: 0, attWeekOffset: 0, attMarks: {},
+    weekOffset: 0,
+    enrollCourseId: null, enrollSel: [null, null],
+    adjustCourseId: null, adjustFromIdx: null, adjustToIdx: null,
+    sessionPickerCtx: null,
+    toast: null,
+  };
+
+  myLecturerId = 'u2';
+  myStudentId = 'u6';
+  studentEnroll = [
+    { courseId: 'c1', sessionIdx: [0, 1], grade: 8.5, present: 14, excused: 1, absent: 1 },
+    { courseId: 'c6', sessionIdx: [0, 1], grade: 0, present: 12, excused: 2, absent: 2 },
+    { courseId: 'c5', sessionIdx: [0, 1], grade: 8.3, present: 15, excused: 0, absent: 1 },
+  ];
+
+  // ── Static data (Vietnamese sample data) ─────────────────────────
+  users = [
+    { id: 'u1', name: 'Đặng Quốc Bảo', email: 'bao.dang@university.edu', role: 'Admin', active: true, profile: '' },
+    { id: 'u2', name: 'Nguyễn Văn An', email: 'an.nguyen@university.edu', role: 'Lecturer', active: true, profile: 'Khoa Công nghệ Thông tin' },
+    { id: 'u3', name: 'Trần Thị Bình', email: 'binh.tran@university.edu', role: 'Lecturer', active: true, profile: 'Khoa Khoa học Máy tính' },
+    { id: 'u4', name: 'Lê Hoàng Cường', email: 'cuong.le@university.edu', role: 'Lecturer', active: true, profile: 'Khoa Hệ thống Thông tin' },
+    { id: 'u5', name: 'Phạm Thị Dung', email: 'dung.pham@university.edu', role: 'Lecturer', active: false, profile: 'Khoa Mạng Máy tính' },
+    { id: 'u6', name: 'Đỗ Minh Quân', email: 'quan.do@student.edu', role: 'Student', active: true, profile: 'Kỹ thuật Phần mềm' },
+    { id: 'u7', name: 'Vũ Thị Hà', email: 'ha.vu@student.edu', role: 'Student', active: true, profile: 'Khoa học Máy tính' },
+    { id: 'u8', name: 'Hoàng Văn Nam', email: 'nam.hoang@student.edu', role: 'Student', active: true, profile: 'An toàn Thông tin' },
+    { id: 'u9', name: 'Ngô Thị Lan', email: 'lan.ngo@student.edu', role: 'Student', active: false, profile: 'Trí tuệ Nhân tạo' },
+    { id: 'u10', name: 'Bùi Đức Anh', email: 'anh.bui@student.edu', role: 'Student', active: true, profile: 'Kỹ thuật Phần mềm' },
+  ];
+
+  courses = [
+    { id: 'c1', name: 'Nhập môn Lập trình', desc: 'Kiến thức nền tảng về tư duy lập trình và ngôn ngữ C, dành cho sinh viên năm nhất.', lecturerId: 'u2', status: 'Active', start: '2026-01-06', end: '2026-04-24', max: 40, enrolled: 34, avg: 7.8, sessions: [['2026-02-10','Morning'],['2026-02-12','Afternoon'],['2026-06-15','Morning'],['2026-06-17','Afternoon']] },
+    { id: 'c2', name: 'Cấu trúc Dữ liệu & Giải thuật', desc: 'Các cấu trúc dữ liệu cơ bản và phân tích độ phức tạp thuật toán.', lecturerId: 'u3', status: 'Active', start: '2026-01-06', end: '2026-05-08', max: 35, enrolled: 35, avg: 7.1, sessions: [['2026-02-11','Morning'],['2026-02-13','Afternoon'],['2026-06-20','Morning'],['2026-06-24','Afternoon']] },
+    { id: 'c3', name: 'Cơ sở Dữ liệu', desc: 'Mô hình quan hệ, SQL và thiết kế cơ sở dữ liệu.', lecturerId: 'u4', status: 'Upcoming', start: '2026-08-01', end: '2026-11-20', max: 30, enrolled: 12, avg: 0, sessions: [['2026-08-04','Morning'],['2026-08-06','Afternoon'],['2026-08-11','Morning'],['2026-08-13','Afternoon']] },
+    { id: 'c4', name: 'Lập trình Web', desc: 'Xây dựng ứng dụng web hiện đại với HTML, CSS và JavaScript.', lecturerId: 'u2', status: 'Upcoming', start: '2026-08-01', end: '2026-11-27', max: 45, enrolled: 20, avg: 0, sessions: [['2026-08-05','Morning'],['2026-08-07','Afternoon'],['2026-08-12','Morning'],['2026-08-14','Afternoon']] },
+    { id: 'c5', name: 'Trí tuệ Nhân tạo', desc: 'Giới thiệu các khái niệm nền tảng của trí tuệ nhân tạo và học máy.', lecturerId: 'u3', status: 'Completed', start: '2025-08-01', end: '2025-11-28', max: 30, enrolled: 28, avg: 8.3, sessions: [['2025-08-05','Morning'],['2025-08-07','Afternoon'],['2025-11-25','Morning'],['2025-11-27','Afternoon']] },
+    { id: 'c6', name: 'Mạng Máy tính', desc: 'Nguyên lý mạng, mô hình TCP/IP và các giao thức truyền thông.', lecturerId: 'u4', status: 'Active', start: '2026-01-06', end: '2026-05-15', max: 38, enrolled: 30, avg: 6.9, sessions: [['2026-02-09','Morning'],['2026-02-11','Afternoon'],['2026-06-18','Morning'],['2026-06-22','Afternoon']] },
+    { id: 'c7', name: 'Toán Rời rạc', desc: 'Logic, tập hợp, đồ thị và tổ hợp cho khoa học máy tính.', lecturerId: 'u2', status: 'Completed', start: '2025-08-01', end: '2025-12-05', max: 50, enrolled: 46, avg: 6.4, sessions: [['2025-08-04','Morning'],['2025-08-06','Afternoon'],['2025-12-01','Morning'],['2025-12-03','Afternoon']] },
+  ];
+
+  roster = [
+    { name: 'Đỗ Minh Quân', email: 'quan.do@student.edu', grade: 8.5, present: 14, excused: 1, absent: 1 },
+    { name: 'Vũ Thị Hà', email: 'ha.vu@student.edu', grade: 9.2, present: 16, excused: 0, absent: 0 },
+    { name: 'Hoàng Văn Nam', email: 'nam.hoang@student.edu', grade: 6.8, present: 12, excused: 2, absent: 2 },
+    { name: 'Ngô Thị Lan', email: 'lan.ngo@student.edu', grade: 7.5, present: 13, excused: 1, absent: 2 },
+    { name: 'Bùi Đức Anh', email: 'anh.bui@student.edu', grade: 4.3, present: 9, excused: 1, absent: 6 },
+    { name: 'Trịnh Thu Hằng', email: 'hang.trinh@student.edu', grade: 8.9, present: 15, excused: 1, absent: 0 },
+    { name: 'Phan Gia Huy', email: 'huy.phan@student.edu', grade: 5.6, present: 11, excused: 3, absent: 2 },
+    { name: 'Lý Khánh Vy', email: 'vy.ly@student.edu', grade: 7.1, present: 13, excused: 0, absent: 3 },
+  ];
+
+  csvErrors = [
+    { row: 4, reason: 'Email already exists in the system' },
+    { row: 9, reason: 'Invalid email format' },
+    { row: 15, reason: 'Role must be Admin, Lecturer or Student' },
+    { row: 23, reason: 'FullName is required' },
+  ];
+
+  // ── Helpers ──────────────────────────────────────────────────────
+  courseStatusPill(s) {
+    if (s === 'Active') return { label: 'Active', color: '#1E875F', bg: '#D7F0E4' };
+    if (s === 'Upcoming') return { label: 'Upcoming', color: '#2E73C4', bg: '#DBE8F7' };
+    return { label: 'Completed', color: '#8A847E', bg: '#F3EEE9' };
+  }
+  lecturerName(id) { const u = this.users.find(x => x.id === id); return u ? u.name : '—'; }
+  initials(name) { const p = name.trim().split(/\s+/); return (p[0][0] + p[p.length-1][0]).toUpperCase(); }
+  fmtDate(iso) { const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
+  weekday(iso) { const d = new Date(iso+'T00:00:00'); return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]; }
+  monShort(iso) { return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(iso.split('-')[1],10)-1]; }
+  isPast(iso) { return new Date(iso+'T00:00:00') < new Date('2026-05-20'); }
+  gradeColor(g) { if (g >= 8.5) return '#1E875F'; if (g >= 7) return '#2E73C4'; if (g >= 5) return '#E5A20B'; return '#D7372C'; }
+  mondayOf(iso) { const d = new Date(iso + 'T00:00:00'); const off = (d.getDay() + 6) % 7; d.setDate(d.getDate() - off); return d; }
+  addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
+  isoOf(date) { const y = date.getFullYear(); const m = String(date.getMonth() + 1).padStart(2, '0'); const dd = String(date.getDate()).padStart(2, '0'); return `${y}-${m}-${dd}`; }
+  coursePalette(id) { const pals = [{ bg: '#FBEDE4', bar: '#F45D48' }, { bg: '#E4EAF7', bar: '#2E73C4' }, { bg: '#D7F0E4', bar: '#1E875F' }, { bg: '#FDE9D6', bar: '#E5A20B' }, { bg: '#EFE7F7', bar: '#7A5AF0' }, { bg: '#E9F2E4', bar: '#5E9E3E' }]; const n = parseInt(String(id).replace(/\D/g, ''), 10) || 1; return pals[n % pals.length]; }
+  fakeAtt(id, iso) { const h = (id + iso).split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 10; if (h < 7) return { label: 'Present', color: '#1E875F' }; if (h < 9) return { label: 'Excused', color: '#E5A20B' }; return { label: 'Absent', color: '#D7372C' }; }
+
+  showToast(msg) { this.setState({ toast: msg }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: null }), 2600); }
+  go(screen) { this.setState({ screen }); }
+  nav(screen) { return () => this.setState({ screen, modal: null, gradingCourseId: null, attendanceCourseId: null }); }
+  openModal(m) { return () => this.setState({ modal: m }); }
+
+  renderVals() {
+    const S = this.state;
+    const sel = this.courses.find(c => c.id === S.selectedCourseId) || this.courses[0];
+    const DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const rep = this.courses.find(c => c.id === S.selectedReportId) || this.courses[0];
+    const selUser = this.users.find(u => u.id === S.selectedUserId) || this.users[3];
+
+    // Nav (role-aware)
+    const navByRole = {
+      admin: [
+        { key: 'dashboard', label: 'Courses', screens: ['dashboard','courseDetail'] },
+        { key: 'users', label: 'Users', screens: ['users'] },
+        { key: 'statistics', label: 'Statistics', screens: ['statistics'] },
+        { key: 'reports', label: 'Reports', screens: ['reports','reportDetail'] },
+      ],
+      lecturer: [
+        { key: 'dashboard', label: 'My courses', screens: ['dashboard','courseDetail'] },
+        { key: 'grading', label: 'Grading', screens: ['grading'] },
+        { key: 'attendance', label: 'Attendance', screens: ['attendance'] },
+        { key: 'schedule', label: 'Schedule', screens: ['schedule'] },
+        { key: 'reports', label: 'Reports', screens: ['reports','reportDetail'] },
+      ],
+      student: [
+        { key: 'available', label: 'Available courses', screens: ['available'] },
+        { key: 'mycourses', label: 'My courses', screens: ['mycourses'] },
+        { key: 'schedule', label: 'Schedule', screens: ['schedule'] },
+        { key: 'summary', label: 'Summary', screens: ['summary'] },
+      ],
+    };
+    const navDef = navByRole[S.role] || navByRole.admin;
+    const navItems = navDef.map(n => {
+      const active = n.screens.includes(S.screen);
+      return {
+        label: n.label, onClick: this.nav(n.key), dot: active ? '#fff' : '#D8C9BB',
+        style: `display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;border-radius:10px;padding:0 12px;height:42px;font:600 15px Inter;cursor:pointer;transition:all 120ms;${active ? 'background:#F45D48;color:#fff;' : 'background:none;color:#5C5854;'}`,
+        hoverStyle: active ? 'background:#F45D48;' : 'background:#FBEDE4;color:#1C1B1A;',
+      };
+    });
+
+    // Course grid
+    const cf = S.courseSearch.trim().toLowerCase();
+    const courseRows = (S.role === 'lecturer' ? this.courses.filter(c => c.lecturerId === this.myLecturerId) : this.courses)
+      .filter(c => (S.courseStatus === 'All' || c.status === S.courseStatus) && c.name.toLowerCase().includes(cf))
+      .map(c => { const p = this.courseStatusPill(c.status); return {
+        name: c.name, dates: `${this.fmtDate(c.start)} – ${this.fmtDate(c.end)}`,
+        lecturer: this.lecturerName(c.lecturerId), statusLabel: p.label, statusColor: p.color, statusBg: p.bg,
+        capacity: `${c.enrolled}/${c.max}`, sessionCount: c.sessions.length,
+        onOpen: () => this.setState({ screen: 'courseDetail', selectedCourseId: c.id }),
+      }; });
+
+    const mkFilter = (opts, cur, onPick) => opts.map(o => ({
+      label: o, onClick: () => onPick(o),
+      style: `border:none;border-radius:6px;height:32px;padding:0 14px;font:600 13px Inter;cursor:pointer;${cur === o ? 'background:#F45D48;color:#fff;' : 'background:none;color:#5C5854;'}`,
+    }));
+    const statusFilters = mkFilter(['All','Upcoming','Active','Completed'], S.courseStatus, o => this.setState({ courseStatus: o }));
+    const roleFilters = mkFilter(['All','Admin','Lecturer','Student'], S.userRole, o => this.setState({ userRole: o }));
+
+    // Course detail
+    const dp = this.courseStatusPill(sel.status);
+    const courseWeekMap = {};
+    sel.sessions.forEach(([date, type]) => { const day = this.weekday(date).slice(0, 3); courseWeekMap[day + '|' + type] = true; });
+    const canManageCourseNow = S.role === 'admin';
+    const openScheduleEditor = () => this.setState({ modal: 'session', sessionWeekdaySel: Object.keys(courseWeekMap) });
+    const courseWeekCellStyle = has => `min-height:64px;border-radius:8px;font:600 12px Inter;border:1px solid ${has ? '#F45D48' : '#E8DDD3'};background:${has ? '#FBEDE4' : '#fff'};color:${has ? '#F45D48' : '#C9C2B9'};cursor:${canManageCourseNow ? 'pointer' : 'default'};display:flex;align-items:center;justify-content:center;`;
+    const courseWeekDayHeaders = DOW.map(d => ({ label: d }));
+    const courseWeekAM = DOW.map(day => { const has = !!courseWeekMap[day + '|Morning']; return { has, label: has ? 'Morning' : '—', style: courseWeekCellStyle(has), onClick: canManageCourseNow ? openScheduleEditor : null }; });
+    const courseWeekPM = DOW.map(day => { const has = !!courseWeekMap[day + '|Afternoon']; return { has, label: has ? 'Afternoon' : '—', style: courseWeekCellStyle(has), onClick: canManageCourseNow ? openScheduleEditor : null }; });
+    const sessionRows = sel.sessions.map((s, i) => {
+      const [date, type] = s; const past = this.isPast(date);
+      const typeMap = type === 'Morning'
+        ? { label: 'Morning', bg: '#FDE9D6', color: '#B4690E' }
+        : { label: 'Afternoon', bg: '#E4EAF7', color: '#2E73C4' };
+      const btnBase = 'height:32px;border-radius:7px;padding:0 12px;font:600 13px Inter;';
+      return {
+        mon: this.monShort(date), dayNum: date.split('-')[2], weekday: this.weekday(date), date: this.fmtDate(date),
+        tint: past ? '#F3EEE9' : '#FBEDE4', typeLabel: typeMap.label, typeBg: typeMap.bg, typeColor: typeMap.color, past,
+        onEdit: past ? () => {} : () => this.setState({ modal: 'session' }),
+        onDelete: past ? () => {} : () => this.setState({ modal: 'deleteSession' }),
+        editStyle: btnBase + (past ? 'background:#F7F2ED;border:1px solid #EFE7DF;color:#C4BDB5;cursor:not-allowed;' : 'background:#fff;border:1px solid #E8DDD3;color:#1C1B1A;cursor:pointer;'),
+        delStyle: btnBase + (past ? 'background:#F7F2ED;border:1px solid #EFE7DF;color:#C4BDB5;cursor:not-allowed;' : 'background:#fff;border:1px solid #E8DDD3;color:#D7372C;cursor:pointer;'),
+      };
+    });
+
+    // Users
+    const uf = S.userSearch.trim().toLowerCase();
+    const userRows = this.users
+      .filter(u => (S.userRole === 'All' || u.role === S.userRole) && (u.name.toLowerCase().includes(uf) || u.email.toLowerCase().includes(uf)))
+      .map(u => ({
+        initials: this.initials(u.name), name: u.name, email: u.email, role: u.role,
+        statusLabel: u.active ? 'Active' : 'Inactive', statusColor: u.active ? '#1E875F' : '#8A847E', statusBg: u.active ? '#D7F0E4' : '#F3EEE9',
+        onEdit: () => this.setState({ modal: 'editUser', selectedUserId: u.id }),
+        onToggle: () => this.setState({ modal: 'confirmStatus', selectedUserId: u.id }),
+        toggleLabel: u.active ? 'Deactivate' : 'Activate',
+        toggleStyle: `height:32px;border-radius:7px;padding:0 12px;font:600 13px Inter;cursor:pointer;background:#fff;border:1px solid #E8DDD3;color:${u.active ? '#D7372C' : '#1E875F'};`,
+      }));
+
+    // Statistics — one column per course, same order across both charts for direct comparison
+    const maxEnroll = Math.max(...this.courses.map(c => c.enrolled));
+    const enrollBars = this.courses.map(c => ({ name: c.name, value: String(c.enrolled), pct: `${Math.max(4, Math.round(c.enrolled/maxEnroll*100))}%` }));
+    const avgBars = this.courses.map(c => ({ name: c.name, value: c.avg > 0 ? c.avg.toFixed(1) : '—', pct: c.avg > 0 ? `${Math.max(4, Math.round(c.avg/10*100))}%` : '2%' }));
+    const statRows = this.courses.map(c => { const p = this.courseStatusPill(c.status); return {
+      name: c.name, statusLabel: p.label, statusColor: p.color, statusBg: p.bg,
+      enrolled: String(c.enrolled), avg: c.avg > 0 ? c.avg.toFixed(1) : '—', avgColor: c.avg > 0 ? this.gradeColor(c.avg) : '#8A847E',
+    }; });
+
+    // Report grid
+    const reportCards = (S.role === 'lecturer' ? this.courses.filter(c => c.lecturerId === this.myLecturerId) : this.courses).map(c => { const p = this.courseStatusPill(c.status); return {
+      name: c.name, statusLabel: p.label, statusColor: p.color, statusBg: p.bg,
+      students: String(c.enrolled), avg: c.avg > 0 ? c.avg.toFixed(1) : '—',
+      onOpen: () => this.setState({ screen: 'reportDetail', selectedReportId: c.id, reportTab: S.role === 'lecturer' ? 'attendance' : 'grades' }),
+    }; });
+
+    // Report detail
+    const gradeRows = this.roster.map(r => ({ name: r.name, email: r.email, grade: r.grade.toFixed(1), color: this.gradeColor(r.grade) }));
+    const attendanceRows = this.roster.map(r => { const tot = r.present + r.excused + r.absent; return {
+      name: r.name, present: String(r.present), excused: String(r.excused), absent: String(r.absent),
+      rate: `${Math.round(r.present/tot*100)}%`,
+    }; });
+    const bands = [
+      { label: 'Excellent', range: '8.5 – 10', color: '#1E875F', count: this.roster.filter(r => r.grade >= 8.5).length },
+      { label: 'Good', range: '7.0 – 8.4', color: '#2E73C4', count: this.roster.filter(r => r.grade >= 7 && r.grade < 8.5).length },
+      { label: 'Average', range: '5.0 – 6.9', color: '#E5A20B', count: this.roster.filter(r => r.grade >= 5 && r.grade < 7).length },
+      { label: 'Weak', range: '0 – 4.9', color: '#D7372C', count: this.roster.filter(r => r.grade < 5).length },
+    ];
+    const totalGraded = this.roster.length;
+    let acc = 0; const segs = bands.map(b => { const start = acc/totalGraded*360; acc += b.count; const end = acc/totalGraded*360; return `${b.color} ${start}deg ${end}deg`; });
+    const pieGradient = `conic-gradient(${segs.join(',')})`;
+    const allReportTabs = [ { key: 'grades', label: 'Student Grades' }, { key: 'attendance', label: 'Attendance' }, { key: 'dist', label: 'Score Distribution' } ];
+    const reportTabsDef = S.role === 'lecturer' ? allReportTabs.filter(t => t.key === 'attendance') : allReportTabs;
+    const reportTabs = reportTabsDef.map(t => ({
+      label: t.label, onClick: () => this.setState({ reportTab: t.key }),
+      style: `border:none;background:none;padding:0 4px 12px;margin-right:20px;font:600 15px Inter;cursor:pointer;border-bottom:2px solid ${S.reportTab === t.key ? '#F45D48' : 'transparent'};color:${S.reportTab === t.key ? '#1C1B1A' : '#8A847E'};`,
+    }));
+
+    // ── Role identity & role-scoped screens ──────────────────────
+    const identity = ({ admin: { u: 'u1', label: 'Administrator' }, lecturer: { u: this.myLecturerId, label: 'Lecturer' }, student: { u: this.myStudentId, label: 'Student' } })[S.role] || { u: 'u1', label: 'Administrator' };
+    const meUser = this.users.find(u => u.id === identity.u) || this.users[0];
+    const myCourses = this.courses.filter(c => c.lecturerId === this.myLecturerId);
+    const courseCountLabel = S.role === 'lecturer' ? `${myCourses.length} courses you teach` : `${this.courses.length} courses total`;
+
+    // Grading (Lecturer)
+    const gradingCourses = myCourses.map(c => { const p = this.courseStatusPill(c.status); return {
+      name: c.name, statusLabel: p.label, statusColor: p.color, statusBg: p.bg,
+      students: String(c.enrolled), avg: c.avg > 0 ? c.avg.toFixed(1) : '—',
+      onOpen: () => this.setState({ gradingCourseId: c.id, rosterSearch: '' }),
+    }; });
+    const gradeCourse = this.courses.find(c => c.id === S.gradingCourseId);
+    const gcp = gradeCourse ? this.courseStatusPill(gradeCourse.status) : null;
+    const rgf = S.rosterSearch.trim().toLowerCase();
+    const rosterGradeRows = gradeCourse ? this.roster
+      .filter(r => r.name.toLowerCase().includes(rgf) || r.email.toLowerCase().includes(rgf))
+      .map((r, idx) => {
+        const key = S.gradingCourseId + '#' + idx;
+        const committed = S.gradeCommitted[key];
+        const draft = S.gradeDraft[key];
+        const baseVal = committed != null ? committed : r.grade;
+        const shown = draft != null ? draft : baseVal.toFixed(1);
+        const dirty = draft != null && draft !== '' && parseFloat(draft) !== baseVal;
+        return {
+          name: r.name, email: r.email, value: shown, dotColor: dirty ? '#F45D48' : 'transparent',
+          onInput: e => { const v = e.target.value; this.setState(s => ({ gradeDraft: { ...s.gradeDraft, [key]: v } })); },
+          onSave: dirty ? () => { const v = parseFloat(draft); this.setState(s => { const d = { ...s.gradeDraft }; delete d[key]; return { gradeDraft: d, gradeCommitted: { ...s.gradeCommitted, [key]: v } }; }); this.showToast('Grade saved · email sent to student'); } : () => {},
+          inputStyle: "width:78px;height:40px;text-align:right;font-family:'Roboto Mono',monospace;font-size:15px;font-weight:600;border:1px solid #D8C9BB;border-radius:8px;padding:0 12px;background:#fff;color:#1C1B1A;",
+          saveStyle: 'height:38px;border-radius:8px;padding:0 16px;font:600 13px Inter;' + (dirty ? 'background:#F45D48;color:#fff;border:none;cursor:pointer;' : 'background:#F7F2ED;color:#C4BDB5;border:1px solid #EFE7DF;cursor:default;'),
+        };
+      }) : [];
+
+    // Attendance (Lecturer)
+    const attendanceCourses = myCourses.filter(c => c.status !== 'Upcoming').map(c => { const p = this.courseStatusPill(c.status); return {
+      name: c.name, statusLabel: p.label, statusColor: p.color, statusBg: p.bg,
+      sessions: c.sessions.length + ' sessions',
+      onOpen: () => {
+        const first = c.sessions[0];
+        const off = first ? Math.round((this.mondayOf(first[0]) - this.mondayOf(c.start)) / (7 * 86400000)) : 0;
+        this.setState({ attendanceCourseId: c.id, attendanceSessionIdx: 0, attWeekOffset: off });
+      },
+    }; });
+    const attCourse = this.courses.find(c => c.id === S.attendanceCourseId);
+    const acp = attCourse ? this.courseStatusPill(attCourse.status) : null;
+    let attSessionLabel = '';
+    let attWeekDayHeaders = [], attWeekAM = [], attWeekPM = [], attWeekLabel = '';
+    if (attCourse) {
+      const attSchedBase = this.mondayOf(attCourse.start);
+      const attWeekStart = this.addDays(attSchedBase, S.attWeekOffset * 7);
+      const attCellStyle = (has, on) => `min-height:60px;border-radius:8px;font:600 12px Inter;border:1px solid ${on ? '#F45D48' : (has ? '#E8DDD3' : '#F1E7DD')};background:${on ? '#FBEDE4' : (has ? '#fff' : '#FAF6F1')};color:${on ? '#F45D48' : (has ? '#1C1B1A' : '#C9C2B9')};cursor:${has ? 'pointer' : 'default'};`;
+      attWeekDayHeaders = DOW.map((label, i) => { const d = this.addDays(attWeekStart, i); return { label, num: String(d.getDate()).padStart(2, '0') }; });
+      const buildAttCell = type => DOW.map((_, i) => {
+        const d = this.addDays(attWeekStart, i); const iso = this.isoOf(d);
+        const idx = attCourse.sessions.findIndex(s => s[0] === iso && s[1] === type);
+        const has = idx !== -1; const on = has && idx === S.attendanceSessionIdx;
+        return { label: type === 'Morning' ? 'AM' : 'PM', style: attCellStyle(has, on), onClick: has ? () => this.setState({ attendanceSessionIdx: idx }) : null };
+      });
+      attWeekAM = buildAttCell('Morning'); attWeekPM = buildAttCell('Afternoon');
+      const attWsEnd = this.addDays(attWeekStart, 6);
+      attWeekLabel = `${attWeekStart.getDate()} ${this.monShort(this.isoOf(attWeekStart))} – ${attWsEnd.getDate()} ${this.monShort(this.isoOf(attWsEnd))} ${attWeekStart.getFullYear()}`;
+    }
+    const prevAttWeek = () => this.setState(s => ({ attWeekOffset: s.attWeekOffset - 1 }));
+    const nextAttWeek = () => this.setState(s => ({ attWeekOffset: s.attWeekOffset + 1 }));
+    let attRosterRows = [];
+    if (attCourse) {
+      const sIdx = S.attendanceSessionIdx; const cur = attCourse.sessions[sIdx];
+      if (cur) attSessionLabel = `${this.weekday(cur[0])}, ${this.fmtDate(cur[0])} · ${cur[1]} session`;
+      attRosterRows = this.roster.map((r, idx) => {
+        const key = S.attendanceCourseId + '#' + sIdx + '#' + idx;
+        const marked = S.attMarks[key] != null; const val = S.attMarks[key] || 'present';
+        const opts = [['present', 'Present', '#1E875F', '#D7F0E4'], ['excused', 'Excused', '#B4690E', '#FDE9D6'], ['absent', 'Absent', '#D7372C', '#FBE3E1']].map(([k, lbl, col, bg], oi) => ({
+          label: lbl, onClick: () => this.setState(s => ({ attMarks: { ...s.attMarks, [key]: k } })),
+          style: 'min-width:96px;height:40px;border:none;font:600 13px Inter;cursor:pointer;' + (val === k ? `background:${bg};color:${col};` : 'background:#fff;color:#8A847E;') + (oi < 2 ? 'border-right:1px solid #E8DDD3;' : ''),
+        }));
+        return { name: r.name, email: r.email, opts, savedStyle: 'font-size:12px;font-weight:600;color:#1E875F;width:64px;flex:none;' + (marked ? 'opacity:1;' : 'opacity:0;') };
+      });
+    }
+
+    // Schedule (Lecturer & Student)
+    const schedBase = this.mondayOf('2026-02-09');
+    const weekStart = this.addDays(schedBase, S.weekOffset * 7);
+    const relCourses = S.role === 'student'
+      ? this.studentEnroll.map(e => this.courses.find(c => c.id === e.courseId)).filter(Boolean)
+      : myCourses;
+    const sessList = [];
+    relCourses.forEach(c => c.sessions.forEach(([date, type]) => sessList.push({ courseId: c.id, name: c.name, date, type })));
+    const NOW = '2026-05-20';
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const scheduleDays = [], scheduleMorning = [], scheduleAfternoon = [];
+    for (let i = 0; i < 7; i++) {
+      const d = this.addDays(weekStart, i); const iso = this.isoOf(d); const isToday = iso === NOW;
+      scheduleDays.push({ label: dayNames[i], num: String(d.getDate()).padStart(2, '0'), headBg: isToday ? '#FBEDE4' : '#FDF4EC', numColor: isToday ? '#F45D48' : '#1C1B1A' });
+      ['Morning', 'Afternoon'].forEach(period => {
+        const hit = sessList.find(s => s.date === iso && s.type === period);
+        const arr = period === 'Morning' ? scheduleMorning : scheduleAfternoon;
+        if (hit) {
+          const pal = this.coursePalette(hit.courseId); let showDot = false, dotColor = 'transparent', dotLabel = '';
+          if (S.role === 'student' && this.isPast(iso)) { const st = this.fakeAtt(hit.courseId, iso); showDot = true; dotColor = st.color; dotLabel = st.label; }
+          arr.push({ has: true, name: hit.name, tint: pal.bg, bar: pal.bar, showDot, dotColor, dotLabel });
+        } else arr.push({ has: false });
+      });
+    }
+    const wsEnd = this.addDays(weekStart, 6);
+    const weekLabel = `${weekStart.getDate()} ${this.monShort(this.isoOf(weekStart))} – ${wsEnd.getDate()} ${this.monShort(this.isoOf(wsEnd))} ${weekStart.getFullYear()}`;
+
+    // Available courses (Student)
+    const enrolledIds = this.studentEnroll.map(e => e.courseId);
+    const availableCards = this.courses.filter(c => c.status === 'Upcoming' && !enrolledIds.includes(c.id)).map(c => {
+      const pct = Math.round(c.enrolled / c.max * 100); const full = c.enrolled >= c.max; return {
+        name: c.name, lecturer: this.lecturerName(c.lecturerId), dates: `${this.fmtDate(c.start)} – ${this.fmtDate(c.end)}`, desc: c.desc,
+        capacity: `${c.enrolled}/${c.max}`, pct: `${pct}%`, barColor: pct >= 80 ? '#E5A20B' : '#1E875F',
+        enrollLabel: full ? 'Course full' : 'Enroll',
+        onEnroll: full ? () => this.showToast('This course is full') : () => this.setState({ modal: 'enroll', enrollCourseId: c.id, enrollSel: [null, null] }),
+        enrollStyle: 'height:42px;border-radius:8px;padding:0 20px;font:600 14px Inter;' + (full ? 'background:#F7F2ED;color:#C4BDB5;border:1px solid #EFE7DF;cursor:not-allowed;' : 'background:#F45D48;color:#fff;border:none;cursor:pointer;'),
+      };
+    });
+    const noAvailable = availableCards.length === 0;
+
+    // My courses (Student)
+    const myEnrollRows = this.studentEnroll.map(e => { const c = this.courses.find(x => x.id === e.courseId); const p = this.courseStatusPill(c.status); const hasGrade = e.grade > 0; return {
+      name: c.name, lecturer: this.lecturerName(c.lecturerId), dates: `${this.fmtDate(c.start)} – ${this.fmtDate(c.end)}`,
+      statusLabel: p.label, statusColor: p.color, statusBg: p.bg,
+      grade: hasGrade ? e.grade.toFixed(1) : '—', gradeColor: hasGrade ? this.gradeColor(e.grade) : '#8A847E', hasGrade, noGrade: !hasGrade, gradeNote: 'Chưa có điểm',
+      onAdjust: c.status !== 'Completed' ? () => this.setState({ modal: 'adjust', adjustCourseId: c.id, adjustFromIdx: e.sessionIdx[0], adjustToIdx: null }) : () => {},
+      adjustStyle: 'height:34px;border-radius:8px;padding:0 12px;font:600 13px Inter;' + (c.status !== 'Completed' ? 'background:#fff;border:1px solid #E8DDD3;color:#1C1B1A;cursor:pointer;' : 'background:#F7F2ED;border:1px solid #EFE7DF;color:#C4BDB5;cursor:not-allowed;'),
+    }; });
+
+    // Personal summary (Student)
+    const gradedEnroll = this.studentEnroll.filter(e => e.grade > 0);
+    const gpaVal = gradedEnroll.length ? gradedEnroll.reduce((a, e) => a + e.grade, 0) / gradedEnroll.length : 0;
+    const totP = this.studentEnroll.reduce((a, e) => a + e.present, 0);
+    const totAll = this.studentEnroll.reduce((a, e) => a + e.present + e.excused + e.absent, 0);
+    const attRateVal = totAll ? Math.round(totP / totAll * 100) : 0;
+    const summaryRows = this.studentEnroll.map(e => { const c = this.courses.find(x => x.id === e.courseId); const p = this.courseStatusPill(c.status); const tot = e.present + e.excused + e.absent; const hasGrade = e.grade > 0; return {
+      name: c.name, statusLabel: p.label, statusColor: p.color, statusBg: p.bg,
+      grade: hasGrade ? e.grade.toFixed(1) : '—', gradeColor: hasGrade ? this.gradeColor(e.grade) : '#8A847E',
+      rate: tot ? `${Math.round(e.present / tot * 100)}%` : '—',
+    }; });
+
+    // Enroll modal (Student)
+    const enrollCourse = this.courses.find(c => c.id === S.enrollCourseId);
+    const sessionLabel = (course, i) => { const [date, type] = course.sessions[i]; return `${type} · ${this.weekday(date)} ${this.fmtDate(date)}`; };
+    let enrollPct = '0%', enrollCapLabel = '', enrollBarColor = '#1E875F', enrollHint = '';
+    let enrollSlot0Label = 'Select session', enrollSlot1Label = 'Select session', enrollSlot0Color = '#8A847E', enrollSlot1Color = '#8A847E';
+    const openEnrollSlot = i => () => this.setState({ modal: 'sessionPicker', sessionPickerCtx: 'enroll' + i });
+    let openEnrollSlot0 = openEnrollSlot(0), openEnrollSlot1 = openEnrollSlot(1);
+    if (enrollCourse) {
+      if (S.enrollSel[0] != null) { enrollSlot0Label = sessionLabel(enrollCourse, S.enrollSel[0]); enrollSlot0Color = '#1C1B1A'; }
+      if (S.enrollSel[1] != null) { enrollSlot1Label = sessionLabel(enrollCourse, S.enrollSel[1]); enrollSlot1Color = '#1C1B1A'; }
+      const pct = Math.round(enrollCourse.enrolled / enrollCourse.max * 100);
+      enrollPct = `${pct}%`; enrollCapLabel = `${enrollCourse.enrolled}/${enrollCourse.max} enrolled`; enrollBarColor = pct >= 80 ? '#E5A20B' : '#1E875F';
+      const chosenCount = S.enrollSel.filter(x => x != null).length;
+      enrollHint = `${chosenCount} of 2 sessions selected`;
+    }
+
+    // Adjust modal (Student)
+    const adjustCourse = this.courses.find(c => c.id === S.adjustCourseId);
+    const adjustRec = this.studentEnroll.find(e => e.courseId === S.adjustCourseId);
+    const curIdx = adjustRec ? adjustRec.sessionIdx : [];
+    let adjustFromLabel = 'Select session', adjustToLabel = 'Select session', adjustFromColor = '#8A847E', adjustToColor = '#8A847E';
+    if (adjustCourse) {
+      if (S.adjustFromIdx != null) { adjustFromLabel = sessionLabel(adjustCourse, S.adjustFromIdx); adjustFromColor = '#1C1B1A'; }
+      if (S.adjustToIdx != null) { adjustToLabel = sessionLabel(adjustCourse, S.adjustToIdx); adjustToColor = '#1C1B1A'; }
+    }
+    const openAdjustFromPicker = () => this.setState({ modal: 'sessionPicker', sessionPickerCtx: 'adjustFrom' });
+    const openAdjustToPicker = () => this.setState({ modal: 'sessionPicker', sessionPickerCtx: 'adjustTo' });
+
+    // Session picker modal (shared by Enroll & Adjust) — weekly calendar grid (7 days x 2 shifts)
+    const pickerCellStyle = (exists, sel) => `height:44px;border-radius:8px;font:600 12px Inter;border:1px solid ${sel ? '#F45D48' : (exists ? '#E8DDD3' : '#F1E7DD')};background:${sel ? '#FBEDE4' : (exists ? '#fff' : '#FAF6F1')};color:${sel ? '#F45D48' : (exists ? '#1C1B1A' : '#C9C2B9')};cursor:${exists ? 'pointer' : 'default'};`;
+    const buildPickerRow = (course, type, onlyIdx, excludeIdxArr, currentIdx, onPick) => {
+      const map = {};
+      course.sessions.forEach((s, i) => { const [date, ty] = s; if (ty !== type) return; if (onlyIdx && !onlyIdx.includes(i)) return; if (excludeIdxArr && excludeIdxArr.includes(i)) return; const day = this.weekday(date).slice(0, 3); if (!(day in map)) map[day] = i; });
+      return DOW.map(day => {
+        const idx = map[day]; const exists = idx !== undefined; const sel = exists && idx === currentIdx;
+        return { label: type === 'Morning' ? 'AM' : 'PM', exists, sel, style: pickerCellStyle(exists, sel), onClick: exists ? () => onPick(idx) : null };
+      });
+    };
+    const pickerCtx = S.sessionPickerCtx;
+    let sessionPickerDayHeaders = DOW.map(d => ({ label: d }));
+    let sessionPickerAM = [], sessionPickerPM = [];
+    let sessionPickerReturnModal = 'enroll';
+    if (pickerCtx === 'enroll0' || pickerCtx === 'enroll1') {
+      sessionPickerReturnModal = 'enroll';
+      if (enrollCourse) {
+        const slot = pickerCtx === 'enroll0' ? 0 : 1;
+        const otherIdx = S.enrollSel[slot === 0 ? 1 : 0];
+        const excl = otherIdx != null ? [otherIdx] : null;
+        const onPick = i => this.setState(st => { const arr = [...st.enrollSel]; arr[slot] = i; return { enrollSel: arr, modal: 'enroll' }; });
+        sessionPickerAM = buildPickerRow(enrollCourse, 'Morning', null, excl, S.enrollSel[slot], onPick);
+        sessionPickerPM = buildPickerRow(enrollCourse, 'Afternoon', null, excl, S.enrollSel[slot], onPick);
+      }
+    } else if (pickerCtx === 'adjustFrom' || pickerCtx === 'adjustTo') {
+      sessionPickerReturnModal = 'adjust';
+      if (adjustCourse) {
+        const isFrom = pickerCtx === 'adjustFrom';
+        const onlyIdx = isFrom ? curIdx : null;
+        const excl = isFrom ? null : curIdx;
+        const current = isFrom ? S.adjustFromIdx : S.adjustToIdx;
+        const onPick = i => this.setState({ [isFrom ? 'adjustFromIdx' : 'adjustToIdx']: i, modal: 'adjust' });
+        sessionPickerAM = buildPickerRow(adjustCourse, 'Morning', onlyIdx, excl, current, onPick);
+        sessionPickerPM = buildPickerRow(adjustCourse, 'Afternoon', onlyIdx, excl, current, onPick);
+      }
+    }
+    const closeSessionPicker = () => this.setState({ modal: sessionPickerReturnModal });
+
+    // Add Session modal (Admin) — pick recurring weekday+shift slots, generated across course.start–end
+    const sessKeyStyle = sel => `height:44px;border-radius:8px;font:600 12px Inter;cursor:pointer;border:1px solid ${sel ? '#F45D48' : '#E8DDD3'};background:${sel ? '#FBEDE4' : '#fff'};color:${sel ? '#F45D48' : '#1C1B1A'};`;
+    const toggleWeekdaySel = key => this.setState(st => ({ sessionWeekdaySel: st.sessionWeekdaySel.includes(key) ? st.sessionWeekdaySel.filter(k => k !== key) : [...st.sessionWeekdaySel, key] }));
+    const addSessionDayHeaders = DOW.map(d => ({ label: d }));
+    const addSessionAM = DOW.map(day => { const key = day + '|Morning'; const on = S.sessionWeekdaySel.includes(key); return { label: 'AM', sel: on, style: sessKeyStyle(on), onClick: () => toggleWeekdaySel(key) }; });
+    const addSessionPM = DOW.map(day => { const key = day + '|Afternoon'; const on = S.sessionWeekdaySel.includes(key); return { label: 'PM', sel: on, style: sessKeyStyle(on), onClick: () => toggleWeekdaySel(key) }; });
+
+    // Modals
+    const modal = S.modal;
+    const modalMeta = {
+      createUser: { title: 'Create user', subtitle: 'Add a new account to the system', width: '460px', btn: 'Create user', btnColor: '#F45D48' },
+      editUser: { title: 'Edit user', subtitle: 'Update name, email and profile', width: '460px', btn: 'Save changes', btnColor: '#F45D48' },
+      importCsv: { title: 'Import users from CSV', subtitle: 'Bulk-create accounts from a file', width: '540px', btn: 'Done', btnColor: '#F45D48' },
+      createCourse: { title: 'Create course', subtitle: 'New courses start in Upcoming status', width: '560px', btn: 'Create course', btnColor: '#F45D48' },
+      editCourse: { title: 'Edit course', subtitle: 'Update course information', width: '560px', btn: 'Save changes', btnColor: '#F45D48' },
+      session: { title: 'Course schedule', subtitle: 'Choose weekday & shift — repeats every week', width: '480px', btn: 'Save schedule', btnColor: '#F45D48' },
+      enroll: { title: 'Enroll in course', subtitle: enrollCourse ? enrollCourse.name : '', width: '560px', btn: 'Confirm enrollment', btnColor: '#F45D48' },
+      adjust: { title: 'Adjust session', subtitle: adjustCourse ? adjustCourse.name : '', width: '480px', btn: 'Save change', btnColor: '#F45D48' },
+      deleteSession: { title: 'Delete session?', subtitle: '', width: '420px', btn: 'Delete session', btnColor: '#D7372C' },
+      confirmStatus: { title: (selUser.active ? 'Deactivate' : 'Activate') + ' user?', subtitle: '', width: '420px', btn: (selUser.active ? 'Deactivate' : 'Activate'), btnColor: selUser.active ? '#D7372C' : '#1E875F' },
+      lecturerPicker: S.pickerContext === 'create'
+        ? { title: 'Select lecturer', subtitle: 'Choose who will lead this course', width: '480px', btn: '', btnColor: '#F45D48' }
+        : { title: 'Replace lecturer', subtitle: 'Assign a different lecturer to this course', width: '480px', btn: '', btnColor: '#F45D48' },
+      sessionPicker: { title: 'Select session', subtitle: 'Choose a session', width: '440px', btn: '', btnColor: '#F45D48' },
+    };
+    const meta = modalMeta[modal] || { title: '', subtitle: '', width: '460px', btn: 'Confirm', btnColor: '#F45D48' };
+    const showPrimaryBtn = modal !== 'lecturerPicker' && modal !== 'sessionPicker';
+    const cancelBtnLabel = (modal === 'lecturerPicker' || modal === 'sessionPicker') ? (modal === 'sessionPicker' ? 'Back' : 'Close') : 'Cancel';
+
+    const editIsLecturer = selUser.role === 'Lecturer';
+    const editShowProfile = selUser.role !== 'Admin';
+    const rolePicker = ['Admin','Lecturer','Student'].map(r => ({
+      label: r, onClick: () => this.setState({ newUserRole: r }),
+      style: `flex:1;height:44px;border-radius:8px;font:600 14px Inter;cursor:pointer;${S.newUserRole === r ? 'background:#F45D48;color:#fff;border:1px solid #F45D48;' : 'background:#fff;color:#5C5854;border:1px solid #D8C9BB;'}`,
+    }));
+    const sessionTypePicker = ['Morning','Afternoon'].map(t => ({
+      label: t, onClick: () => this.setState({ sessionType: t }),
+      style: `flex:1;height:44px;border-radius:8px;font:600 14px Inter;cursor:pointer;${S.sessionType === t ? 'background:#F45D48;color:#fff;border:1px solid #F45D48;' : 'background:#fff;color:#5C5854;border:1px solid #D8C9BB;'}`,
+    }));
+    const pickerLayout = this.props.lecturerPickerLayout ?? 'list';
+    const showLecturerDept = this.props.showLecturerDept ?? true;
+    const lecturerSearchLC = S.lecturerSearch.trim().toLowerCase();
+    const excludeId = S.pickerContext === 'replace' ? sel.lecturerId : null;
+    const lecturerOptions = this.users
+      .filter(u => u.role === 'Lecturer' && u.active && u.id !== excludeId)
+      .filter(l => l.name.toLowerCase().includes(lecturerSearchLC) || (l.profile || '').toLowerCase().includes(lecturerSearchLC))
+      .map(l => {
+        const isSelected = S.pickerContext === 'create' && S.createLecturerId === l.id;
+        return {
+          initials: this.initials(l.name), name: l.name, dept: l.profile, showDept: showLecturerDept,
+          onClick: () => {
+            if (S.pickerContext === 'create') {
+              this.setState({ createLecturerId: l.id, modal: 'createCourse' });
+            } else {
+              this.setState({ modal: null });
+              this.showToast('Lecturer replaced');
+            }
+          },
+          style: `display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:${isSelected ? '#FBEDE4' : '#fff'};border:1px solid ${isSelected ? '#F45D48' : '#E8DDD3'};border-radius:12px;cursor:pointer;transition:border 120ms;`,
+          checkStyle: `color:#F45D48;font-size:16px;font-weight:700;flex:none;${isSelected ? 'opacity:1;' : 'opacity:0;'}`,
+        };
+      });
+    const noLecturers = lecturerOptions.length === 0;
+    const lecturerListStyle = pickerLayout === 'grid'
+      ? 'display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:360px;overflow-y:auto;'
+      : 'display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;';
+
+    const confirmBodyMap = {
+      deleteSession: 'This session will be removed from the course. This action can’t be undone. A course must keep at least 2 sessions.',
+      confirmStatus: selUser.active
+        ? `${selUser.name} will no longer be able to sign in until reactivated.`
+        : `${selUser.name} will regain access to the system.`,
+    };
+
+    const confirmModal = () => {
+      if (S.modal === 'enroll' && S.enrollSel.filter(x => x != null).length !== 2) { this.showToast('Please select exactly 2 sessions'); return; }
+      if (S.modal === 'adjust' && (S.adjustFromIdx == null || S.adjustToIdx == null)) { this.showToast('Choose a session to switch to'); return; }
+      if (S.modal === 'session') {
+        if (!S.sessionWeekdaySel.length) { this.showToast('Select at least one day & shift'); return; }
+        const dowIdx = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 };
+        const startD = new Date(sel.start + 'T00:00:00'); const endD = new Date(sel.end + 'T00:00:00');
+        const wantedKeys = new Set(S.sessionWeekdaySel);
+        let removed = 0;
+        const kept = sel.sessions.filter(([date, type]) => {
+          if (this.isPast(date)) return true;
+          const day = this.weekday(date).slice(0, 3);
+          const keep = wantedKeys.has(day + '|' + type);
+          if (!keep) removed++;
+          return keep;
+        });
+        if (kept.length < 2 && kept.length < sel.sessions.length) { this.showToast('A course must keep at least 2 sessions'); return; }
+        sel.sessions = kept;
+        let added = 0;
+        for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+          const iso = this.isoOf(d);
+          if (this.isPast(iso)) continue;
+          S.sessionWeekdaySel.forEach(key => {
+            const [day, type] = key.split('|');
+            if (d.getDay() === dowIdx[day] && !sel.sessions.some(s => s[0] === iso && s[1] === type)) { sel.sessions.push([iso, type]); added++; }
+          });
+        }
+        sel.sessions.sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]));
+        this.setState({ modal: null, sessionWeekdaySel: [] });
+        this.showToast(added || removed ? `Schedule updated (+${added}/-${removed})` : 'No changes');
+        return;
+      }
+      const toastMap = {
+        createUser: 'User created', editUser: 'Changes saved', importCsv: 'Import complete',
+        createCourse: 'Course created', editCourse: 'Course updated', replaceLecturer: 'Lecturer replaced',
+        session: 'Session saved', deleteSession: 'Session deleted',
+        enroll: 'Enrolled successfully', adjust: 'Session updated',
+        confirmStatus: selUser.active ? 'User deactivated' : 'User activated',
+      };
+      const msg = toastMap[modal] || 'Done';
+      this.setState({ modal: null });
+      this.showToast(msg);
+    };
+
+    return {
+      // auth
+      showLogin: !S.authed, authed: S.authed,
+      showLoginPanel: S.screen !== 'reset', showResetPanel: S.screen === 'reset',
+      email: S.email, password: S.password,
+      onEmail: e => this.setState({ email: e.target.value }),
+      onPassword: e => this.setState({ password: e.target.value }),
+      doLogin: () => this.setState({ authed: true, role: 'admin', screen: 'dashboard' }),
+      loginAdmin: () => this.setState({ authed: true, role: 'admin', screen: 'dashboard' }),
+      loginLecturer: () => this.setState({ authed: true, role: 'lecturer', screen: 'dashboard' }),
+      loginStudent: () => this.setState({ authed: true, role: 'student', screen: 'available' }),
+      toReset: () => this.setState({ screen: 'reset' }),
+      backToLogin: () => this.setState({ screen: 'dashboard' }),
+      doReset: () => { this.setState({ screen: 'dashboard' }); this.showToast('Password reset'); },
+      doLogout: () => this.setState({ authed: false, role: 'admin', screen: 'dashboard', email: '', password: '' }),
+
+      // shell
+      roleLabel: identity.label,
+      userName: meUser.name, userEmail: meUser.email, userInitials: this.initials(meUser.name),
+      navItems,
+
+      // screen flags
+      isDashboard: S.screen === 'dashboard', isCourseDetail: S.screen === 'courseDetail',
+      isUsers: S.screen === 'users', isStatistics: S.screen === 'statistics',
+      isReports: S.screen === 'reports', isReportDetail: S.screen === 'reportDetail',
+      isGradingList: S.screen === 'grading' && !S.gradingCourseId, isGradingRoster: S.screen === 'grading' && !!S.gradingCourseId,
+      isAttendanceList: S.screen === 'attendance' && !S.attendanceCourseId, isAttendanceMark: S.screen === 'attendance' && !!S.attendanceCourseId,
+      isSchedule: S.screen === 'schedule', isAvailable: S.screen === 'available', isMyCourses: S.screen === 'mycourses', isSummary: S.screen === 'summary',
+
+      // dashboard
+      courseCountLabel: courseCountLabel,
+      canCreateCourse: S.role === 'admin', canManageCourse: S.role === 'admin',
+      courseSearch: S.courseSearch, onCourseSearch: e => this.setState({ courseSearch: e.target.value }),
+      statusFilters, courseRows, noCourses: courseRows.length === 0,
+      openCreateCourse: () => this.setState({ modal: 'createCourse', createLecturerId: null, lecturerSearch: '' }),
+      backToDashboard: () => this.setState({ screen: 'dashboard' }),
+
+      // course detail
+      detailName: sel.name, detailDesc: sel.desc || 'No description provided.',
+      detailStatusLabel: dp.label, detailStatusColor: dp.color, detailStatusBg: dp.bg,
+      detailLecturer: this.lecturerName(sel.lecturerId), detailCapacity: `${sel.enrolled} / ${sel.max}`,
+      detailStart: this.fmtDate(sel.start), detailEnd: this.fmtDate(sel.end), detailMax: String(sel.max),
+      sessionRows,
+      openEditCourse: this.openModal('editCourse'),
+      openReplaceLecturer: () => this.setState({ modal: 'lecturerPicker', pickerContext: 'replace', lecturerSearch: '' }),
+      openLecturerPickerCreate: () => this.setState({ modal: 'lecturerPicker', pickerContext: 'create', lecturerSearch: '' }),
+      onLecturerSearch: e => this.setState({ lecturerSearch: e.target.value }),
+      createLecturerLabel: S.createLecturerId ? this.lecturerName(S.createLecturerId) : 'Select lecturer',
+      createLecturerColor: S.createLecturerId ? '#1C1B1A' : '#8A847E',
+      isReplaceContext: S.pickerContext === 'replace',
+      lecturerSearch: S.lecturerSearch, lecturerListStyle, noLecturers,
+      openAddSession: openScheduleEditor,
+      courseWeekDayHeaders, courseWeekAM, courseWeekPM,
+
+      // users
+      userCountLabel: `${this.users.length} accounts`,
+      userSearch: S.userSearch, onUserSearch: e => this.setState({ userSearch: e.target.value }),
+      roleFilters, userRows, noUsers: userRows.length === 0,
+      openCreateUser: () => this.setState({ modal: 'createUser', newUserRole: 'Student', newUserPassword: '', newUserConfirmPassword: '' }),
+      newUserPassword: S.newUserPassword, onNewUserPassword: e => this.setState({ newUserPassword: e.target.value }),
+      newUserConfirmPassword: S.newUserConfirmPassword, onNewUserConfirmPassword: e => this.setState({ newUserConfirmPassword: e.target.value }),
+      openImportCsv: this.openModal('importCsv'),
+
+      // statistics
+      enrollBars, avgBars, statRows,
+
+      // reports
+      reportCards,
+      reportName: rep.name, backToReports: () => this.setState({ screen: 'reports' }),
+      reportTabs, tabGrades: S.reportTab === 'grades', tabAttendance: S.reportTab === 'attendance', tabDist: S.reportTab === 'dist',
+      gradeRows, attendanceRows, distRows: bands, pieGradient, pieTotal: String(totalGraded),
+
+      // modal
+      anyModal: !!modal,
+      mCreateUser: modal === 'createUser', mEditUser: modal === 'editUser', mImportCsv: modal === 'importCsv',
+      mCreateCourse: modal === 'createCourse', mEditCourse: modal === 'editCourse', mReplaceLecturer: modal === 'replaceLecturer',
+      mSession: modal === 'session', mConfirm: modal === 'deleteSession' || modal === 'confirmStatus',
+      mPickLecturer: modal === 'lecturerPicker',
+      modalTitle: meta.title, modalSubtitle: meta.subtitle, modalWidth: meta.width,
+      primaryBtnLabel: meta.btn, primaryBtnColor: meta.btnColor, showPrimaryBtn, cancelBtnLabel,
+      confirmBody: confirmBodyMap[modal] || '',
+      closeModal: () => this.setState({ modal: modal === 'sessionPicker' ? sessionPickerReturnModal : (modal === 'lecturerPicker' && S.pickerContext === 'create' ? 'createCourse' : null) }),
+      confirmModal, stop: e => e.stopPropagation(),
+      rolePicker, sessionTypePicker, lecturerOptions, csvErrors: this.csvErrors,
+      sessionPickerDayHeaders, sessionPickerAM, sessionPickerPM, closeSessionPicker,
+      editUserName: selUser.name, editUserEmail: selUser.email, editUserRole: selUser.role,
+      editShowProfile,
+      editProfileLabel: editIsLecturer ? 'Department' : 'Major',
+      editProfilePlaceholder: editIsLecturer ? 'e.g. Khoa Công nghệ Thông tin' : 'e.g. Kỹ thuật Phần mềm',
+      editProfileValue: selUser.profile,
+
+      // grading (lecturer)
+      gradingCourses, noGradingCourses: gradingCourses.length === 0,
+      backToGrading: () => this.setState({ gradingCourseId: null }),
+      gradeCourseName: gradeCourse ? gradeCourse.name : '', gradeCourseStatusLabel: gcp ? gcp.label : '', gradeCourseStatusColor: gcp ? gcp.color : '#8A847E', gradeCourseStatusBg: gcp ? gcp.bg : '#F3EEE9',
+      rosterSearch: S.rosterSearch, onRosterSearch: e => this.setState({ rosterSearch: e.target.value }),
+      rosterGradeRows,
+
+      // attendance (lecturer)
+      attendanceCourses, noAttendanceCourses: attendanceCourses.length === 0,
+      backToAttendance: () => this.setState({ attendanceCourseId: null }),
+      attCourseName: attCourse ? attCourse.name : '', attCourseStatusLabel: acp ? acp.label : '', attCourseStatusColor: acp ? acp.color : '#8A847E', attCourseStatusBg: acp ? acp.bg : '#F3EEE9',
+      attSessionLabel, attRosterRows,
+      attWeekDayHeaders, attWeekAM, attWeekPM, attWeekLabel, prevAttWeek, nextAttWeek,
+
+      // schedule (lecturer & student)
+      scheduleTitle: S.role === 'lecturer' ? 'Teaching schedule' : 'My schedule',
+      scheduleSub: S.role === 'lecturer' ? 'Your class sessions, week by week.' : 'Your class sessions and attendance, week by week.',
+      scheduleDays, scheduleMorning, scheduleAfternoon, weekLabel, scheduleShowLegend: S.role === 'student',
+      prevWeek: () => this.setState(s => ({ weekOffset: s.weekOffset - 1 })),
+      nextWeek: () => this.setState(s => ({ weekOffset: s.weekOffset + 1 })),
+      thisWeek: () => this.setState({ weekOffset: 0 }),
+
+      // available (student)
+      availableCards, noAvailable,
+
+      // my courses (student)
+      myEnrollRows,
+
+      // summary (student)
+      gpa: gradedEnroll.length ? gpaVal.toFixed(1) : '—', gpaColor: gradedEnroll.length ? this.gradeColor(gpaVal) : '#8A847E',
+      attRate: `${attRateVal}%`, enrollCount: String(this.studentEnroll.length), summaryRows,
+
+      // enroll & adjust modals (student)
+      mEnroll: modal === 'enroll', mAdjust: modal === 'adjust', mSessionPicker: modal === 'sessionPicker',
+      enrollPct, enrollCapLabel, enrollBarColor, enrollHint,
+      enrollSlot0Label, enrollSlot1Label, enrollSlot0Color, enrollSlot1Color, openEnrollSlot0, openEnrollSlot1,
+      adjustFromLabel, adjustToLabel, adjustFromColor, adjustToColor, openAdjustFromPicker, openAdjustToPicker,
+      addSessionDayHeaders, addSessionAM, addSessionPM,
+
+      // toast
+      toast: S.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

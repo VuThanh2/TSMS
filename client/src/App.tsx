@@ -1,122 +1,88 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { Navigate, Route, Routes } from 'react-router-dom';
 
-function App() {
-  const [count, setCount] = useState(0)
+import ProtectedRoute from '@/app/routes/ProtectedRoute';
+import AppLayout from '@/app/layouts/AppLayout';
+import { useAuth, getDefaultRouteForRole } from '@/shared/lib/auth-context';
+import LoginPage from '@/modules/identity/login/LoginPage';
+import ResetPasswordPage from '@/modules/identity/reset-password/ResetPasswordPage';
+import CourseGridPage from '@/modules/course-management/course-grid/CourseGridPage';
+import CourseDetailPage from '@/modules/course-management/course-detail/CourseDetailPage';
+import UserListPage from '@/modules/identity/user-management/UserListPage';
+import CourseStatisticsPage from '@/modules/reporting/course-statistics/CourseStatisticsPage';
+import CourseReportPage from '@/modules/reporting/course-report/CourseReportPage';
 
+function PlaceholderPage({ title }: { title: string }) {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div style={{ padding: 24 }}>
+      <h1>{title}</h1>
+      <p>Chưa code — placeholder chờ page thật.</p>
+    </div>
+  );
 }
 
-export default App
+function RootRedirect() {
+  const { state } = useAuth();
+
+  // Cùng lý do với ProtectedRoute: chưa đọc xong localStorage thì chưa được quyết định
+  // điều hướng — nếu không sẽ có 1 khoảnh khắc "nháy" về /login rồi mới nhảy lại đúng
+  // trang, gây giật UI khó chịu mỗi lần F5.
+  if (state.status === 'loading') {
+    return null;
+  }
+
+  if (state.status === 'unauthenticated') {
+    return <Navigate to="/login" replace />;
+  }
+  return <Navigate to={getDefaultRouteForRole(state.user.role)} replace />;
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<RootRedirect />} />
+
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+      <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
+        <Route element={<AppLayout />}>
+          <Route path="/admin/dashboard" element={<CourseGridPage />} />
+          <Route path="/admin/users" element={<UserListPage />} />
+          <Route path="/admin/courses/:courseId" element={<CourseDetailPage />} />
+          <Route path="/admin/reports/statistics" element={<CourseStatisticsPage />} />
+          <Route path="/admin/reports/courses/:courseId" element={<CourseReportPage />} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute allowedRoles={['Lecturer']} />}>
+        <Route
+          path="/lecturer/dashboard"
+          element={<PlaceholderPage title="Course Grid (Lecturer)" />}
+        />
+        <Route
+          path="/lecturer/courses/:courseId"
+          element={<PlaceholderPage title="Course Student List (Grading)" />}
+        />
+        <Route path="/lecturer/schedule" element={<PlaceholderPage title="My Schedule (Lecturer)" />} />
+        <Route
+          path="/lecturer/sessions/:sessionId/attendance"
+          element={<PlaceholderPage title="Attendance Marking Screen" />}
+        />
+        <Route
+          path="/lecturer/reports/courses/:courseId"
+          element={<PlaceholderPage title="Course Report (Tab Attendance only)" />}
+        />
+      </Route>
+
+      <Route element={<ProtectedRoute allowedRoles={['Student']} />}>
+        <Route path="/student/courses" element={<PlaceholderPage title="Available Courses / My Courses" />} />
+        <Route path="/student/schedule" element={<PlaceholderPage title="My Schedule (Student)" />} />
+        <Route path="/student/summary" element={<PlaceholderPage title="Personal Summary Screen" />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+export default App;
