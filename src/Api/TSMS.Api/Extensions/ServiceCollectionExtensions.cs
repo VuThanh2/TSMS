@@ -12,6 +12,7 @@ using Identity.Presentation.Controllers;
 using Reporting.Infrastructure.Extensions;
 using Reporting.Infrastructure.Persistence;
 using Reporting.Presentation.Controllers;
+using TSMS.Api.Options;
 
 namespace TSMS.Api.Extensions;
 
@@ -59,13 +60,13 @@ public static class ServiceCollectionExtensions {
     private static void AddCorsPolicy(
         this IServiceCollection services,
         IConfiguration configuration) {
-        var allowedOrigins = configuration
-            .GetSection("Cors:AllowedOrigins")
-            .Get<string[]>() ?? [];
+        var corsOptions = configuration
+            .GetSection(CorsOptions.SectionName)
+            .Get<CorsOptions>() ?? new CorsOptions();
 
         services.AddCors(options => {
             options.AddPolicy("AllowFrontend", policy => {
-                policy.WithOrigins(allowedOrigins)
+                policy.WithOrigins(corsOptions.AllowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();

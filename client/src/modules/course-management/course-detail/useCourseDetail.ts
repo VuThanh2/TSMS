@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { message } from 'antd';
+import { App } from 'antd';
 import type { AxiosError } from 'axios';
 
 import {
@@ -37,6 +37,7 @@ function useInvalidateCourse(courseId: string) {
 }
 
 export function useUpdateCourse(courseId: string, onSuccess?: () => void) {
+  const { message } = App.useApp();
   const invalidate = useInvalidateCourse(courseId);
   return useMutation({
     mutationFn: (data: { name: string; description?: string; endDate: string; maxCapacity: number }) =>
@@ -58,6 +59,7 @@ export function useUpdateCourse(courseId: string, onSuccess?: () => void) {
 }
 
 export function useReplaceLecturer(courseId: string, onSuccess?: () => void) {
+  const { message } = App.useApp();
   const invalidate = useInvalidateCourse(courseId);
   return useMutation({
     mutationFn: (data: { lecturerId: string }) => replaceLecturerApi(courseId, data),
@@ -79,6 +81,7 @@ export function useReplaceLecturer(courseId: string, onSuccess?: () => void) {
 }
 
 export function useAddWeeklySlot(courseId: string, onSuccess?: () => void) {
+  const { message } = App.useApp();
   const invalidate = useInvalidateCourse(courseId);
   return useMutation({
     mutationFn: (data: { dayOfWeek: string; sessionType: string }) => addWeeklySlotApi(courseId, data),
@@ -99,6 +102,7 @@ export function useAddWeeklySlot(courseId: string, onSuccess?: () => void) {
 }
 
 export function useRemoveWeeklySlot(courseId: string) {
+  const { message } = App.useApp();
   const invalidate = useInvalidateCourse(courseId);
   return useMutation({
     mutationFn: (weeklySlotId: string) => removeWeeklySlotApi(courseId, weeklySlotId),

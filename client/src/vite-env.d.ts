@@ -5,6 +5,7 @@
 // type-safety của TypeScript ngay tại nơi quan trọng nhất (URL gọi API).
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL: string;
+  readonly VITE_SIGNALR_HUB_URL: string;
 }
 
 interface ImportMeta {

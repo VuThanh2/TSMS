@@ -12,3 +12,7 @@ export interface CourseGridParams {
 export function getCoursesApi(params: CourseGridParams) {
   return api.get<PagedResult<CourseListItem>>('/courses', { params });
 }
+
+export function getMyCourseApi(params: CourseGridParams) {
+  return api.get<PagedResult<CourseListItem>>('/courses/my-courses', { params });
+}

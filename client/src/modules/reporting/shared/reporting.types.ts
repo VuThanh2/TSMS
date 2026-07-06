@@ -1,5 +1,22 @@
 import type { CourseStatus } from '@/modules/course-management/shared/course.types';
 
+export interface PersonalSummaryItem {
+  courseId: string;
+  courseName: string;
+  status: CourseStatus;
+  grade: number | null;
+  totalSessions: number;
+  presentCount: number;
+  excusedCount: number;
+  absentCount: number;
+  attendanceRate: number;
+}
+
+export interface PersonalSummaryResponse {
+  overallGpa: number | null;
+  items: PersonalSummaryItem[];
+}
+
 export interface CourseStatisticsItem {
   courseId: string;
   courseName: string;

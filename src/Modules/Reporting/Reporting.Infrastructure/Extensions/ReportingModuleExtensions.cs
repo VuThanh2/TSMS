@@ -13,7 +13,7 @@ namespace Reporting.Infrastructure.Extensions;
 public static class ReportingModuleExtensions {
     public static readonly Assembly ApplicationAssembly =
         typeof(Reporting.Application.CourseStatistics.GetCourseStatistics.GetCourseStatisticsQuery).Assembly;
-
+    
     public static IServiceCollection AddReportingModule(
         this IServiceCollection services,
         IConfiguration configuration) {

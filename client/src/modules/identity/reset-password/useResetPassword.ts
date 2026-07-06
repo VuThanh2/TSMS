@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { message } from 'antd';
+import { App } from 'antd';
 import type { AxiosError } from 'axios';
 
 import { resetPasswordApi } from './reset-password.api';
@@ -13,6 +13,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export function useResetPassword() {
+  const { message } = App.useApp();
   const navigate = useNavigate();
 
   return useMutation({

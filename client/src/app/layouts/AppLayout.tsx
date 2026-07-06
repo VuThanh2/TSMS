@@ -1,16 +1,20 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { message } from 'antd';
+import { App } from 'antd';
 import {
   BookOutlined,
   TeamOutlined,
   BarChartOutlined,
   FileTextOutlined,
+  CalendarOutlined,
+  LineChartOutlined,
+  SearchOutlined,
+  EditOutlined,
+  CheckSquareOutlined,
 } from '@ant-design/icons';
 
 import { useAuth } from '@/shared/lib/auth-context';
 import { logoutApi } from '@/modules/identity/shared/auth.api';
 
-// Nav items theo role — hiện tại chỉ Admin, sau sẽ mở rộng cho Lecturer/Student
 const ADMIN_NAV = [
   { to: '/admin/dashboard', label: 'Courses', icon: BookOutlined },
   { to: '/admin/users', label: 'Users', icon: TeamOutlined },
@@ -18,7 +22,23 @@ const ADMIN_NAV = [
   { to: '/admin/reports', label: 'Reports', icon: FileTextOutlined },
 ];
 
+const LECTURER_NAV = [
+  { to: '/lecturer/dashboard', label: 'My Courses', icon: BookOutlined },
+  { to: '/lecturer/grading', label: 'Grading', icon: EditOutlined },
+  { to: '/lecturer/attendance', label: 'Attendance', icon: CheckSquareOutlined },
+  { to: '/lecturer/schedule', label: 'Schedule', icon: CalendarOutlined },
+  { to: '/lecturer/reports', label: 'Reports', icon: FileTextOutlined },
+];
+
+const STUDENT_NAV = [
+  { to: '/student/available-courses', label: 'Available Courses', icon: SearchOutlined },
+  { to: '/student/courses', label: 'My Courses', icon: BookOutlined },
+  { to: '/student/schedule', label: 'Schedule', icon: CalendarOutlined },
+  { to: '/student/summary', label: 'My Summary', icon: LineChartOutlined },
+];
+
 export default function AppLayout() {
+  const { message } = App.useApp();
   const { state, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -43,7 +63,8 @@ export default function AppLayout() {
     navigate('/login', { replace: true });
   }
 
-  const navItems = role === 'Admin' ? ADMIN_NAV : ADMIN_NAV;
+  const navItems =
+    role === 'Admin' ? ADMIN_NAV : role === 'Lecturer' ? LECTURER_NAV : STUDENT_NAV;
 
   return (
     <div className="grid min-h-screen" style={{ gridTemplateColumns: '248px 1fr' }}>
@@ -68,7 +89,7 @@ export default function AppLayout() {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === '/admin/reports'}
+              end={item.to === '/admin/reports' || item.to === '/lecturer/reports'}
               className={({ isActive }) =>
                 `flex h-10 items-center gap-3 rounded-lg px-3 text-[14px] font-semibold transition-colors ${
                   isActive

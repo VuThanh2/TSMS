@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { message } from 'antd';
+import { App } from 'antd';
 import type { AxiosError } from 'axios';
 
 import {
@@ -57,6 +57,7 @@ const STATUS_ERROR_MESSAGES: Record<string, string> = {
 };
 
 export function useCreateUser(onSuccess?: () => void) {
+  const { message } = App.useApp();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createUserApi,
@@ -78,6 +79,7 @@ export function useCreateUser(onSuccess?: () => void) {
 }
 
 export function useEditUser(onSuccess?: () => void) {
+  const { message } = App.useApp();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, ...data }: { userId: string; fullName: string; email: string; department?: string; major?: string }) =>
@@ -94,6 +96,7 @@ export function useEditUser(onSuccess?: () => void) {
 }
 
 export function useToggleUserStatus() {
+  const { message } = App.useApp();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
@@ -110,6 +113,7 @@ export function useToggleUserStatus() {
 }
 
 export function useImportCsv() {
+  const { message } = App.useApp();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: importUsersCsvApi,

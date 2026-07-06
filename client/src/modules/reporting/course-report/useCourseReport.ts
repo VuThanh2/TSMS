@@ -9,14 +9,16 @@ import {
 
 export type ReportTab = 'grades' | 'attendance' | 'distribution';
 
-export function useCourseReport(courseId: string) {
-  const [activeTab, setActiveTab] = useState<ReportTab>('grades');
+export function useCourseReport(courseId: string, initialTab: ReportTab = 'grades') {
+  const [activeTab, setActiveTab] = useState<ReportTab>(initialTab);
 
   const grades = useQuery({
     queryKey: ['student-grades', courseId],
     queryFn: () => getStudentGradesApi(courseId),
     select: (res) => res.data,
     enabled: activeTab === 'grades',
+    retry: false,
+    staleTime: 5 * 60 * 1000,
   });
 
   const attendance = useQuery({
@@ -24,6 +26,8 @@ export function useCourseReport(courseId: string) {
     queryFn: () => getAttendanceReportApi(courseId),
     select: (res) => res.data,
     enabled: activeTab === 'attendance',
+    retry: false,
+    staleTime: 5 * 60 * 1000,
   });
 
   const distribution = useQuery({
@@ -31,6 +35,8 @@ export function useCourseReport(courseId: string) {
     queryFn: () => getScoreDistributionApi(courseId),
     select: (res) => res.data,
     enabled: activeTab === 'distribution',
+    retry: false,
+    staleTime: 5 * 60 * 1000,
   });
 
   return { activeTab, setActiveTab, grades, attendance, distribution };

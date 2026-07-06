@@ -6,26 +6,23 @@ import { useAuth, getDefaultRouteForRole } from '@/shared/lib/auth-context';
 import LoginPage from '@/modules/identity/login/LoginPage';
 import ResetPasswordPage from '@/modules/identity/reset-password/ResetPasswordPage';
 import CourseGridPage from '@/modules/course-management/course-grid/CourseGridPage';
+import LecturerCourseGridPage from '@/modules/course-management/course-grid/LecturerCourseGridPage';
 import CourseDetailPage from '@/modules/course-management/course-detail/CourseDetailPage';
 import UserListPage from '@/modules/identity/user-management/UserListPage';
 import CourseStatisticsPage from '@/modules/reporting/course-statistics/CourseStatisticsPage';
+import CourseReportGridPage from '@/modules/reporting/course-report/CourseReportGridPage';
 import CourseReportPage from '@/modules/reporting/course-report/CourseReportPage';
-
-function PlaceholderPage({ title }: { title: string }) {
-  return (
-    <div style={{ padding: 24 }}>
-      <h1>{title}</h1>
-      <p>Chưa code — placeholder chờ page thật.</p>
-    </div>
-  );
-}
+import GradingPage from '@/modules/enrollment-management/grading/GradingPage';
+import SchedulePage from '@/modules/enrollment-management/schedule/SchedulePage';
+import StudentSchedulePage from '@/modules/enrollment-management/schedule/StudentSchedulePage';
+import AttendancePage from '@/modules/enrollment-management/attendance/AttendancePage';
+import StudentCoursesPage from '@/modules/enrollment-management/enrollment/StudentCoursesPage';
+import AvailableCoursesPage from '@/modules/enrollment-management/enrollment/AvailableCoursesPage';
+import PersonalSummaryPage from '@/modules/reporting/personal-summary/PersonalSummaryPage';
 
 function RootRedirect() {
   const { state } = useAuth();
 
-  // Cùng lý do với ProtectedRoute: chưa đọc xong localStorage thì chưa được quyết định
-  // điều hướng — nếu không sẽ có 1 khoảnh khắc "nháy" về /login rồi mới nhảy lại đúng
-  // trang, gây giật UI khó chịu mỗi lần F5.
   if (state.status === 'loading') {
     return null;
   }
@@ -50,34 +47,29 @@ function App() {
           <Route path="/admin/users" element={<UserListPage />} />
           <Route path="/admin/courses/:courseId" element={<CourseDetailPage />} />
           <Route path="/admin/reports/statistics" element={<CourseStatisticsPage />} />
+          <Route path="/admin/reports" element={<CourseReportGridPage />} />
           <Route path="/admin/reports/courses/:courseId" element={<CourseReportPage />} />
         </Route>
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['Lecturer']} />}>
-        <Route
-          path="/lecturer/dashboard"
-          element={<PlaceholderPage title="Course Grid (Lecturer)" />}
-        />
-        <Route
-          path="/lecturer/courses/:courseId"
-          element={<PlaceholderPage title="Course Student List (Grading)" />}
-        />
-        <Route path="/lecturer/schedule" element={<PlaceholderPage title="My Schedule (Lecturer)" />} />
-        <Route
-          path="/lecturer/sessions/:sessionId/attendance"
-          element={<PlaceholderPage title="Attendance Marking Screen" />}
-        />
-        <Route
-          path="/lecturer/reports/courses/:courseId"
-          element={<PlaceholderPage title="Course Report (Tab Attendance only)" />}
-        />
+        <Route element={<AppLayout />}>
+          <Route path="/lecturer/dashboard" element={<LecturerCourseGridPage />} />
+          <Route path="/lecturer/grading" element={<GradingPage />} />
+          <Route path="/lecturer/attendance" element={<AttendancePage />} />
+          <Route path="/lecturer/schedule" element={<SchedulePage />} />
+          <Route path="/lecturer/reports" element={<CourseReportGridPage />} />
+          <Route path="/lecturer/reports/courses/:courseId" element={<CourseReportPage />} />
+        </Route>
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['Student']} />}>
-        <Route path="/student/courses" element={<PlaceholderPage title="Available Courses / My Courses" />} />
-        <Route path="/student/schedule" element={<PlaceholderPage title="My Schedule (Student)" />} />
-        <Route path="/student/summary" element={<PlaceholderPage title="Personal Summary Screen" />} />
+        <Route element={<AppLayout />}>
+          <Route path="/student/available-courses" element={<AvailableCoursesPage />} />
+          <Route path="/student/courses" element={<StudentCoursesPage />} />
+          <Route path="/student/schedule" element={<StudentSchedulePage />} />
+          <Route path="/student/summary" element={<PersonalSummaryPage />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

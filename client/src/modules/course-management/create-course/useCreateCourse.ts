@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { message } from 'antd';
+import { App } from 'antd';
 import type { AxiosError } from 'axios';
 
 import { createCourseApi, type CreateCourseRequest } from './create-course.api';
@@ -11,6 +11,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export function useCreateCourse(onSuccess?: () => void) {
+  const { message } = App.useApp();
   const queryClient = useQueryClient();
 
   return useMutation({

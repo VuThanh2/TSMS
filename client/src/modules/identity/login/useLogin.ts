@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { message } from 'antd';
+import { App } from 'antd';
 import { jwtDecode } from 'jwt-decode';
 import type { AxiosError } from 'axios';
 
@@ -8,6 +8,7 @@ import { useAuth, getDefaultRouteForRole, type Role } from '@/shared/lib/auth-co
 import { loginApi } from './login.api';
 
 export function useLogin() {
+  const { message } = App.useApp();
   const { login } = useAuth();
   const navigate = useNavigate();
 
