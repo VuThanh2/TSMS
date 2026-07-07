@@ -233,6 +233,9 @@ public class Course : AggregateRoot {
     /// Hủy 1 buổi CỤ THỂ (vd nghỉ lễ) mà không xóa cả WeeklySlot — các tuần khác vẫn diễn ra bình thường.
     /// Không còn enforce "tối thiểu 2 ClassSession" — rule đó giờ thuộc về WeeklySlot (RemoveWeeklySlot).
     public Result CancelClassSession(Guid classSessionId) {
+        if (Status == CourseStatus.Completed)
+            return Result.Failure(CourseErrors.CompletedCourseIsImmutable);
+
         var session = _classSessions.FirstOrDefault(s => s.Id == classSessionId);
         if (session is null)
             return Result.Failure(CourseErrors.ClassSessionNotFound);
