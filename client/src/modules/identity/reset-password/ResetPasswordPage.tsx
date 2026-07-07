@@ -47,7 +47,7 @@ export default function ResetPasswordPage() {
             { type: 'email', message: 'Email không hợp lệ' },
           ]}
         >
-          <Input prefix={<MailOutlined />} placeholder="you@university.edu" />
+          <Input prefix={<MailOutlined />} placeholder="you@university.edu" className="h-12" />
         </Form.Item>
 
         <Form.Item
@@ -58,7 +58,11 @@ export default function ResetPasswordPage() {
             { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
           ]}
         >
-          <Input.Password prefix={<LockOutlined />} placeholder="At least 8 characters" />
+          <Input.Password
+            prefix={<LockOutlined />}
+            placeholder="At least 8 characters"
+            className="h-12"
+          />
         </Form.Item>
 
         <Form.Item
@@ -77,11 +81,15 @@ export default function ResetPasswordPage() {
             }),
           ]}
         >
-          <Input.Password prefix={<LockOutlined />} placeholder="Re-enter password" />
+          <Input.Password
+            prefix={<LockOutlined />}
+            placeholder="Re-enter password"
+            className="h-12"
+          />
         </Form.Item>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" block loading={isPending}>
+          <Button type="primary" htmlType="submit" block loading={isPending} className="h-12">
             Reset password
           </Button>
         </Form.Item>
@@ -89,7 +97,7 @@ export default function ResetPasswordPage() {
         <div className="text-center">
           <Link
             to="/login"
-            className="text-[15px] font-medium text-text-secondary no-underline hover:text-text"
+            className="flex h-11 items-center justify-center text-[15px] font-medium text-text-secondary no-underline hover:text-text"
           >
             Back to sign in
           </Link>

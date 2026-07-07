@@ -1,5 +1,4 @@
 import { Modal, Upload, Table } from 'antd';
-import { InboxOutlined } from '@ant-design/icons';
 
 import { useImportCsv } from './useUserList';
 
@@ -24,13 +23,9 @@ export default function ImportCsvModal({ open, onClose }: ImportCsvModalProps) {
       open={open}
       onCancel={handleClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       width={560}
     >
-      <p className="mb-4 text-[13px] text-text-muted">
-        Required columns: <strong>FullName, Email, Role, Password</strong>
-      </p>
-
       <Upload.Dragger
         accept=".csv"
         maxCount={1}
@@ -39,10 +34,13 @@ export default function ImportCsvModal({ open, onClose }: ImportCsvModalProps) {
           mutate(file as File);
         }}
         disabled={isPending}
+        className="!bg-[#FFFCF9] !border-border-input"
       >
-        <p className="ant-upload-drag-icon"><InboxOutlined /></p>
-        <p className="ant-upload-text">
-          {isPending ? 'Importing…' : 'Drop a CSV file here or click to browse'}
+        <p className="ant-upload-text mb-1 text-[15px] font-semibold">
+          {isPending ? 'Importing…' : 'Drop a CSV file here'}
+        </p>
+        <p className="ant-upload-hint text-[13px] text-text-muted">
+          Columns: FullName, Email, Role, Password
         </p>
       </Upload.Dragger>
 

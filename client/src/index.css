@@ -30,3 +30,9 @@ input:focus, select:focus, button:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(244, 93, 72, 0.30);
 }
+
+/* Table row có onClick (Course Grid...) — hover đổi màu nền theo mock */
+.tsms-clickable-row { cursor: pointer; }
+.tsms-clickable-row:hover > td {
+  background: var(--color-bg-card) !important;
+}

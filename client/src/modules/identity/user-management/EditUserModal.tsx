@@ -41,7 +41,7 @@ export default function EditUserModal({ userId, open, onClose }: EditUserModalPr
       onCancel={onClose}
       confirmLoading={isPending}
       okText="Save"
-      destroyOnClose
+      destroyOnHidden
       width={480}
     >
       {isLoading ? (
@@ -64,7 +64,7 @@ export default function EditUserModal({ userId, open, onClose }: EditUserModalPr
               { type: 'email', message: 'Email không hợp lệ' },
             ]}
           >
-            <Input />
+            <Input className="font-mono" />
           </Form.Item>
 
           {/* Profile field tuỳ theo role */}

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Modal, Checkbox, Spin, Alert } from 'antd';
+import { Modal, Spin, Alert } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 
 import { getCourseWeeklySlotsApi } from './enrollment.api';
+import SessionPicker from './SessionPicker';
 import type { AvailableCourse } from './enrollment.types';
 import type { WeeklySlot } from '@/modules/course-management/shared/course.types';
 
@@ -20,6 +21,12 @@ function formatSlot(slot: WeeklySlot) {
   return `${DAY_VN[slot.dayOfWeek] ?? slot.dayOfWeek} — ${slot.sessionType === 'Morning' ? 'Sáng (AM)' : 'Chiều (PM)'}`;
 }
 
+function capacityColor(pct: number) {
+  if (pct >= 1) return '#D7372C';
+  if (pct >= 0.75) return '#E5A20B';
+  return '#1E875F';
+}
+
 interface Props {
   course: AvailableCourse | null;
   onClose: () => void;
@@ -28,7 +35,11 @@ interface Props {
 }
 
 export default function EnrollModal({ course, onClose, onConfirm, isLoading }: Props) {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [slotIds, setSlotIds] = useState<[string | undefined, string | undefined]>([
+    undefined,
+    undefined,
+  ]);
+  const [pickerIndex, setPickerIndex] = useState<0 | 1 | null>(null);
 
   const slotsQuery = useQuery({
     queryKey: ['weekly-slots', course?.courseId],
@@ -38,17 +49,21 @@ export default function EnrollModal({ course, onClose, onConfirm, isLoading }: P
   });
 
   function handleOk() {
-    if (!course) return;
-    onConfirm(course.courseId, selectedIds);
+    if (!course || !slotIds[0] || !slotIds[1]) return;
+    onConfirm(course.courseId, [slotIds[0], slotIds[1]]);
   }
 
   // reset khi modal đóng/mở course mới
   function afterOpenChange(open: boolean) {
-    if (!open) setSelectedIds([]);
+    if (!open) {
+      setSlotIds([undefined, undefined]);
+      setPickerIndex(null);
+    }
   }
 
   const slots = slotsQuery.data ?? [];
-  const isExactTwo = selectedIds.length === 2;
+  const isExactTwo = !!slotIds[0] && !!slotIds[1];
+  const pct = course && course.maxCapacity > 0 ? course.enrolledCount / course.maxCapacity : 0;
 
   return (
     <Modal
@@ -61,25 +76,24 @@ export default function EnrollModal({ course, onClose, onConfirm, isLoading }: P
       destroyOnHidden
       afterOpenChange={afterOpenChange}
     >
-      {/* Course info */}
       {course && (
-        <div className="mb-4 grid grid-cols-2 gap-2 rounded-lg border border-border bg-bg-card px-4 py-3 text-[14px]">
-          <span className="text-text-muted">Giảng viên</span>
-          <span className="font-semibold">{course.lecturerName}</span>
-          <span className="text-text-muted">Thời gian</span>
-          <span className="font-mono">
-            {course.startDate} – {course.endDate}
-          </span>
-          <span className="text-text-muted">Còn chỗ</span>
-          <span className="font-mono font-semibold">
-            {course.maxCapacity - course.enrolledCount}/{course.maxCapacity}
-          </span>
+        <div className="mb-4 rounded-xl p-3.5" style={{ background: '#FBEDE4' }}>
+          <div className="mb-1.5 flex justify-between text-[13px]">
+            <span className="font-semibold text-text-secondary">Capacity</span>
+            <span className="font-mono font-semibold">
+              {course.enrolledCount}/{course.maxCapacity}
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full" style={{ background: '#F1E7DD' }}>
+            <div
+              className="h-full rounded-full"
+              style={{ width: `${Math.min(pct, 1) * 100}%`, background: capacityColor(pct) }}
+            />
+          </div>
         </div>
       )}
 
-      <p className="mb-3 text-[14px] text-text-secondary">
-        Chọn đúng <strong>2 slot học</strong> để hoàn tất đăng ký.
-      </p>
+      <label className="mb-2.5 block text-[14px] font-semibold">Choose exactly 2 sessions</label>
 
       {slotsQuery.isLoading ? (
         <div className="flex justify-center py-6">
@@ -87,30 +101,43 @@ export default function EnrollModal({ course, onClose, onConfirm, isLoading }: P
         </div>
       ) : slots.length === 0 ? (
         <Alert type="warning" description="Khóa học chưa có slot học nào." showIcon />
+      ) : pickerIndex !== null ? (
+        <SessionPicker
+          slots={slots}
+          disabledSlotIds={[slotIds[1 - pickerIndex]].filter((v): v is string => !!v)}
+          selectedSlotId={slotIds[pickerIndex]}
+          onPick={(id) => {
+            const next: [string | undefined, string | undefined] = [...slotIds];
+            next[pickerIndex] = id;
+            setSlotIds(next);
+            setPickerIndex(null);
+          }}
+        />
       ) : (
-        <Checkbox.Group
-          value={selectedIds}
-          onChange={(vals) => setSelectedIds(vals as string[])}
-          className="flex w-full flex-col gap-2"
-        >
-          {slots.map((slot) => (
-            <Checkbox
-              key={slot.weeklySlotId}
-              value={slot.weeklySlotId}
-              disabled={selectedIds.length >= 2 && !selectedIds.includes(slot.weeklySlotId)}
-              className="rounded-lg border border-border px-4 py-2.5 hover:bg-bg-card"
-            >
-              {formatSlot(slot)}
-            </Checkbox>
-          ))}
-        </Checkbox.Group>
+        <div className="flex flex-col gap-2.5">
+          {([0, 1] as const).map((i) => {
+            const slot = slots.find((s) => s.weeklySlotId === slotIds[i]);
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setPickerIndex(i)}
+                className="flex h-12 w-full items-center justify-between rounded-lg border border-border-input bg-white px-3.5 text-[15px] font-semibold"
+                style={{ color: slot ? '#1C1B1A' : '#8A847E' }}
+              >
+                <span>{slot ? formatSlot(slot) : `Chọn slot ${i + 1}`}</span>
+                <span className="text-[13px] font-medium text-text-muted">Change</span>
+              </button>
+            );
+          })}
+        </div>
       )}
 
-      {!isExactTwo && selectedIds.length > 0 && (
-        <p className="mt-3 text-[13px] text-[#D7372C]">
-          Đã chọn {selectedIds.length}/2 slot.
-        </p>
-      )}
+      <div className="mt-3 text-[13px] text-text-muted">
+        {!isExactTwo && (slotIds[0] || slotIds[1])
+          ? 'Đã chọn 1/2 slot. Chọn thêm 1 slot nữa để hoàn tất.'
+          : 'Slot đã chọn phải khác nhau và không trùng với các khóa học khác của bạn.'}
+      </div>
     </Modal>
   );
 }

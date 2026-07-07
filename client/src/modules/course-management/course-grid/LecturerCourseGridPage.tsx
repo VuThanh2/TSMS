@@ -71,7 +71,7 @@ export default function LecturerCourseGridPage() {
     <div className="p-10 px-12">
       {/* Header */}
       <div className="mb-7">
-        <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">My Courses</h1>
+        <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">My courses</h1>
         <p className="m-0 text-[15px] text-text-secondary">
           {totalCount} course{totalCount !== 1 ? 's' : ''} assigned to you
         </p>
@@ -88,7 +88,7 @@ export default function LecturerCourseGridPage() {
             setPage(1);
           }}
           allowClear
-          className="min-w-[240px] flex-1"
+          className="h-11 min-w-[240px] flex-1"
           size="large"
         />
         <div className="flex gap-1.5 rounded-lg border border-border bg-white p-1">
@@ -117,6 +117,8 @@ export default function LecturerCourseGridPage() {
         dataSource={courses}
         rowKey="courseId"
         loading={isLoading}
+        locale={{ emptyText: 'No courses match your search.' }}
+        rowClassName="tsms-clickable-row"
         pagination={{
           current: page,
           pageSize,

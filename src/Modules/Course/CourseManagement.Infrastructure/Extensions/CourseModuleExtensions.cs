@@ -40,18 +40,25 @@ public static class CourseModuleExtensions {
         services.AddScoped<ICourseReportingService, CourseReportingService>();
  
         services.AddScoped<UpdateCourseStatusJobService>();
+        services.AddScoped<CourseOutboxProcessor>();
  
         return services;
     }
 
-    /// Registers the recurring Hangfire job for automatic course status transitions.
+    /// Registers the recurring Hangfire jobs của CourseManagement BC:
+    /// status transition (daily) và outbox dispatcher (mỗi phút).
     public static void RegisterCourseJobs(this WebApplication app) {
         using var scope = app.Services.CreateScope();
         var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
- 
+
         recurringJobManager.AddOrUpdate<UpdateCourseStatusJobService>(
             recurringJobId: "update-course-status",
             methodCall: job => job.ExecuteAsync(CancellationToken.None),
             cronExpression: "5 0 * * *");
+
+        recurringJobManager.AddOrUpdate<CourseOutboxProcessor>(
+            recurringJobId: "process-course-outbox",
+            methodCall: job => job.ExecuteAsync(CancellationToken.None),
+            cronExpression: "*/1 * * * *");
     }
 }

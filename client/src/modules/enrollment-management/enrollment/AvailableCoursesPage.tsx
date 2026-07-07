@@ -1,62 +1,62 @@
 import { useState } from 'react';
-import { Table, Button, Tag } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
+import { Button, Spin } from 'antd';
 
+import StatusTag from '@/shared/components/StatusTag';
 import { useAvailableCourses } from './useAvailableCourses';
 import EnrollModal from './EnrollModal';
 import type { AvailableCourse } from './enrollment.types';
 
-const columns = (
-  onEnroll: (course: AvailableCourse) => void,
-): ColumnsType<AvailableCourse> => [
-  {
-    title: 'Khóa học',
-    dataIndex: 'name',
-    key: 'name',
-    render: (name: string, record) => (
-      <div>
-        <div className="font-semibold">{name}</div>
-        <div className="text-[13px] text-text-muted">
-          {record.startDate} — {record.endDate}
+function capacityColor(pct: number) {
+  if (pct >= 1) return '#D7372C';
+  if (pct >= 0.75) return '#E5A20B';
+  return '#1E875F';
+}
+
+function CourseCard({ course, onEnroll }: { course: AvailableCourse; onEnroll: () => void }) {
+  const remaining = course.maxCapacity - course.enrolledCount;
+  const pct = course.maxCapacity > 0 ? course.enrolledCount / course.maxCapacity : 0;
+  const isFull = remaining <= 0;
+
+  return (
+    <div className="flex flex-col rounded-[20px] border border-border bg-white p-6 shadow-sm">
+      <div className="mb-2.5 flex items-start justify-between gap-3">
+        <div className="text-[18px] font-semibold leading-tight tracking-tight">
+          {course.name}
+        </div>
+        <StatusTag status="Upcoming" />
+      </div>
+      <div className="mb-4 flex gap-6">
+        <div>
+          <div className="mb-0.5 text-[12px] text-text-muted">Lecturer</div>
+          <div className="text-[14px] font-semibold">{course.lecturerName}</div>
+        </div>
+        <div>
+          <div className="mb-0.5 text-[12px] text-text-muted">Dates</div>
+          <div className="font-mono text-[14px] font-semibold">
+            {course.startDate} – {course.endDate}
+          </div>
         </div>
       </div>
-    ),
-  },
-  {
-    title: 'Giảng viên',
-    dataIndex: 'lecturerName',
-    key: 'lecturer',
-    render: (v: string) => <span className="text-text-secondary">{v}</span>,
-  },
-  {
-    title: 'Còn chỗ',
-    key: 'capacity',
-    align: 'center',
-    render: (_, record) => {
-      const remaining = record.maxCapacity - record.enrolledCount;
-      return (
-        <Tag color={remaining > 0 ? 'green' : 'red'}>
-          {remaining > 0 ? `${remaining} chỗ còn` : 'Hết chỗ'}
-        </Tag>
-      );
-    },
-  },
-  {
-    title: '',
-    key: 'action',
-    align: 'right',
-    render: (_, record) => (
-      <Button
-        type="primary"
-        size="small"
-        disabled={record.enrolledCount >= record.maxCapacity}
-        onClick={() => onEnroll(record)}
-      >
-        Đăng ký
+      <div className="mb-[18px]">
+        <div className="mb-1.5 flex justify-between text-[13px]">
+          <span className="text-text-muted">Capacity</span>
+          <span className="font-mono font-semibold">
+            {course.enrolledCount}/{course.maxCapacity}
+          </span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full" style={{ background: '#F1E7DD' }}>
+          <div
+            className="h-full rounded-full"
+            style={{ width: `${Math.min(pct, 1) * 100}%`, background: capacityColor(pct) }}
+          />
+        </div>
+      </div>
+      <Button type="primary" disabled={isFull} onClick={onEnroll} className="mt-auto self-start">
+        {isFull ? 'Full' : 'Enroll'}
       </Button>
-    ),
-  },
-];
+    </div>
+  );
+}
 
 export default function AvailableCoursesPage() {
   const available = useAvailableCourses();
@@ -65,28 +65,31 @@ export default function AvailableCoursesPage() {
   return (
     <div className="p-10 px-12">
       <div className="mb-7">
-        <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">Available Courses</h1>
+        <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">Available courses</h1>
         <p className="m-0 text-[15px] text-text-secondary">
-          Các khóa học đang mở đăng ký. Chọn đúng 2 slot để hoàn tất.
+          Upcoming courses open for enrollment. Pick 2 sessions per week when you enroll.
         </p>
       </div>
 
-      <Table<AvailableCourse>
-        columns={columns((course) => setEnrollTarget(course))}
-        dataSource={available.courses}
-        rowKey="courseId"
-        loading={available.isLoading}
-        pagination={{
-          current: available.page,
-          pageSize: available.pageSize,
-          total: available.totalCount,
-          showSizeChanger: true,
-          onChange: (p, ps) => {
-            available.setPage(p);
-            available.setPageSize(ps);
-          },
-        }}
-      />
+      {available.isLoading ? (
+        <div className="flex justify-center pt-20">
+          <Spin size="large" />
+        </div>
+      ) : available.courses.length === 0 ? (
+        <div className="rounded-xl border border-border bg-white p-14 text-center text-[15px] text-text-muted">
+          No upcoming courses available right now. Check back soon.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {available.courses.map((course) => (
+            <CourseCard
+              key={course.courseId}
+              course={course}
+              onEnroll={() => setEnrollTarget(course)}
+            />
+          ))}
+        </div>
+      )}
 
       <EnrollModal
         course={enrollTarget}

@@ -20,11 +20,22 @@ export default function ScheduleCalendar<T>({
   // Tháng đang xem — controlled để header prev/next điều khiển được
   const [value, setValue] = useState<Dayjs>(dayjs());
 
+  // Chặn chọn ngày thuộc tháng trước/sau — đây là nguyên nhân Calendar tự đổi
+  // tháng khi bấm vào ô đầu/cuối lưới (antd Calendar không tôn trọng hoàn toàn
+  // controlled value khi cell được select, chỉ disabledDate mới chặn được click).
+  function disabledDate(current: Dayjs) {
+    return !current.isSame(value, 'month');
+  }
+
   function cellRender(
     current: Dayjs,
     info: { type: string; originNode: React.ReactElement },
   ) {
     if (info.type !== 'date') return info.originNode;
+
+    // Ô thuộc tháng trước/sau — để trống, không hiện số ngày, cho dễ nhìn
+    if (!current.isSame(value, 'month')) return <div />;
+
     const dateStr = current.format('YYYY-MM-DD');
     const daySessions = sessionsByDate[dateStr] ?? [];
     if (daySessions.length === 0) return info.originNode;
@@ -46,9 +57,10 @@ export default function ScheduleCalendar<T>({
       <Calendar
         value={value}
         onChange={setValue}
+        disabledDate={disabledDate}
         cellRender={cellRender}
         // Header tự vẽ: chỉ điều hướng theo tháng, ẩn dropdown năm/tháng mặc định
-        headerRender={({ value: v, onChange }) => (
+        headerRender={({ value: v }) => (
           <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
             <div className="text-[18px] font-bold capitalize tracking-tight">
               {v.format('MMMM YYYY')}
@@ -56,13 +68,13 @@ export default function ScheduleCalendar<T>({
             <div className="flex items-center gap-2">
               <Button
                 icon={<LeftOutlined />}
-                onClick={() => onChange(v.clone().subtract(1, 'month'))}
+                onClick={() => setValue(value.clone().subtract(1, 'month'))}
                 aria-label="Tháng trước"
               />
-              <Button onClick={() => onChange(dayjs())}>Hôm nay</Button>
+              <Button onClick={() => setValue(dayjs())}>Hôm nay</Button>
               <Button
                 icon={<RightOutlined />}
-                onClick={() => onChange(v.clone().add(1, 'month'))}
+                onClick={() => setValue(value.clone().add(1, 'month'))}
                 aria-label="Tháng sau"
               />
             </div>

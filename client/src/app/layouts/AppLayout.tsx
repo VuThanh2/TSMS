@@ -1,40 +1,29 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { App } from 'antd';
-import {
-  BookOutlined,
-  TeamOutlined,
-  BarChartOutlined,
-  FileTextOutlined,
-  CalendarOutlined,
-  LineChartOutlined,
-  SearchOutlined,
-  EditOutlined,
-  CheckSquareOutlined,
-} from '@ant-design/icons';
 
 import { useAuth } from '@/shared/lib/auth-context';
 import { logoutApi } from '@/modules/identity/shared/auth.api';
 
 const ADMIN_NAV = [
-  { to: '/admin/dashboard', label: 'Courses', icon: BookOutlined },
-  { to: '/admin/users', label: 'Users', icon: TeamOutlined },
-  { to: '/admin/reports/statistics', label: 'Statistics', icon: BarChartOutlined },
-  { to: '/admin/reports', label: 'Reports', icon: FileTextOutlined },
+  { to: '/admin/dashboard', label: 'Courses' },
+  { to: '/admin/users', label: 'Users' },
+  { to: '/admin/reports/statistics', label: 'Statistics' },
+  { to: '/admin/reports', label: 'Reports' },
 ];
 
 const LECTURER_NAV = [
-  { to: '/lecturer/dashboard', label: 'My Courses', icon: BookOutlined },
-  { to: '/lecturer/grading', label: 'Grading', icon: EditOutlined },
-  { to: '/lecturer/attendance', label: 'Attendance', icon: CheckSquareOutlined },
-  { to: '/lecturer/schedule', label: 'Schedule', icon: CalendarOutlined },
-  { to: '/lecturer/reports', label: 'Reports', icon: FileTextOutlined },
+  { to: '/lecturer/dashboard', label: 'My Courses' },
+  { to: '/lecturer/grading', label: 'Grading' },
+  { to: '/lecturer/attendance', label: 'Attendance' },
+  { to: '/lecturer/schedule', label: 'Schedule' },
+  { to: '/lecturer/reports', label: 'Reports' },
 ];
 
 const STUDENT_NAV = [
-  { to: '/student/available-courses', label: 'Available Courses', icon: SearchOutlined },
-  { to: '/student/courses', label: 'My Courses', icon: BookOutlined },
-  { to: '/student/schedule', label: 'Schedule', icon: CalendarOutlined },
-  { to: '/student/summary', label: 'My Summary', icon: LineChartOutlined },
+  { to: '/student/available-courses', label: 'Available Courses' },
+  { to: '/student/courses', label: 'My Courses' },
+  { to: '/student/schedule', label: 'Schedule' },
+  { to: '/student/summary', label: 'My Summary' },
 ];
 
 export default function AppLayout() {
@@ -79,7 +68,7 @@ export default function AppLayout() {
         </div>
 
         {/* Role label */}
-        <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-widest text-text-muted">
+        <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-text-muted">
           {role}
         </div>
 
@@ -91,15 +80,22 @@ export default function AppLayout() {
               to={item.to}
               end={item.to === '/admin/reports' || item.to === '/lecturer/reports'}
               className={({ isActive }) =>
-                `flex h-10 items-center gap-3 rounded-lg px-3 text-[14px] font-semibold transition-colors ${
+                `flex h-[42px] items-center gap-2.5 rounded-[10px] px-3 text-[14px] font-semibold transition-colors ${
                   isActive
-                    ? 'bg-bg-card text-text'
+                    ? 'bg-primary text-white'
                     : 'text-text-muted hover:bg-bg-card hover:text-text'
                 }`
               }
             >
-              <item.icon style={{ fontSize: 16 }} />
-              {item.label}
+              {({ isActive }) => (
+                <>
+                  <span
+                    className="h-2 w-2 flex-none rounded-full"
+                    style={{ background: isActive ? '#fff' : '#D8C9BB' }}
+                  />
+                  {item.label}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>

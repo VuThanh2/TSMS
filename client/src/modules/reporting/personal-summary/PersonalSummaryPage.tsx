@@ -12,63 +12,61 @@ const GRADE_COLOR = (g: number | null) => {
 
 const columns: ColumnsType<PersonalSummaryItem> = [
   {
-    title: 'Khóa học',
+    title: 'Course',
     dataIndex: 'courseName',
     key: 'name',
     render: (v: string) => <span className="font-semibold">{v}</span>,
   },
   {
-    title: 'Trạng thái',
+    title: 'Status',
     dataIndex: 'status',
     key: 'status',
     render: (v: PersonalSummaryItem['status']) => <StatusTag status={v} />,
   },
   {
-    title: 'Điểm',
+    title: 'Grade',
     dataIndex: 'grade',
     key: 'grade',
     align: 'right',
     render: (v: number | null) => (
       <span className={`font-mono text-[15px] font-semibold ${GRADE_COLOR(v)}`}>
-        {v !== null ? v.toFixed(1) : 'Chưa có điểm'}
+        {v !== null ? v.toFixed(1) : 'Not graded yet'}
       </span>
     ),
   },
   {
-    title: 'Có mặt',
-    dataIndex: 'presentCount',
-    key: 'present',
-    align: 'center',
-    render: (v: number) => <span className="font-mono font-semibold text-[#1E875F]">{v}</span>,
-  },
-  {
-    title: 'Có phép',
-    dataIndex: 'excusedCount',
-    key: 'excused',
-    align: 'center',
-    render: (v: number) => <span className="font-mono font-semibold text-[#E5A20B]">{v}</span>,
-  },
-  {
-    title: 'Vắng',
-    dataIndex: 'absentCount',
-    key: 'absent',
-    align: 'center',
-    render: (v: number) => <span className="font-mono font-semibold text-[#D7372C]">{v}</span>,
-  },
-  {
-    title: 'Tỷ lệ đi học',
+    title: 'Attendance',
     dataIndex: 'attendanceRate',
     key: 'rate',
     align: 'right',
     render: (v: number) => (
-      <span
-        className={`font-mono text-[14px] font-semibold ${v >= 0.8 ? 'text-[#1E875F]' : v >= 0.6 ? 'text-[#E5A20B]' : 'text-[#D7372C]'}`}
-      >
+      <span className="font-mono text-[14px] font-semibold text-text-secondary">
         {(v * 100).toFixed(0)}%
       </span>
     ),
   },
 ];
+
+function StatTile({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: string;
+  color: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-white px-6 py-[22px] shadow-sm">
+      <div className="mb-2.5 text-[12px] font-semibold uppercase tracking-wide text-text-muted">
+        {label}
+      </div>
+      <div className="font-mono text-[34px] font-bold leading-none" style={{ color }}>
+        {value}
+      </div>
+    </div>
+  );
+}
 
 export default function PersonalSummaryPage() {
   const { summary, isLoading } = usePersonalSummary();
@@ -81,42 +79,37 @@ export default function PersonalSummaryPage() {
     );
   }
 
-  const gpa = summary?.overallGpa;
+  const gpa = summary?.overallGpa ?? null;
   const items = summary?.items ?? [];
 
+  const totalSessions = items.reduce((sum, i) => sum + i.totalSessions, 0);
+  const totalPresent = items.reduce((sum, i) => sum + i.presentCount, 0);
+  const attendanceRate = totalSessions > 0 ? totalPresent / totalSessions : null;
+
+  const gpaColor = gpa === null ? '#8A847E' : gpa >= 5 ? '#1E875F' : '#D7372C';
+
   return (
-    <div className="max-w-[1040px] p-10 px-12">
+    <div className="max-w-[960px] p-10 px-12">
       {/* Header */}
       <div className="mb-7">
-        <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">My Summary</h1>
+        <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">Personal summary</h1>
         <p className="m-0 text-[15px] text-text-secondary">
-          Tổng hợp điểm và điểm danh của bạn. Cập nhật tự động khi giảng viên chấm điểm.
+          Your grades and attendance across every course.
         </p>
       </div>
 
-      {/* GPA Card */}
-      <div className="mb-8 inline-flex items-center gap-6 rounded-2xl border border-border bg-white px-8 py-6 shadow-sm">
-        <div>
-          <div className="mb-1 text-[12px] font-semibold uppercase tracking-widest text-text-muted">
-            Điểm trung bình chung (GPA)
-          </div>
-          {gpa !== null && gpa !== undefined ? (
-            <div
-              className={`font-mono text-[40px] font-bold leading-none ${GRADE_COLOR(gpa)}`}
-            >
-              {gpa.toFixed(2)}
-            </div>
-          ) : (
-            <div className="font-mono text-[40px] font-bold leading-none text-text-muted">—</div>
-          )}
-          {gpa === null && (
-            <p className="mt-1 text-[13px] text-text-muted">Chưa có điểm nào được ghi nhận.</p>
-          )}
-        </div>
+      {/* Stat tiles */}
+      <div className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatTile label="Overall GPA" value={gpa !== null ? gpa.toFixed(2) : '—'} color={gpaColor} />
+        <StatTile
+          label="Attendance rate"
+          value={attendanceRate !== null ? `${(attendanceRate * 100).toFixed(0)}%` : '—'}
+          color="#1E875F"
+        />
+        <StatTile label="Courses enrolled" value={String(items.length)} color="#1C1B1A" />
       </div>
 
       {/* Detail table */}
-      <h2 className="mb-4 text-[20px] font-semibold tracking-tight">Chi tiết theo khóa học</h2>
       <Table<PersonalSummaryItem>
         columns={columns}
         dataSource={items}

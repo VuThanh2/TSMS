@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Modal, Select, Spin, Tag } from 'antd';
+import { Modal, Spin, Tag } from 'antd';
 import { SwapOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 
 import { getCourseWeeklySlotsApi } from './enrollment.api';
+import SessionPicker from './SessionPicker';
 import type { MyCourseItem } from './enrollment.types';
 import type { WeeklySlot } from '@/modules/course-management/shared/course.types';
 
@@ -28,6 +29,8 @@ const STATUS_COLOR: Record<string, string> = {
   Completed: '#8A847E',
 };
 
+type PickerTarget = 'from' | 'to' | null;
+
 interface Props {
   enrollment: MyCourseItem | null;
   onClose: () => void;
@@ -38,6 +41,7 @@ interface Props {
 export default function AdjustSessionModal({ enrollment, onClose, onConfirm, isLoading }: Props) {
   const [oldSlotId, setOldSlotId] = useState<string | undefined>();
   const [newSlotId, setNewSlotId] = useState<string | undefined>();
+  const [picker, setPicker] = useState<PickerTarget>(null);
 
   const slotsQuery = useQuery({
     queryKey: ['weekly-slots', enrollment?.courseId],
@@ -55,12 +59,15 @@ export default function AdjustSessionModal({ enrollment, onClose, onConfirm, isL
     if (!open) {
       setOldSlotId(undefined);
       setNewSlotId(undefined);
+      setPicker(null);
     }
   }
 
   const slots = slotsQuery.data ?? [];
   const canSubmit = !!oldSlotId && !!newSlotId && oldSlotId !== newSlotId;
   const statusColor = enrollment ? (STATUS_COLOR[enrollment.status] ?? '#8A847E') : '#8A847E';
+  const oldSlot = slots.find((s) => s.weeklySlotId === oldSlotId);
+  const newSlot = slots.find((s) => s.weeklySlotId === newSlotId);
 
   return (
     <Modal
@@ -117,55 +124,52 @@ export default function AdjustSessionModal({ enrollment, onClose, onConfirm, isL
         <div className="rounded-xl border border-border bg-bg-card px-4 py-6 text-center text-[14px] text-text-muted">
           Khóa học chưa có slot học nào.
         </div>
+      ) : picker !== null ? (
+        <SessionPicker
+          slots={slots}
+          disabledSlotIds={[picker === 'from' ? newSlotId : oldSlotId].filter(
+            (v): v is string => !!v,
+          )}
+          selectedSlotId={picker === 'from' ? oldSlotId : newSlotId}
+          onPick={(id) => {
+            if (picker === 'from') {
+              setOldSlotId(id);
+              if (newSlotId === id) setNewSlotId(undefined);
+            } else {
+              setNewSlotId(id);
+            }
+            setPicker(null);
+          }}
+        />
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-[18px]">
           <div>
-            <p className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-text-muted">
-              1 · Slot muốn thay thế
-            </p>
-            <Select
-              placeholder="Chọn slot hiện tại muốn đổi"
-              value={oldSlotId}
-              onChange={(v) => {
-                setOldSlotId(v);
-                if (newSlotId === v) setNewSlotId(undefined);
-              }}
-              className="w-full"
-              size="large"
-              options={slots.map((s) => ({
-                value: s.weeklySlotId,
-                label: formatSlot(s),
-              }))}
-            />
-          </div>
-
-          <div
-            className="flex items-center gap-3"
-            style={{ opacity: oldSlotId ? 1 : 0.4, transition: 'opacity 0.2s' }}
-          >
-            <div className="h-px flex-1 bg-border" />
-            <SwapOutlined style={{ color: '#F45D48', fontSize: 16 }} />
-            <div className="h-px flex-1 bg-border" />
+            <label className="mb-2.5 block text-[14px] font-semibold">
+              Current session to change
+            </label>
+            <button
+              type="button"
+              onClick={() => setPicker('from')}
+              className="flex h-12 w-full items-center justify-between rounded-lg border border-border-input bg-white px-3.5 text-[15px] font-semibold"
+              style={{ color: oldSlot ? '#1C1B1A' : '#8A847E' }}
+            >
+              <span>{oldSlot ? formatSlot(oldSlot) : 'Chọn slot muốn đổi'}</span>
+              <span className="text-[13px] font-medium text-text-muted">Change</span>
+            </button>
           </div>
 
           <div>
-            <p className="mb-2 text-[13px] font-semibold uppercase tracking-wide text-text-muted">
-              2 · Slot mới muốn chuyển sang
-            </p>
-            <Select
-              placeholder={oldSlotId ? 'Chọn slot mới' : 'Chọn slot cũ trước'}
-              value={newSlotId}
-              onChange={setNewSlotId}
-              className="w-full"
-              size="large"
+            <label className="mb-2.5 block text-[14px] font-semibold">Switch to</label>
+            <button
+              type="button"
               disabled={!oldSlotId}
-              options={slots
-                .filter((s) => s.weeklySlotId !== oldSlotId)
-                .map((s) => ({
-                  value: s.weeklySlotId,
-                  label: formatSlot(s),
-                }))}
-            />
+              onClick={() => setPicker('to')}
+              className="flex h-12 w-full items-center justify-between rounded-lg border border-border-input bg-white px-3.5 text-[15px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ color: newSlot ? '#1C1B1A' : '#8A847E' }}
+            >
+              <span>{newSlot ? formatSlot(newSlot) : oldSlotId ? 'Chọn slot mới' : 'Chọn slot cũ trước'}</span>
+              <span className="text-[13px] font-medium text-text-muted">Change</span>
+            </button>
           </div>
         </div>
       )}

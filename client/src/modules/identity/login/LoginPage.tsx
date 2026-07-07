@@ -57,7 +57,7 @@ export default function LoginPage() {
             { type: 'email', message: 'Email không hợp lệ' },
           ]}
         >
-          <Input prefix={<MailOutlined />} placeholder="you@university.edu" />
+          <Input prefix={<MailOutlined />} placeholder="you@university.edu" className="h-12" />
         </Form.Item>
 
         <Form.Item
@@ -75,11 +75,15 @@ export default function LoginPage() {
             </div>
           }
         >
-          <Input.Password prefix={<LockOutlined />} placeholder="Enter your password" />
+          <Input.Password
+            prefix={<LockOutlined />}
+            placeholder="Enter your password"
+            className="h-12"
+          />
         </Form.Item>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" block loading={isPending}>
+          <Button type="primary" htmlType="submit" block loading={isPending} className="h-12">
             Sign in
           </Button>
         </Form.Item>
@@ -91,13 +95,17 @@ export default function LoginPage() {
           Demo — sign in as a role
         </p>
         <div className="flex gap-2">
-          {(['Admin', 'Lecturer', 'Student'] as const).map((role) => (
+          {(['Admin', 'Lecturer', 'Student'] as const).map((role, index) => (
             <Button
               key={role}
               block
               onClick={() => handleDemoLogin(role)}
               disabled={isPending}
-              className="flex-1"
+              className={`h-10 flex-1 border-border font-semibold ${
+                index === 0
+                  ? 'bg-bg-card text-text'
+                  : 'bg-white text-text-muted'
+              }`}
             >
               {role}
             </Button>

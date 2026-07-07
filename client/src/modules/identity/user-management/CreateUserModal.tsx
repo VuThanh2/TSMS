@@ -1,4 +1,4 @@
-import { Modal, Form, Input, Select } from 'antd';
+import { Modal, Form, Input, Radio } from 'antd';
 
 import { useCreateUser } from './useUserList';
 
@@ -15,7 +15,7 @@ export default function CreateUserModal({ open, onClose }: CreateUserModalProps)
   });
 
   function handleOk() {
-    form.validateFields().then((values) => {
+    form.validateFields().then(({ confirmPassword: _confirmPassword, ...values }) => {
       mutate(values);
     });
   }
@@ -28,7 +28,7 @@ export default function CreateUserModal({ open, onClose }: CreateUserModalProps)
       onCancel={onClose}
       confirmLoading={isPending}
       okText="Create"
-      destroyOnClose
+      destroyOnHidden
       width={480}
     >
       <Form form={form} layout="vertical" requiredMark={false} className="mt-4">
@@ -56,8 +56,10 @@ export default function CreateUserModal({ open, onClose }: CreateUserModalProps)
           name="role"
           rules={[{ required: true, message: 'Chọn role' }]}
         >
-          <Select
-            placeholder="Select role"
+          <Radio.Group
+            optionType="button"
+            buttonStyle="solid"
+            className="flex gap-2 [&_.ant-radio-button-wrapper]:rounded-lg [&_.ant-radio-button-wrapper]:border-border-input [&_.ant-radio-button-wrapper]:before:hidden"
             options={[
               { value: 'Admin', label: 'Admin' },
               { value: 'Lecturer', label: 'Lecturer' },
@@ -73,8 +75,29 @@ export default function CreateUserModal({ open, onClose }: CreateUserModalProps)
             { required: true, message: 'Vui lòng nhập mật khẩu' },
             { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
           ]}
+          hasFeedback
         >
           <Input.Password placeholder="Tối thiểu 6 ký tự" />
+        </Form.Item>
+
+        <Form.Item
+          label="Confirm password"
+          name="confirmPassword"
+          dependencies={['password']}
+          hasFeedback
+          rules={[
+            { required: true, message: 'Vui lòng nhập lại mật khẩu' },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue('password') === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('Mật khẩu xác nhận không khớp'));
+              },
+            }),
+          ]}
+        >
+          <Input.Password placeholder="Nhập lại mật khẩu" />
         </Form.Item>
       </Form>
     </Modal>

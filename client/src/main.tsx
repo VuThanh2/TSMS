@@ -29,6 +29,14 @@ const antdTheme = {
     fontFamily: "'Inter', -apple-system, sans-serif",
     borderRadius: 8,
   },
+  components: {
+    // Modal trong mock có border-radius 20px, padding 32px — khác token borderRadius chung (8px)
+    Modal: {
+      borderRadiusLG: 20,
+      padding: 32,
+      titleFontSize: 22,
+    },
+  },
 };
 
 createRoot(document.getElementById('root')!).render(

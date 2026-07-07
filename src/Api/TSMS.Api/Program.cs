@@ -48,5 +48,6 @@ app.MapHub<GradeHub>("/hubs/grade");
 
 // ── Hangfire jobs
 app.RegisterCourseJobs();
+app.RegisterEnrollmentJobs();
 
 app.Run();

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using EnrollmentManagement.Infrastructure.Persistence;
+using Hangfire;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,9 @@ public class EnrollmentOutboxProcessor {
         _logger = logger;
     }
 
+    // Ngăn 2 lần chạy job chồng lấn (nếu 1 lần xử lý mất hơn 1 phút — chu kỳ cron hiện tại)
+    // — tránh 2 worker cùng đọc và publish trùng 1 OutboxMessage trước khi bên nào commit.
+    [DisableConcurrentExecution(timeoutInSeconds: 30)]
     public async Task ExecuteAsync(CancellationToken cancellationToken = default) {
         var messages = await _context.OutboxMessages
             .Where(m => m.ProcessedOn == null)

@@ -5,6 +5,8 @@ using EnrollmentManagement.Domain.Repositories;
 using EnrollmentManagement.Infrastructure.Persistence;
 using EnrollmentManagement.Infrastructure.Repositories;
 using EnrollmentManagement.Infrastructure.Services;
+using Hangfire;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,9 +37,21 @@ public static class EnrollmentModuleExtensions {
             sp => sp.GetRequiredService<EnrollmentQueryService>());
 
         services.AddScoped<INotificationService, SignalRNotificationService>();
+        services.AddScoped<EnrollmentOutboxProcessor>();
 
         services.AddSignalR();
 
         return services;
+    }
+
+    /// Registers the recurring Hangfire job dispatch OutboxMessages của EnrollmentManagement BC.
+    public static void RegisterEnrollmentJobs(this WebApplication app) {
+        using var scope = app.Services.CreateScope();
+        var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+
+        recurringJobManager.AddOrUpdate<EnrollmentOutboxProcessor>(
+            recurringJobId: "process-enrollment-outbox",
+            methodCall: job => job.ExecuteAsync(CancellationToken.None),
+            cronExpression: "*/1 * * * *");
     }
 }

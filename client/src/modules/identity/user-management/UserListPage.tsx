@@ -62,14 +62,14 @@ export default function UserListPage() {
             borderRadius: 9999,
             border: 'none',
             fontWeight: 600,
-            background: isActive ? '#D6F0E5' : '#FDE2E2',
-            color: isActive ? '#1E875F' : '#D7372C',
+            background: isActive ? '#D6F0E5' : '#F3EEE9',
+            color: isActive ? '#1E875F' : '#8A847E',
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
           }}
         >
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: isActive ? '#1E875F' : '#D7372C' }} />
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: isActive ? '#1E875F' : '#8A847E' }} />
           {isActive ? 'Active' : 'Inactive'}
         </Tag>
       ),
@@ -80,7 +80,7 @@ export default function UserListPage() {
       align: 'right',
       render: (_, record) => (
         <div className="flex justify-end gap-1.5">
-          <Button size="small" onClick={() => setEditUserId(record.userId)}>
+          <Button className="h-8 text-[13px]" onClick={() => setEditUserId(record.userId)}>
             Edit
           </Button>
           <Popconfirm
@@ -91,7 +91,11 @@ export default function UserListPage() {
             cancelText="Cancel"
             okButtonProps={{ danger: record.isActive }}
           >
-            <Button size="small" danger={record.isActive}>
+            <Button
+              className={`h-8 border-border text-[13px] font-semibold ${
+                record.isActive ? 'text-[#D7372C]' : 'text-[#1E875F]'
+              }`}
+            >
               {record.isActive ? 'Deactivate' : 'Activate'}
             </Button>
           </Popconfirm>
@@ -111,10 +115,16 @@ export default function UserListPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button icon={<UploadOutlined />} size="large" onClick={() => setImportOpen(true)}>
+          <Button icon={<UploadOutlined />} size="large" className="h-11" onClick={() => setImportOpen(true)}>
             Import CSV
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} size="large" onClick={() => setCreateOpen(true)}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            size="large"
+            className="h-11"
+            onClick={() => setCreateOpen(true)}
+          >
             Create user
           </Button>
         </div>
@@ -131,7 +141,7 @@ export default function UserListPage() {
             list.setPage(1);
           }}
           allowClear
-          className="min-w-[240px] flex-1"
+          className="h-11 min-w-[240px] flex-1"
           size="large"
         />
         <div className="flex gap-1.5 rounded-lg border border-border bg-white p-1">
@@ -160,6 +170,7 @@ export default function UserListPage() {
         dataSource={list.users}
         rowKey="userId"
         loading={list.isLoading}
+        locale={{ emptyText: 'No users match your search.' }}
         pagination={{
           current: list.page,
           pageSize: list.pageSize,

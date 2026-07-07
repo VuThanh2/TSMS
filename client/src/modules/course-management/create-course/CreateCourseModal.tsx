@@ -45,7 +45,7 @@ export default function CreateCourseModal({ open, onClose }: CreateCourseModalPr
       okText="Create"
       cancelText="Cancel"
       width={520}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form form={form} layout="vertical" requiredMark={false} className="mt-4">
         <Form.Item
@@ -57,7 +57,7 @@ export default function CreateCourseModal({ open, onClose }: CreateCourseModalPr
         </Form.Item>
 
         <Form.Item label="Description" name="description">
-          <Input.TextArea placeholder="Short description of the course…" rows={3} />
+          <Input.TextArea placeholder="Short description of the course…" rows={3} className="resize-none" />
         </Form.Item>
 
         <div className="grid grid-cols-2 gap-3">
@@ -83,7 +83,7 @@ export default function CreateCourseModal({ open, onClose }: CreateCourseModalPr
             name="maxCapacity"
             rules={[{ required: true, message: 'Nhập sĩ số tối đa' }]}
           >
-            <InputNumber min={1} placeholder="30" className="w-full" />
+            <InputNumber min={1} placeholder="30" className="w-full font-mono" />
           </Form.Item>
           <Form.Item
             label="Lecturer"

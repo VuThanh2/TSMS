@@ -18,27 +18,30 @@ const columns = (
   onAdjust: (course: MyCourseItem) => void,
 ): ColumnsType<MyCourseItem> => [
   {
-    title: 'Khóa học',
+    title: 'Course',
     dataIndex: 'courseName',
     key: 'name',
     render: (v: string) => <span className="font-semibold">{v}</span>,
   },
   {
-    title: 'Trạng thái',
+    title: 'Status',
     dataIndex: 'status',
     key: 'status',
     render: (v: MyCourseItem['status']) => <StatusTag status={v} />,
   },
   {
-    title: 'Điểm',
+    title: 'Grade',
     dataIndex: 'grade',
     key: 'grade',
     align: 'right',
-    render: (v: number | null) => (
-      <span className={`font-mono text-[15px] font-semibold ${GRADE_COLOR(v)}`}>
-        {v !== null ? v.toFixed(1) : 'Chưa có điểm'}
-      </span>
-    ),
+    render: (v: number | null) =>
+      v !== null ? (
+        <span className={`font-mono text-[15px] font-semibold ${GRADE_COLOR(v)}`}>
+          {v.toFixed(1)}
+        </span>
+      ) : (
+        <span className="text-[13px] text-text-muted">Not graded yet</span>
+      ),
   },
   {
     title: '',
@@ -48,7 +51,7 @@ const columns = (
       if (record.status === 'Completed') return null;
       return (
         <Button size="small" onClick={() => onAdjust(record)}>
-          Điều chỉnh ca
+          Adjust session
         </Button>
       );
     },
@@ -68,9 +71,9 @@ export default function StudentCoursesPage() {
   return (
     <div className="p-10 px-12">
       <div className="mb-7">
-        <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">My Courses</h1>
+        <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">My courses</h1>
         <p className="m-0 text-[15px] text-text-secondary">
-          Các khóa học bạn đã đăng ký.
+          Courses you&apos;re enrolled in, with status and grades.
         </p>
       </div>
 

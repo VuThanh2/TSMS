@@ -68,6 +68,7 @@ export default function CourseGridPage() {
           type="primary"
           icon={<PlusOutlined />}
           size="large"
+          className="h-11"
           onClick={() => setCreateOpen(true)}
         >
           Create course
@@ -85,7 +86,7 @@ export default function CourseGridPage() {
             grid.setPage(1);
           }}
           allowClear
-          className="min-w-[240px] flex-1"
+          className="h-11 min-w-[240px] flex-1"
           size="large"
         />
         <div className="flex gap-1.5 rounded-lg border border-border bg-white p-1">
@@ -114,6 +115,8 @@ export default function CourseGridPage() {
         dataSource={grid.courses}
         rowKey="courseId"
         loading={grid.isLoading}
+        locale={{ emptyText: 'No courses match your search.' }}
+        rowClassName="tsms-clickable-row"
         pagination={{
           current: grid.page,
           pageSize: grid.pageSize,

@@ -4,6 +4,7 @@ import ReactECharts from 'echarts-for-react';
 import type { ColumnsType } from 'antd/es/table';
 
 import StatusTag from '@/shared/components/StatusTag';
+import { getGradeBand } from '@/shared/lib/grade-band';
 import type { CourseStatisticsItem } from '@/modules/reporting/shared/reporting.types';
 import { useCourseStatistics } from './useCourseStatistics';
 
@@ -33,7 +34,10 @@ const columns: ColumnsType<CourseStatisticsItem> = [
     key: 'averageScore',
     align: 'right',
     render: (v: number | null) => (
-      <span className={`font-mono text-[14px] font-semibold ${v !== null && v >= 5 ? 'text-[#1E875F]' : v !== null ? 'text-[#D7372C]' : 'text-text-muted'}`}>
+      <span
+        className="font-mono text-[14px] font-semibold"
+        style={{ color: v !== null ? getGradeBand(v).color : 'var(--color-text-muted)' }}
+      >
         {v !== null ? v.toFixed(1) : 'N/A'}
       </span>
     ),

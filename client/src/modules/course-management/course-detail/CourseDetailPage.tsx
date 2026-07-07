@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Modal, Form, Input, InputNumber, DatePicker, Spin, Popconfirm, Table, Tag } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
@@ -42,8 +42,8 @@ function WeeklySlotGrid({
           </div>
         ))}
         {SESSION_TYPES.map((type) => (
-          <>
-            <div key={type} className="text-[12px] font-bold text-text-muted">
+          <Fragment key={type}>
+            <div className="text-[12px] font-bold text-text-muted">
               {type === 'Morning' ? 'AM' : 'PM'}
             </div>
             {DAYS.map((day) => {
@@ -71,7 +71,7 @@ function WeeklySlotGrid({
                 </button>
               );
             })}
-          </>
+          </Fragment>
         ))}
       </div>
     </div>
@@ -184,9 +184,9 @@ export default function CourseDetailPage() {
         ))}
       </div>
 
-      {/* Weekly slots */}
+      {/* Class sessions — weekly pattern grid (this IS the add/remove session mechanism, matches mock's isCourseDetail section) */}
       <div className="mb-3.5 flex items-center justify-between">
-        <h2 className="m-0 text-[20px] font-semibold tracking-tight">Weekly slots</h2>
+        <h2 className="m-0 text-[20px] font-semibold tracking-tight">Class sessions</h2>
       </div>
       <WeeklySlotGrid
         slots={weeklySlots.data ?? []}
@@ -194,11 +194,11 @@ export default function CourseDetailPage() {
         onRemove={(slot) => removeSlot.mutate(slot.weeklySlotId)}
       />
       <p className="mt-3 text-[13px] text-text-muted">
-        Click + to add a slot, click ✓ to remove. Sessions repeat every week from start to end date.
+        Click a day &amp; shift to edit the weekly pattern. Sessions repeat every week from start to end date.
       </p>
 
-      {/* Class sessions */}
-      <h2 className="mb-3.5 mt-8 text-[20px] font-semibold tracking-tight">Class sessions</h2>
+      {/* Session list (detail beyond the mock's weekly grid — kept as it surfaces real per-date data: cancellations, past/upcoming) */}
+      <h2 className="mb-3.5 mt-8 text-[20px] font-semibold tracking-tight">Session history</h2>
       <Table<ClassSession>
         columns={sessionColumns}
         dataSource={c.classSessions}
@@ -218,7 +218,7 @@ export default function CourseDetailPage() {
         onCancel={() => setEditOpen(false)}
         confirmLoading={updateCourse.isPending}
         okText="Save"
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={editForm} layout="vertical" requiredMark={false} className="mt-4">
           <Form.Item label="Course name" name="name" rules={[{ required: true }]}>
@@ -246,7 +246,7 @@ export default function CourseDetailPage() {
         onCancel={() => setReplaceOpen(false)}
         confirmLoading={replaceLecturer.isPending}
         okText="Replace"
-        destroyOnClose
+        destroyOnHidden
       >
         <p className="mb-4 text-[14px] text-text-secondary">
           Currently assigned: <strong>{c.lecturerName}</strong>

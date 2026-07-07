@@ -1,10 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Table, Tabs, Spin, Empty } from 'antd';
+import { Button, ConfigProvider, Table, Tabs, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import ReactECharts from 'echarts-for-react';
 import type { ColumnsType } from 'antd/es/table';
 
 import { useAuth } from '@/shared/lib/auth-context';
+import { getGradeBand } from '@/shared/lib/grade-band';
 import type { StudentGradeItem, AttendanceReportItem } from '@/modules/reporting/shared/reporting.types';
 import { useCourseReport, type ReportTab } from './useCourseReport';
 
@@ -16,7 +17,10 @@ const gradeColumns: ColumnsType<StudentGradeItem> = [
   {
     title: 'Score', dataIndex: 'grade', key: 'grade', align: 'right',
     render: (v: number | null) => (
-      <span className={`font-mono text-[15px] font-semibold ${v !== null && v >= 5 ? 'text-[#1E875F]' : v !== null ? 'text-[#D7372C]' : 'text-text-muted'}`}>
+      <span
+        className="font-mono text-[15px] font-semibold"
+        style={{ color: v !== null ? getGradeBand(v).color : 'var(--color-text-muted)' }}
+      >
         {v !== null ? v.toFixed(1) : 'Not graded'}
       </span>
     ),
@@ -83,6 +87,20 @@ export default function CourseReportPage() {
 
       <h1 className="m-0 mb-5 text-[28px] font-bold tracking-tight">{courseName}</h1>
 
+      <ConfigProvider
+        theme={{
+          components: {
+            Tabs: {
+              titleFontSize: 15,
+              itemColor: 'var(--color-text-muted)',
+              itemHoverColor: 'var(--color-text)',
+              itemSelectedColor: 'var(--color-primary)',
+              itemActiveColor: 'var(--color-primary)',
+              inkBarColor: 'var(--color-primary)',
+            },
+          },
+        }}
+      >
       <Tabs
         activeKey={report.activeTab}
         onChange={(key) => report.setActiveTab(key as ReportTab)}
@@ -168,6 +186,7 @@ export default function CourseReportPage() {
             : []),
         ]}
       />
+      </ConfigProvider>
     </div>
   );
 }
