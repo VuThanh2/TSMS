@@ -45,7 +45,10 @@ public static class CourseMapper {
  
     // ── List projections (no sessions loaded)
     
-    public static GetCoursesOutputDto ToGetCoursesOutputDto(Course course, string? lecturerName) =>
+    public static GetCoursesOutputDto ToGetCoursesOutputDto(
+        Course course,
+        string? lecturerName,
+        int enrolledCount) =>
         new(
             CourseId: course.Id,
             Name: course.Name,
@@ -54,6 +57,7 @@ public static class CourseMapper {
             EndDate: course.EndDate,
             Status: course.Status.ToString(),
             MaxCapacity: course.MaxCapacity,
+            EnrolledCount: enrolledCount,
             LecturerId: course.LecturerId,
             LecturerName: lecturerName,
             CreatedAt: course.CreatedAt);
@@ -75,7 +79,10 @@ public static class CourseMapper {
 
     // ── Detail projection (sessions must be loaded)
 
-    public static GetCourseByIdOutputDto ToGetCourseByIdOutputDto(Course course, string? lecturerName) =>
+    public static GetCourseByIdOutputDto ToGetCourseByIdOutputDto(
+        Course course,
+        string? lecturerName,
+        int enrolledCount) =>
         new(
             CourseId: course.Id,
             Name: course.Name,
@@ -84,6 +91,7 @@ public static class CourseMapper {
             EndDate: course.EndDate,
             Status: course.Status.ToString(),
             MaxCapacity: course.MaxCapacity,
+            EnrolledCount: enrolledCount,
             LecturerId: course.LecturerId,
             LecturerName: lecturerName,
             CreatedAt: course.CreatedAt,

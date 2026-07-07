@@ -55,22 +55,51 @@ export default function CourseStatisticsPage() {
   const items = data?.items ?? [];
   const courseNames = items.map((c) => c.courseName);
 
+  // Rút gọn tên khóa học còn 2 từ đầu cho trục hiển thị ngang (không chéo) —
+  // tooltip vẫn đọc giá trị gốc trong `data` (category value), không qua formatter,
+  // nên hover vẫn thấy đủ tên đầy đủ.
+  function truncateCourseName(name: string) {
+    const words = name.trim().split(/\s+/);
+    return words.length <= 2 ? name : `${words.slice(0, 2).join(' ')}…`;
+  }
+
+  const categoryAxisLabel = { rotate: 0, fontSize: 11, interval: 0, formatter: truncateCourseName };
+
+  // Không để ECharts tự suy max từ giá trị lớn nhất trong data — khi lớp đông
+  // nhất chỉ có vài sinh viên, max tự sinh sẽ bám sát đỉnh cột (vd max=1), nhìn
+  // như biểu đồ lỗi. Chừa thêm ~20% khoảng trống phía trên rồi làm tròn lên một
+  // mốc "đẹp" (bội số của 5/10/20/50 tùy độ lớn) để cột không bị dồn sát trần.
+  function niceAxisMax(maxValue: number) {
+    const padded = Math.max(5, maxValue + Math.max(1, Math.ceil(maxValue * 0.2)));
+    const step = padded <= 10 ? 5 : padded <= 50 ? 10 : padded <= 200 ? 20 : 50;
+    return Math.ceil(padded / step) * step;
+  }
+
+  const maxEnrolled = Math.max(0, ...items.map((c) => c.enrolledCount));
+  const enrolledAxisMax = niceAxisMax(maxEnrolled);
+
   // ECharts: Enrolled per course (bar chart, primary color)
   const enrolledOption = {
-    tooltip: { trigger: 'axis' as const },
-    xAxis: { type: 'category' as const, data: courseNames, axisLabel: { rotate: 30, fontSize: 11 } },
-    yAxis: { type: 'value' as const },
+    tooltip: { trigger: 'axis' as const, valueFormatter: (v: unknown) => `${Math.round(Number(v))}` },
+    xAxis: { type: 'category' as const, data: courseNames, axisLabel: categoryAxisLabel },
+    yAxis: {
+      type: 'value' as const,
+      max: enrolledAxisMax,
+      minInterval: 1,
+      axisLabel: { formatter: (v: number) => `${Math.round(v)}` },
+    },
     series: [{ data: items.map((c) => c.enrolledCount), type: 'bar' as const, itemStyle: { color: '#F45D48', borderRadius: [6, 6, 0, 0] } }],
-    grid: { left: 40, right: 16, bottom: 60, top: 16 },
+    grid: { left: 40, right: 16, bottom: 40, top: 16 },
   };
 
-  // ECharts: Avg score per course (bar chart, green)
+  // ECharts: Avg score per course (bar chart, green) — điểm trung bình giữ 1
+  // chữ số thập phân cả ở trục lẫn tooltip.
   const avgScoreOption = {
-    tooltip: { trigger: 'axis' as const },
-    xAxis: { type: 'category' as const, data: courseNames, axisLabel: { rotate: 30, fontSize: 11 } },
-    yAxis: { type: 'value' as const, max: 10 },
+    tooltip: { trigger: 'axis' as const, valueFormatter: (v: unknown) => Number(v).toFixed(1) },
+    xAxis: { type: 'category' as const, data: courseNames, axisLabel: categoryAxisLabel },
+    yAxis: { type: 'value' as const, max: 10, axisLabel: { formatter: (v: number) => v.toFixed(1) } },
     series: [{ data: items.map((c) => c.averageScore ?? 0), type: 'bar' as const, itemStyle: { color: '#1E875F', borderRadius: [6, 6, 0, 0] } }],
-    grid: { left: 40, right: 16, bottom: 60, top: 16 },
+    grid: { left: 40, right: 16, bottom: 40, top: 16 },
   };
 
   return (

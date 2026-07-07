@@ -36,6 +36,10 @@ const antdTheme = {
       padding: 32,
       titleFontSize: 22,
     },
+    // Mock dùng font:600 cho mọi Button — antd default là 400 (normal)
+    Button: {
+      fontWeight: 600,
+    },
   },
 };
 

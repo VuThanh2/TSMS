@@ -7,6 +7,7 @@ import type { ColumnsType } from 'antd/es/table';
 import StatusTag from '@/shared/components/StatusTag';
 import LecturerPicker from '@/modules/course-management/shared/LecturerPicker';
 import type { ClassSession, WeeklySlot } from '@/modules/course-management/shared/course.types';
+import { useAuth, getDefaultRouteForRole } from '@/shared/lib/auth-context';
 import {
   useCourseDetail,
   useUpdateCourse,
@@ -23,10 +24,12 @@ function WeeklySlotGrid({
   slots,
   onAdd,
   onRemove,
+  readOnly,
 }: {
   slots: WeeklySlot[];
   onAdd: (dayOfWeek: string, sessionType: string) => void;
   onRemove: (slot: WeeklySlot) => void;
+  readOnly?: boolean;
 }) {
   function findSlot(day: string, type: string) {
     return slots.find((s) => s.dayOfWeek === day && s.sessionType === type);
@@ -48,6 +51,24 @@ function WeeklySlotGrid({
             </div>
             {DAYS.map((day) => {
               const slot = findSlot(day, type);
+              if (slot && readOnly) {
+                return (
+                  <div
+                    key={`${day}-${type}`}
+                    className="flex h-10 items-center justify-center rounded-lg border-none bg-primary text-[13px] font-semibold text-white"
+                  >
+                    ✓
+                  </div>
+                );
+              }
+              if (!slot && readOnly) {
+                return (
+                  <div
+                    key={`${day}-${type}`}
+                    className="flex h-10 items-center justify-center rounded-lg border border-dashed border-border-input bg-transparent text-[16px] text-text-muted"
+                  />
+                );
+              }
               return slot ? (
                 <Popconfirm
                   key={`${day}-${type}`}
@@ -110,6 +131,7 @@ const sessionColumns: ColumnsType<ClassSession> = [
 export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const { state } = useAuth();
   const { course, weeklySlots } = useCourseDetail(courseId!);
 
   const [editOpen, setEditOpen] = useState(false);
@@ -129,13 +151,19 @@ export default function CourseDetailPage() {
   const c = course.data;
   if (!c) return null;
 
+  // Edit/Replace lecturer/Add-remove WeeklySlot chỉ Admin được làm (UC-14/15/16/18
+  // trong docs/Screen Inventory.md) — Lecturer/Student xem cùng màn hình ở chế độ read-only.
+  const role = state.status === 'authenticated' ? state.user.role : undefined;
+  const canManage = role === 'Admin';
+  const backTo = role ? getDefaultRouteForRole(role) : '/admin/dashboard';
+
   return (
     <div className="max-w-[1040px] p-10 px-12">
       {/* Back */}
       <Button
         type="text"
         icon={<ArrowLeftOutlined />}
-        onClick={() => navigate('/admin/dashboard')}
+        onClick={() => navigate(backTo)}
         className="mb-4 p-0 text-text-secondary"
       >
         Back to courses
@@ -154,15 +182,17 @@ export default function CourseDetailPage() {
             </p>
           )}
         </div>
-        <div className="flex flex-none gap-2">
-          <Button onClick={() => setReplaceOpen(true)}>Replace lecturer</Button>
-          <Button onClick={() => {
-            editForm.setFieldsValue({ name: c.name, description: c.description, maxCapacity: c.maxCapacity });
-            setEditOpen(true);
-          }}>
-            Edit course
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex flex-none gap-2">
+            <Button onClick={() => setReplaceOpen(true)}>Replace lecturer</Button>
+            <Button onClick={() => {
+              editForm.setFieldsValue({ name: c.name, description: c.description, maxCapacity: c.maxCapacity });
+              setEditOpen(true);
+            }}>
+              Edit course
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Stat cards */}
@@ -192,10 +222,13 @@ export default function CourseDetailPage() {
         slots={weeklySlots.data ?? []}
         onAdd={(dayOfWeek, sessionType) => addSlot.mutate({ dayOfWeek, sessionType })}
         onRemove={(slot) => removeSlot.mutate(slot.weeklySlotId)}
+        readOnly={!canManage}
       />
-      <p className="mt-3 text-[13px] text-text-muted">
-        Click a day &amp; shift to edit the weekly pattern. Sessions repeat every week from start to end date.
-      </p>
+      {canManage && (
+        <p className="mt-3 text-[13px] text-text-muted">
+          Click a day &amp; shift to edit the weekly pattern. Sessions repeat every week from start to end date.
+        </p>
+      )}
 
       {/* Session list (detail beyond the mock's weekly grid — kept as it surfaces real per-date data: cancellations, past/upcoming) */}
       <h2 className="mb-3.5 mt-8 text-[20px] font-semibold tracking-tight">Session history</h2>

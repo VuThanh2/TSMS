@@ -82,9 +82,14 @@ export default function PersonalSummaryPage() {
   const gpa = summary?.overallGpa ?? null;
   const items = summary?.items ?? [];
 
-  const totalSessions = items.reduce((sum, i) => sum + i.totalSessions, 0);
-  const totalPresent = items.reduce((sum, i) => sum + i.presentCount, 0);
-  const attendanceRate = totalSessions > 0 ? totalPresent / totalSessions : null;
+  // Không tự tính lại từ totalSessions/presentCount — totalSessions đếm TOÀN BỘ
+  // ClassSession của Course (kể cả buổi tương lai chưa diễn ra), tính thẳng ra tỷ lệ
+  // sẽ bị lệch khi Course vừa bắt đầu. Lấy trung bình attendanceRate mỗi Course —
+  // giá trị này Backend đã tính đúng theo rule "chỉ tính ca đã kết thúc".
+  const attendanceRate =
+    items.length > 0
+      ? items.reduce((sum, i) => sum + i.attendanceRate, 0) / items.length
+      : null;
 
   const gpaColor = gpa === null ? '#8A847E' : gpa >= 5 ? '#1E875F' : '#D7372C';
 

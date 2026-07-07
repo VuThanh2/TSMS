@@ -130,7 +130,7 @@ export default function LecturerCourseGridPage() {
           },
         }}
         onRow={(record) => ({
-          onClick: () => navigate(`/lecturer/grading?courseId=${record.courseId}`),
+          onClick: () => navigate(`/lecturer/courses/${record.courseId}`),
           style: { cursor: 'pointer' },
         })}
       />

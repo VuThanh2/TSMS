@@ -55,6 +55,7 @@ function App() {
       <Route element={<ProtectedRoute allowedRoles={['Lecturer']} />}>
         <Route element={<AppLayout />}>
           <Route path="/lecturer/dashboard" element={<LecturerCourseGridPage />} />
+          <Route path="/lecturer/courses/:courseId" element={<CourseDetailPage />} />
           <Route path="/lecturer/grading" element={<GradingPage />} />
           <Route path="/lecturer/attendance" element={<AttendancePage />} />
           <Route path="/lecturer/schedule" element={<SchedulePage />} />

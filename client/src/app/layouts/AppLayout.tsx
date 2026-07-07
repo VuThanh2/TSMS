@@ -1,35 +1,48 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { App } from 'antd';
 
 import { useAuth } from '@/shared/lib/auth-context';
 import { logoutApi } from '@/modules/identity/shared/auth.api';
 
+// matchExact: khớp tuyệt đối, không lan sang route con (vd '/admin/reports' không
+// được tự khớp '/admin/reports/statistics' dù cùng tiền tố path).
+// matchPrefix: khớp cả chính nó lẫn mọi route con phía dưới (vd Course Detail
+// '/admin/courses/:id' thuộc về "Courses", Report Detail thuộc về "Reports") —
+// khớp với cách mock nhóm screens theo nav item (navByRole[].screens). Cần tách
+// riêng 2 loại vì '/admin/reports/statistics' vô tình nằm dưới cùng tiền tố path
+// với '/admin/reports' dù về mặt điều hướng là 2 mục hoàn toàn khác nhau.
 const ADMIN_NAV = [
-  { to: '/admin/dashboard', label: 'Courses' },
-  { to: '/admin/users', label: 'Users' },
-  { to: '/admin/reports/statistics', label: 'Statistics' },
-  { to: '/admin/reports', label: 'Reports' },
+  { to: '/admin/dashboard', label: 'Courses', matchExact: ['/admin/dashboard'], matchPrefix: ['/admin/courses'] },
+  { to: '/admin/users', label: 'Users', matchExact: ['/admin/users'], matchPrefix: [] },
+  { to: '/admin/reports/statistics', label: 'Statistics', matchExact: ['/admin/reports/statistics'], matchPrefix: [] },
+  { to: '/admin/reports', label: 'Reports', matchExact: ['/admin/reports'], matchPrefix: ['/admin/reports/courses'] },
 ];
 
 const LECTURER_NAV = [
-  { to: '/lecturer/dashboard', label: 'My Courses' },
-  { to: '/lecturer/grading', label: 'Grading' },
-  { to: '/lecturer/attendance', label: 'Attendance' },
-  { to: '/lecturer/schedule', label: 'Schedule' },
-  { to: '/lecturer/reports', label: 'Reports' },
+  { to: '/lecturer/dashboard', label: 'My Courses', matchExact: ['/lecturer/dashboard'], matchPrefix: ['/lecturer/courses'] },
+  { to: '/lecturer/grading', label: 'Grading', matchExact: ['/lecturer/grading'], matchPrefix: [] },
+  { to: '/lecturer/attendance', label: 'Attendance', matchExact: ['/lecturer/attendance'], matchPrefix: [] },
+  { to: '/lecturer/schedule', label: 'Schedule', matchExact: ['/lecturer/schedule'], matchPrefix: [] },
+  { to: '/lecturer/reports', label: 'Reports', matchExact: ['/lecturer/reports'], matchPrefix: ['/lecturer/reports/courses'] },
 ];
 
 const STUDENT_NAV = [
-  { to: '/student/available-courses', label: 'Available Courses' },
-  { to: '/student/courses', label: 'My Courses' },
-  { to: '/student/schedule', label: 'Schedule' },
-  { to: '/student/summary', label: 'My Summary' },
+  { to: '/student/available-courses', label: 'Available Courses', matchExact: ['/student/available-courses'], matchPrefix: [] },
+  { to: '/student/courses', label: 'My Courses', matchExact: ['/student/courses'], matchPrefix: [] },
+  { to: '/student/schedule', label: 'Schedule', matchExact: ['/student/schedule'], matchPrefix: [] },
+  { to: '/student/summary', label: 'My Summary', matchExact: ['/student/summary'], matchPrefix: [] },
 ];
+
+function isNavItemActive(pathname: string, item: { matchExact: string[]; matchPrefix: string[] }) {
+  if (item.matchExact.includes(pathname)) return true;
+  return item.matchPrefix.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 export default function AppLayout() {
   const { message } = App.useApp();
   const { state, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   if (state.status !== 'authenticated') return null;
 
@@ -74,30 +87,27 @@ export default function AppLayout() {
 
         {/* Navigation */}
         <nav className="flex flex-col gap-0.5">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/admin/reports' || item.to === '/lecturer/reports'}
-              className={({ isActive }) =>
-                `flex h-[42px] items-center gap-2.5 rounded-[10px] px-3 text-[14px] font-semibold transition-colors ${
+          {navItems.map((item) => {
+            const isActive = isNavItemActive(pathname, item);
+            return (
+              <button
+                key={item.to}
+                type="button"
+                onClick={() => navigate(item.to)}
+                className={`flex h-[42px] w-full cursor-pointer items-center gap-2.5 rounded-[10px] border-none px-3 text-left text-[14px] font-semibold transition-colors ${
                   isActive
                     ? 'bg-primary text-white'
-                    : 'text-text-muted hover:bg-bg-card hover:text-text'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className="h-2 w-2 flex-none rounded-full"
-                    style={{ background: isActive ? '#fff' : '#D8C9BB' }}
-                  />
-                  {item.label}
-                </>
-              )}
-            </NavLink>
-          ))}
+                    : 'bg-transparent text-text-muted hover:bg-bg-card hover:text-text'
+                }`}
+              >
+                <span
+                  className="h-2 w-2 flex-none rounded-full"
+                  style={{ background: isActive ? '#fff' : '#D8C9BB' }}
+                />
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
 
         {/* User info + Logout */}

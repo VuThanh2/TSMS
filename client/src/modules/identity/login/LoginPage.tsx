@@ -1,17 +1,10 @@
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Form, Input, Button } from 'antd';
 import { LockOutlined, MailOutlined } from '@ant-design/icons';
 
 import { useAuth } from '@/shared/lib/auth-context';
 import AuthLayout from '@/modules/identity/shared/AuthLayout';
 import { useLogin } from './useLogin';
-
-// Tài khoản demo để test nhanh (khớp với Seed Data trong Backend)
-const DEMO_ACCOUNTS = {
-  Admin: { email: 'admin@tsms.edu.vn', password: 'Admin@123' },
-  Lecturer: { email: 'lecturer1@tsms.edu.vn', password: 'Lecturer@123' },
-  Student: { email: 'student1@tsms.edu.vn', password: 'Student@123' },
-} as const;
 
 interface LoginFormValues {
   email: string;
@@ -21,6 +14,7 @@ interface LoginFormValues {
 export default function LoginPage() {
   const { state } = useAuth();
   const { mutate, isPending } = useLogin();
+  const navigate = useNavigate();
 
   if (state.status === 'authenticated') {
     return <Navigate to="/" replace />;
@@ -28,10 +22,6 @@ export default function LoginPage() {
 
   function handleFinish(values: LoginFormValues) {
     mutate(values);
-  }
-
-  function handleDemoLogin(role: keyof typeof DEMO_ACCOUNTS) {
-    mutate(DEMO_ACCOUNTS[role]);
   }
 
   return (
@@ -60,20 +50,22 @@ export default function LoginPage() {
           <Input prefix={<MailOutlined />} placeholder="you@university.edu" className="h-12" />
         </Form.Item>
 
+        {/* Đặt row Label/"Forgot password?" ngoài prop `label` của Form.Item —
+        antd render label trong <label> width theo nội dung (không stretch full
+        row), justify-between bên trong sẽ không có chỗ để đẩy 2 đầu. */}
+        <div className="mb-[7px] flex w-full items-baseline justify-between">
+          <span className="text-[14px] font-semibold">Password</span>
+          <button
+            type="button"
+            onClick={() => navigate('/reset-password')}
+            className="cursor-pointer border-none bg-transparent p-0 text-[13px] font-semibold text-primary hover:underline"
+          >
+            Forgot password?
+          </button>
+        </div>
         <Form.Item
           name="password"
           rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
-          label={
-            <div className="flex w-full items-baseline justify-between">
-              <span className="text-[14px] font-semibold">Password</span>
-              <Link
-                to="/reset-password"
-                className="text-[13px] font-semibold text-primary no-underline hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-          }
         >
           <Input.Password
             prefix={<LockOutlined />}
@@ -82,36 +74,12 @@ export default function LoginPage() {
           />
         </Form.Item>
 
-        <Form.Item>
+        <Form.Item className="!mb-0">
           <Button type="primary" htmlType="submit" block loading={isPending} className="h-12">
             Sign in
           </Button>
         </Form.Item>
       </Form>
-
-      {/* Demo quick-login */}
-      <div className="mt-7 border-t border-border pt-[22px]">
-        <p className="m-0 mb-3 text-[13px] font-medium text-text-muted">
-          Demo — sign in as a role
-        </p>
-        <div className="flex gap-2">
-          {(['Admin', 'Lecturer', 'Student'] as const).map((role, index) => (
-            <Button
-              key={role}
-              block
-              onClick={() => handleDemoLogin(role)}
-              disabled={isPending}
-              className={`h-10 flex-1 border-border font-semibold ${
-                index === 0
-                  ? 'bg-bg-card text-text'
-                  : 'bg-white text-text-muted'
-              }`}
-            >
-              {role}
-            </Button>
-          ))}
-        </div>
-      </div>
     </AuthLayout>
   );
 }

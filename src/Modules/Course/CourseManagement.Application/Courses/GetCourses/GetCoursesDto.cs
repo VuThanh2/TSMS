@@ -8,6 +8,7 @@ public sealed record GetCoursesOutputDto(
     DateOnly EndDate,
     string Status,
     int MaxCapacity,
+    int EnrolledCount,
     Guid LecturerId,
     string? LecturerName,
     DateTime CreatedAt);
