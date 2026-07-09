@@ -44,6 +44,7 @@ public class UserRepository : IUserRepository {
     public async Task<(IReadOnlyList<AppUser> Items, int TotalCount)> GetPagedAsync(
         string? keyword,
         UserRole? role,
+        bool? isActive,
         int page,
         int pageSize,
         CancellationToken cancellationToken = default) {
@@ -51,25 +52,28 @@ public class UserRepository : IUserRepository {
             .Include(u => u.LecturerProfile)
             .Include(u => u.StudentProfile)
             .AsQueryable();
-
+ 
         if (!string.IsNullOrWhiteSpace(keyword)) {
             var lower = keyword.Trim().ToLower();
             query = query.Where(u =>
                 u.FullName.ToLower().Contains(lower) ||
                 (u.Email != null && u.Email.ToLower().Contains(lower)));
         }
-
+ 
         if (role.HasValue)
             query = query.Where(u => u.Role == role.Value);
-
+ 
+        if (isActive.HasValue)
+            query = query.Where(u => u.IsActive == isActive.Value);
+ 
         var totalCount = await query.CountAsync(cancellationToken);
-
+ 
         var items = await query
             .OrderBy(u => u.FullName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
-
+ 
         return (items, totalCount);
     }
 

@@ -15,12 +15,15 @@ public sealed class GetCourseByIdQueryHandler
     : IRequestHandler<GetCourseByIdQuery, Result<GetCourseByIdOutputDto>> {
     private readonly ICourseRepository _courseRepository;
     private readonly ILecturerLookupService _lecturerLookupService;
+    private readonly IEnrollmentCourseService _enrollmentCourseService;
 
     public GetCourseByIdQueryHandler(
         ICourseRepository courseRepository,
-        ILecturerLookupService lecturerLookupService) {
+        ILecturerLookupService lecturerLookupService,
+        IEnrollmentCourseService enrollmentCourseService) {
         _courseRepository = courseRepository;
         _lecturerLookupService = lecturerLookupService;
+        _enrollmentCourseService = enrollmentCourseService;
     }
 
     public async Task<Result<GetCourseByIdOutputDto>> Handle(
@@ -35,7 +38,9 @@ public sealed class GetCourseByIdQueryHandler
 
         var lecturerName = await _lecturerLookupService.GetFullNameAsync(
             course.LecturerId, cancellationToken);
+        var enrolledCount = await _enrollmentCourseService.GetEnrollmentCountAsync(
+            course.Id, cancellationToken);
 
-        return Result.Success(CourseMapper.ToGetCourseByIdOutputDto(course, lecturerName));
+        return Result.Success(CourseMapper.ToGetCourseByIdOutputDto(course, lecturerName, enrolledCount));
     }
 }

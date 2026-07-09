@@ -17,12 +17,13 @@ public class GradingController : ControllerBase {
         _sender = sender;
     }
 
-    // GET /api/courses/{courseId}/enrollments?page=&pageSize=
+    // GET /api/courses/{courseId}/enrollments?page=&pageSize=&keyword=
     // Lecturer xem danh sách Student đã enroll trong Course kèm điểm số.
     [HttpGet("courses/{courseId:guid}/enrollments")]
     [Authorize(Roles = "Lecturer")]
     public async Task<IActionResult> GetCourseEnrollments(
         Guid courseId,
+        [FromQuery] string? keyword = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default) {
@@ -30,7 +31,7 @@ public class GradingController : ControllerBase {
         if (lecturerId is null) return Unauthorized();
  
         var result = await _sender.Send(
-            new GetCourseEnrollmentsQuery(courseId, lecturerId.Value, page, pageSize),
+            new GetCourseEnrollmentsQuery(courseId, lecturerId.Value, keyword, page, pageSize),
             cancellationToken);
  
         if (result.IsFailure)

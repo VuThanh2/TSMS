@@ -2,7 +2,7 @@ namespace EnrollmentManagement.Domain.Repositories;
 
 public interface IAttendanceRepository {
     Task<Entities.Attendance?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    
+
     Task<Entities.Attendance?> GetByStudentAndSessionAsync(
         Guid studentId,
         Guid classSessionId,
@@ -19,8 +19,18 @@ public interface IAttendanceRepository {
         Guid courseId,
         CancellationToken cancellationToken = default);
 
+    // Dùng cho AdjustSession: lấy Attendance của Student ứng với nhiều ClassSessionId cùng lúc
+    // (các buổi tương lai thuộc WeeklySlot cũ) để xóa khi đổi slot.
+    Task<List<Entities.Attendance>> GetByStudentAndSessionIdsAsync(
+        Guid studentId,
+        IReadOnlyList<Guid> classSessionIds,
+        CancellationToken cancellationToken = default);
+
     void Add(Entities.Attendance attendance);
 
-    // Dùng khi pre-populate hàng loạt Attendance sau khi Student enroll.
+    // Dùng khi pre-populate hàng loạt Attendance sau khi Student enroll hoặc AdjustSession.
     void AddRange(IEnumerable<Entities.Attendance> attendances);
+
+    // Dùng khi AdjustSession: xóa Attendance của các buổi tương lai thuộc WeeklySlot cũ.
+    void RemoveRange(IEnumerable<Entities.Attendance> attendances);
 }

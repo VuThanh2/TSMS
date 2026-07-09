@@ -13,25 +13,25 @@ public static class EnrollmentMapper {
 
     public static EnrollCourseDtos.EnrollCourseOutputDto ToEnrollCourseOutputDto(
         Enrollment enrollment,
-        IReadOnlyList<ClassSessionLookup> sessionLookups) =>
+        IReadOnlyList<WeeklySlotLookup> slotLookups) =>
         new(
             EnrollmentId: enrollment.Id,
             CourseId: enrollment.CourseId,
             StudentId: enrollment.StudentId,
             EnrolledAt: enrollment.EnrolledAt,
             EnrolledSessions: enrollment.EnrolledSessions
-                .Select(s => ToEnrollCourseSessionOutputDto(s, sessionLookups))
+                .Select(s => ToEnrollCourseSessionOutputDto(s, slotLookups))
                 .ToList());
 
     // ── AdjustSession
 
     public static AdjustSessionDtos.AdjustSessionOutputDto ToAdjustSessionOutputDto(
         Enrollment enrollment,
-        IReadOnlyList<ClassSessionLookup> sessionLookups) =>
+        IReadOnlyList<WeeklySlotLookup> slotLookups) =>
         new(
             EnrollmentId: enrollment.Id,
             EnrolledSessions: enrollment.EnrolledSessions
-                .Select(s => ToAdjustSessionEnrolledSessionOutputDto(s, sessionLookups))
+                .Select(s => ToAdjustSessionEnrolledSessionOutputDto(s, slotLookups))
                 .ToList());
 
     // ── GradeStudent
@@ -72,23 +72,23 @@ public static class EnrollmentMapper {
 
     private static EnrollCourseDtos.EnrolledSessionOutputDto ToEnrollCourseSessionOutputDto(
         EnrolledSession session,
-        IReadOnlyList<ClassSessionLookup> sessionLookups) {
-        var lookup = sessionLookups.FirstOrDefault(l => l.ClassSessionId == session.ClassSessionId);
+        IReadOnlyList<WeeklySlotLookup> slotLookups) {
+        var lookup = slotLookups.FirstOrDefault(l => l.WeeklySlotId == session.WeeklySlotId);
         return new EnrollCourseDtos.EnrolledSessionOutputDto(
             EnrolledSessionId: session.Id,
-            ClassSessionId: session.ClassSessionId,
-            DayOfWeek: lookup is not null ? lookup.SessionDate.DayOfWeek.ToString() : string.Empty,
+            WeeklySlotId: session.WeeklySlotId,
+            DayOfWeek: lookup?.DayOfWeek ?? string.Empty,
             SessionType: session.SessionType.ToString());
     }
 
     private static AdjustSessionDtos.EnrolledSessionOutputDto ToAdjustSessionEnrolledSessionOutputDto(
         EnrolledSession session,
-        IReadOnlyList<ClassSessionLookup> sessionLookups) {
-        var lookup = sessionLookups.FirstOrDefault(l => l.ClassSessionId == session.ClassSessionId);
+        IReadOnlyList<WeeklySlotLookup> slotLookups) {
+        var lookup = slotLookups.FirstOrDefault(l => l.WeeklySlotId == session.WeeklySlotId);
         return new AdjustSessionDtos.EnrolledSessionOutputDto(
             EnrolledSessionId: session.Id,
-            ClassSessionId: session.ClassSessionId,
-            DayOfWeek: lookup is not null ? lookup.SessionDate.DayOfWeek.ToString() : string.Empty,
+            WeeklySlotId: session.WeeklySlotId,
+            DayOfWeek: lookup?.DayOfWeek ?? string.Empty,
             SessionType: session.SessionType.ToString());
     }
 }

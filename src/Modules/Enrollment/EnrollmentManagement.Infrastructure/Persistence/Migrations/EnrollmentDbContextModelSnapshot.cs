@@ -64,9 +64,6 @@ namespace EnrollmentManagement.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("EnrolledSessionId");
 
-                    b.Property<Guid>("ClassSessionId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("EnrollmentId")
                         .HasColumnType("uniqueidentifier");
 
@@ -75,9 +72,12 @@ namespace EnrollmentManagement.Infrastructure.Persistence.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
+                    b.Property<Guid>("WeeklySlotId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("EnrollmentId", "ClassSessionId")
+                    b.HasIndex("EnrollmentId", "WeeklySlotId")
                         .IsUnique();
 
                     b.ToTable("EnrolledSessions", "enrollment");

@@ -10,11 +10,11 @@ public sealed class EnrollCourseCommandValidator : AbstractValidator<EnrollCours
         RuleFor(x => x.CourseId)
             .NotEmpty().WithMessage("CourseId is required.");
 
-        RuleFor(x => x.SessionIds)
-            .NotNull().WithMessage("SessionIds is required.")
+        RuleFor(x => x.WeeklySlotIds)
+            .NotNull().WithMessage("WeeklySlotIds is required.")
             .Must(ids => ids.Count == 2)
-            .WithMessage("Exactly 2 session IDs must be selected.")
+            .WithMessage("Exactly 2 weekly slot IDs must be selected.")
             .Must(ids => ids.Distinct().Count() == ids.Count)
-            .WithMessage("Session IDs must be distinct.");
+            .WithMessage("Weekly slot IDs must be distinct.");
     }
 }

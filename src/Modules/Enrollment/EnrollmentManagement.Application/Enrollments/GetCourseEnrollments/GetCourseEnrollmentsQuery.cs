@@ -12,6 +12,7 @@ namespace EnrollmentManagement.Application.Enrollments.GetCourseEnrollments;
 public sealed record GetCourseEnrollmentsQuery(
     Guid CourseId,
     Guid LecturerId,
+    string? Keyword,
     int Page,
     int PageSize) : IRequest<Result<PagedList<GetCourseEnrollmentsOutputDto>>>;
 
@@ -36,30 +37,40 @@ public sealed class GetCourseEnrollmentsQueryHandler
         // Precondition: Lecturer phải là người phụ trách Course này.
         var courses = await _courseEnrollmentService.GetCoursesByIdsAsync(
             [request.CourseId], cancellationToken);
-
+ 
         var course = courses.FirstOrDefault(c => c.CourseId == request.CourseId);
-
+ 
         if (course is null || course.LecturerId != request.LecturerId)
             return Result.Failure<PagedList<GetCourseEnrollmentsOutputDto>>(
                 EnrollmentErrors.NotCourseOwner);
-
+ 
         var enrollments = await _enrollmentRepository.GetByCourseIdAsync(
             request.CourseId, cancellationToken);
-
+ 
         var dtos = new List<GetCourseEnrollmentsOutputDto>(enrollments.Count);
-
+ 
         foreach (var enrollment in enrollments) {
             var fullName = await _studentEnrollmentService.GetFullNameAsync(
                 enrollment.StudentId, cancellationToken);
             var email = await _studentEnrollmentService.GetEmailAsync(
                 enrollment.StudentId, cancellationToken);
-
+ 
             dtos.Add(EnrollmentMapper.ToGetCourseEnrollmentsOutputDto(enrollment, fullName, email));
         }
-
+ 
+        // Search theo tên hoặc email, không phân biệt hoa thường.
+        if (!string.IsNullOrWhiteSpace(request.Keyword)) {
+            var keyword = request.Keyword.Trim();
+ 
+            dtos = dtos.Where(dto =>
+                (dto.StudentFullName?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (dto.StudentEmail?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false)
+            ).ToList();
+        }
+ 
         var paged = PagedList<GetCourseEnrollmentsOutputDto>.Create(
             dtos, request.Page, request.PageSize, dtos.Count);
-
+ 
         return Result.Success(paged);
     }
 }

@@ -11,7 +11,7 @@ public class AttendanceRepository : IAttendanceRepository {
     public AttendanceRepository(EnrollmentDbContext context) {
         _context = context;
     }
-    
+
     public async Task<Attendance?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default) {
@@ -47,11 +47,24 @@ public class AttendanceRepository : IAttendanceRepository {
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<Attendance>> GetByStudentAndSessionIdsAsync(
+        Guid studentId,
+        IReadOnlyList<Guid> classSessionIds,
+        CancellationToken cancellationToken = default) {
+        return await _context.Attendances
+            .Where(a => a.StudentId == studentId && classSessionIds.Contains(a.ClassSessionId))
+            .ToListAsync(cancellationToken);
+    }
+
     public void Add(Attendance attendance) {
         _context.Attendances.Add(attendance);
     }
 
     public void AddRange(IEnumerable<Attendance> attendances) {
         _context.Attendances.AddRange(attendances);
+    }
+
+    public void RemoveRange(IEnumerable<Attendance> attendances) {
+        _context.Attendances.RemoveRange(attendances);
     }
 }

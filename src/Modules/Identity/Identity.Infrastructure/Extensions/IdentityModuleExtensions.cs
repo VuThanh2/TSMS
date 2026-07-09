@@ -107,6 +107,20 @@ public static class IdentityModuleExtensions {
                     IssuerSigningKey = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(jwtOptions.SecretKey))
                 };
+ 
+                // SignalR (WebSocket) không cho phép Client gắn header Authorization thủ công
+                // khi bắt tay kết nối — bắt buộc phải nhận token qua query string.
+                options.Events = new JwtBearerEvents {
+                    OnMessageReceived = context => {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+ 
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                            context.Token = accessToken;
+ 
+                        return Task.CompletedTask;
+                    }
+                };
             });
  
         services.AddAuthorization();

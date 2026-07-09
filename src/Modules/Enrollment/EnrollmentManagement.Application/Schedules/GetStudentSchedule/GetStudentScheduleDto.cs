@@ -8,4 +8,5 @@ public sealed record GetStudentScheduleOutputDto(
     DateOnly SessionDate,
     string DayOfWeek,
     string SessionType,
+    bool IsCancelled,
     string AttendanceStatus);

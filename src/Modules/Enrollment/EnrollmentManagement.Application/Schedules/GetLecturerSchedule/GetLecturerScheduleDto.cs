@@ -6,4 +6,5 @@ public sealed record GetLecturerScheduleOutputDto(
     Guid ClassSessionId,
     DateOnly SessionDate,
     string DayOfWeek,
-    string SessionType);
+    string SessionType,
+    bool IsCancelled);

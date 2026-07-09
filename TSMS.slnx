@@ -39,5 +39,6 @@
     <Project Path="tests/Course.UnitTests/Course.UnitTests.csproj" />
     <Project Path="tests/Enrollment.UnitTests/Enrollment.UnitTests.csproj" />
     <Project Path="tests/Identity.UnitTests/Identity.UnitTests.csproj" />
+    <Project Path="tests/Reporting.UnitTests/Reporting.UnitTests.csproj" />
   </Folder>
 </Solution>

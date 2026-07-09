@@ -20,12 +20,15 @@ public sealed class GetCoursesQueryHandler
     : IRequestHandler<GetCoursesQuery, Result<PagedList<GetCoursesOutputDto>>> {
     private readonly ICourseRepository _courseRepository;
     private readonly ILecturerLookupService _lecturerLookupService;
+    private readonly IEnrollmentCourseService _enrollmentCourseService;
 
     public GetCoursesQueryHandler(
         ICourseRepository courseRepository,
-        ILecturerLookupService lecturerLookupService) {
+        ILecturerLookupService lecturerLookupService,
+        IEnrollmentCourseService enrollmentCourseService) {
         _courseRepository = courseRepository;
         _lecturerLookupService = lecturerLookupService;
+        _enrollmentCourseService = enrollmentCourseService;
     }
 
     public async Task<Result<PagedList<GetCoursesOutputDto>>> Handle(
@@ -44,12 +47,14 @@ public sealed class GetCoursesQueryHandler
             pageSize: request.PageSize,
             cancellationToken: cancellationToken);
 
-        // Enrich với LecturerName — số item tối đa là pageSize, nên N calls là chấp nhận được.
+        // Enrich với LecturerName/EnrolledCount — số item tối đa là pageSize, nên N calls là chấp nhận được.
         var dtos = new List<GetCoursesOutputDto>(items.Count);
         foreach (var course in items) {
             var lecturerName = await _lecturerLookupService.GetFullNameAsync(
                 course.LecturerId, cancellationToken);
-            dtos.Add(CourseMapper.ToGetCoursesOutputDto(course, lecturerName));
+            var enrolledCount = await _enrollmentCourseService.GetEnrollmentCountAsync(
+                course.Id, cancellationToken);
+            dtos.Add(CourseMapper.ToGetCoursesOutputDto(course, lecturerName, enrolledCount));
         }
 
         return Result.Success(PagedList<GetCoursesOutputDto>.Create(

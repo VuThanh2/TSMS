@@ -1,6 +1,10 @@
 namespace EnrollmentManagement.Application.Enrollments.AdjustSession;
 
-public sealed record AdjustSessionInputDto(IReadOnlyList<Guid> SessionIds);
+// Đổi từ positional IReadOnlyList<Guid> (thứ tự phải đúng) sang named field —
+// tránh footgun "SessionIds[0] là old hay new" ở FE.
+public sealed record AdjustSessionInputDto(
+    Guid OldWeeklySlotId,
+    Guid NewWeeklySlotId);
 
 public sealed record AdjustSessionOutputDto(
     Guid EnrollmentId,
@@ -8,6 +12,6 @@ public sealed record AdjustSessionOutputDto(
 
 public sealed record EnrolledSessionOutputDto(
     Guid EnrolledSessionId,
-    Guid ClassSessionId,
+    Guid WeeklySlotId,
     string DayOfWeek,
     string SessionType);

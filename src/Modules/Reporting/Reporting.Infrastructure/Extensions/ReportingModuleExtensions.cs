@@ -1,4 +1,8 @@
 using System.Reflection;
+using CourseManagement.Domain.Events;
+using EnrollmentManagement.Domain.Events;
+using Identity.Domain.Events;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,13 +26,27 @@ public static class ReportingModuleExtensions {
 
         services.AddScoped<IReportingRepository, ReportingRepository>();
 
-        // EventHandlers — MediatR tự dispatch khi các BC publish event.
-        // Course/Enrollment events: đến qua OutboxProcessor → IPublisher → handler.
-        // Identity events: đến trực tiếp qua IPublisher từ Application handlers.
+        // EventHandlers sống ở Infrastructure (không phải Application) nên MediatR's
+        // RegisterServicesFromAssemblies (chỉ scan *.Application assembly của từng module)
+        // không tự phát hiện được — phải đăng ký thủ công từng INotificationHandler<TEvent>.
+        // 1 instance implement nhiều interface → forward DI (cùng convention với cross-BC interface).
         services.AddScoped<CourseEventHandler>();
+        services.AddScoped<INotificationHandler<CourseCreatedEvent>>(sp => sp.GetRequiredService<CourseEventHandler>());
+        services.AddScoped<INotificationHandler<CourseUpdatedEvent>>(sp => sp.GetRequiredService<CourseEventHandler>());
+        services.AddScoped<INotificationHandler<CourseStatusChangedEvent>>(sp => sp.GetRequiredService<CourseEventHandler>());
+        services.AddScoped<INotificationHandler<LecturerReplacedEvent>>(sp => sp.GetRequiredService<CourseEventHandler>());
+
         services.AddScoped<EnrollmentEventHandler>();
+        services.AddScoped<INotificationHandler<StudentEnrolledEvent>>(sp => sp.GetRequiredService<EnrollmentEventHandler>());
+        services.AddScoped<INotificationHandler<GradeAssignedEvent>>(sp => sp.GetRequiredService<EnrollmentEventHandler>());
+        services.AddScoped<INotificationHandler<GradeUpdatedEvent>>(sp => sp.GetRequiredService<EnrollmentEventHandler>());
+
         services.AddScoped<AttendanceEventHandler>();
+        services.AddScoped<INotificationHandler<AttendanceMarkedEvent>>(sp => sp.GetRequiredService<AttendanceEventHandler>());
+
+        // Identity events: đến trực tiếp qua IPublisher từ Application handlers (không qua Outbox).
         services.AddScoped<IdentityEventHandler>();
+        services.AddScoped<INotificationHandler<UserUpdatedEvent>>(sp => sp.GetRequiredService<IdentityEventHandler>());
 
         return services;
     }

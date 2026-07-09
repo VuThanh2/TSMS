@@ -13,7 +13,7 @@ namespace EnrollmentManagement.Domain.Entities;
 //   - Course phải tồn tại và có Status = Upcoming (ICourseEnrollmentService).
 //   - Course chưa đạt MaxCapacity (IEnrollmentRepository.CountActiveEnrollmentsAsync).
 //   - Student chưa đăng ký Course này (IEnrollmentRepository.GetByStudentAndCourseAsync).
-//   - 2 ClassSessionId phải thuộc đúng Course này (ICourseEnrollmentService).
+//   - 2 WeeklySlotId phải thuộc đúng Course này (ICourseEnrollmentService).
 public class Enrollment : AggregateRoot {
     private readonly List<EnrolledSession> _enrolledSessions = [];
 
@@ -31,23 +31,23 @@ public class Enrollment : AggregateRoot {
     // Required by EF Core.
     private Enrollment() { }
 
-    // sessions: danh sách (ClassSessionId, SessionType) của 2 ca học Student chọn.
+    // slots: danh sách (WeeklySlotId, SessionType) của 2 khung giờ hàng tuần Student chọn cho cả kỳ.
     public static Result<Enrollment> Create(
         Guid studentId,
         Guid courseId,
-        IReadOnlyList<(Guid ClassSessionId, ValueObjects.SessionType SessionType)> sessions,
+        IReadOnlyList<(Guid WeeklySlotId, ValueObjects.SessionType SessionType)> slots,
         string studentFullName,        // ← enrich
         string studentEmail,           // ← enrich
         string courseName,             // ← enrich
         string courseStatus,           // ← enrich
         int totalSessionsInCourse) {   // ← enrich
- 
-        if (sessions.Count != 2)
+
+        if (slots.Count != 2)
             return Result.Failure<Enrollment>(EnrollmentErrors.InvalidSessionCount);
- 
-        if (sessions[0].SessionType == sessions[1].SessionType)
-            return Result.Failure<Enrollment>(EnrollmentErrors.DuplicateSessionType);
- 
+
+        if (slots[0].WeeklySlotId == slots[1].WeeklySlotId)
+            return Result.Failure<Enrollment>(EnrollmentErrors.DuplicateSession);
+
         var enrollment = new Enrollment {
             Id = Guid.NewGuid(),
             StudentId = studentId,
@@ -56,12 +56,12 @@ public class Enrollment : AggregateRoot {
             Grade = null,
             EnrolledAt = DateTime.UtcNow
         };
- 
-        foreach (var (classSessionId, sessionType) in sessions) {
-            var enrolledSession = EnrolledSession.Create(enrollment.Id, classSessionId, sessionType);
+
+        foreach (var (weeklySlotId, sessionType) in slots) {
+            var enrolledSession = EnrolledSession.Create(enrollment.Id, weeklySlotId, sessionType);
             enrollment._enrolledSessions.Add(enrolledSession);
         }
- 
+
         enrollment.RaiseDomainEvent(StudentEnrolledEvent.Create(
             enrollment.Id,
             enrollment.StudentId,
@@ -72,7 +72,7 @@ public class Enrollment : AggregateRoot {
             courseName,
             courseStatus,
             totalSessionsInCourse));
- 
+
         return Result.Success(enrollment);
     }
 
@@ -105,39 +105,40 @@ public class Enrollment : AggregateRoot {
 
         return Result.Success();
     }
-    
-    // Business rule: Nếu ca cũ đã qua, Attendance record của ca đó được giữ nguyên
-    // (buổi điều chỉnh trong tuần đó coi như học thêm).
+
+    // Business rule: đổi WeeklySlot chỉ ảnh hưởng các buổi TƯƠNG LAI — Attendance của buổi
+    // đã qua thuộc slot cũ được giữ nguyên (coi như học thêm). Đồng bộ Attendance được xử lý
+    // ở Application Layer (cross-aggregate, không thuộc trách nhiệm của Enrollment).
     public Result AdjustSession(
-        Guid oldClassSessionId,
-        Guid newClassSessionId,
+        Guid oldWeeklySlotId,
+        Guid newWeeklySlotId,
         SessionType newSessionType) {
-        // Guard: không adjust sang chính session đang có.
-        if (oldClassSessionId == newClassSessionId)
+        // Guard: không adjust sang chính slot đang có.
+        if (oldWeeklySlotId == newWeeklySlotId)
             return Result.Failure(EnrollmentErrors.SessionAlreadyEnrolled);
- 
+
         var sessionToReplace = _enrolledSessions
-            .FirstOrDefault(s => s.ClassSessionId == oldClassSessionId);
- 
+            .FirstOrDefault(s => s.WeeklySlotId == oldWeeklySlotId);
+
         if (sessionToReplace is null)
             return Result.Failure(EnrollmentErrors.AdjustSessionNotFound);
- 
-        // Guard: newClassSessionId không được trùng với session kia đang có.
+
+        // Guard: newWeeklySlotId không được trùng với slot kia đang có.
         var otherSession = _enrolledSessions
-            .First(s => s.ClassSessionId != oldClassSessionId);
- 
-        if (otherSession.ClassSessionId == newClassSessionId)
+            .First(s => s.WeeklySlotId != oldWeeklySlotId);
+
+        if (otherSession.WeeklySlotId == newWeeklySlotId)
             return Result.Failure(EnrollmentErrors.SessionAlreadyEnrolled);
- 
+
         // Guard: SessionType sau khi adjust không được trùng nhau.
         if (otherSession.SessionType == newSessionType)
             return Result.Failure(EnrollmentErrors.AdjustSessionTypeDuplicate);
- 
-        sessionToReplace.Adjust(newClassSessionId, newSessionType);
- 
+
+        sessionToReplace.Adjust(newWeeklySlotId, newSessionType);
+
         RaiseDomainEvent(SessionAdjustedEvent.Create(
-            Id, StudentId, CourseId, oldClassSessionId, newClassSessionId));
- 
+            Id, StudentId, CourseId, oldWeeklySlotId, newWeeklySlotId));
+
         return Result.Success();
     }
 }

@@ -7,7 +7,8 @@ using SharedKernel.Primitives;
 namespace EnrollmentManagement.Application.Schedules.GetStudentSchedule;
 
 // Student lấy toàn bộ lịch học cá nhân kèm trạng thái điểm danh để render timeline.
-// Chỉ trả về 2 ca học đã chọn trong mỗi Course đã đăng ký (EnrolledSessions).
+// Mỗi WeeklySlot đã chọn (EnrolledSession) áp dụng cho CẢ KỲ — trả về TẤT CẢ ClassSession
+// (mọi tuần trong suốt kỳ) thuộc 2 WeeklySlot đã chọn, không chỉ 1 buổi đại diện như trước.
 // Không phân trang — trả về toàn bộ.
 public sealed record GetStudentScheduleQuery(
     Guid StudentId) : IRequest<Result<GetStudentScheduleResponse>>;
@@ -44,9 +45,20 @@ public sealed class GetStudentScheduleQueryHandler
             courseIds, cancellationToken);
         var courseMap = courses.ToDictionary(c => c.CourseId);
 
-        var allSessions = await _courseEnrollmentService.GetClassSessionsByCourseIdsAsync(
-            courseIds, cancellationToken);
-        var sessionMap = allSessions.ToDictionary(s => s.ClassSessionId);
+        // Lấy TOÀN BỘ ClassSession (mọi tuần) thuộc các WeeklySlot Student đã chọn —
+        // 1 EnrolledSession áp dụng cho cả kỳ, không phải chỉ 1 buổi cụ thể.
+        var weeklySlotIds = enrollments
+            .SelectMany(e => e.EnrolledSessions)
+            .Select(s => s.WeeklySlotId)
+            .Distinct()
+            .ToList();
+
+        var sessions = await _courseEnrollmentService.GetClassSessionsByWeeklySlotIdsAsync(
+            weeklySlotIds, cancellationToken);
+
+        var sessionsBySlot = sessions
+            .GroupBy(s => s.WeeklySlotId)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         // Attendance lookup: classSessionId → status string
         var attendanceLookup = new Dictionary<Guid, string>();
@@ -64,21 +76,23 @@ public sealed class GetStudentScheduleQueryHandler
                 continue;
 
             foreach (var enrolledSession in enrollment.EnrolledSessions) {
-                if (!sessionMap.TryGetValue(enrolledSession.ClassSessionId, out var session))
+                if (!sessionsBySlot.TryGetValue(enrolledSession.WeeklySlotId, out var slotSessions))
                     continue;
 
-                var attendanceStatus = attendanceLookup.TryGetValue(
-                    enrolledSession.ClassSessionId, out var status)
-                    ? status
-                    : "Absent";
+                foreach (var session in slotSessions) {
+                    var attendanceStatus = attendanceLookup.TryGetValue(
+                        session.ClassSessionId, out var status)
+                        ? status
+                        : "Absent";
 
-                items.Add(ScheduleMapper.ToGetStudentScheduleOutputDto(
-                    courseId: enrollment.CourseId,
-                    courseName: course.CourseName,
-                    enrollmentId: enrollment.Id,
-                    session: session,
-                    sessionType: enrolledSession.SessionType.ToString(),
-                    attendanceStatus: attendanceStatus));
+                    items.Add(ScheduleMapper.ToGetStudentScheduleOutputDto(
+                        courseId: enrollment.CourseId,
+                        courseName: course.CourseName,
+                        enrollmentId: enrollment.Id,
+                        session: session,
+                        sessionType: enrolledSession.SessionType.ToString(),
+                        attendanceStatus: attendanceStatus));
+                }
             }
         }
 

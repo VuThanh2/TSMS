@@ -1,6 +1,6 @@
 using CourseManagement.Infrastructure.Extensions;
 using EnrollmentManagement.Infrastructure.Extensions;
-using EnrollmentManagement.Infrastructure.Services;
+using EnrollmentManagement.Infrastructure.Hubs;
 using Hangfire;
 using Identity.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -48,5 +48,6 @@ app.MapHub<GradeHub>("/hubs/grade");
 
 // ── Hangfire jobs
 app.RegisterCourseJobs();
+app.RegisterEnrollmentJobs();
 
 app.Run();

@@ -12,6 +12,8 @@ using Identity.Presentation.Controllers;
 using Reporting.Infrastructure.Extensions;
 using Reporting.Infrastructure.Persistence;
 using Reporting.Presentation.Controllers;
+using SharedInfrastructure.Email;
+using TSMS.Api.Options;
 
 namespace TSMS.Api.Extensions;
 
@@ -30,11 +32,19 @@ public static class ServiceCollectionExtensions {
         services.AddMediatRWithValidation();
         services.AddHangfireServices(configuration);
         services.AddHealthCheckServices();
+        services.AddEmailServices(configuration);
 
         return services;
     }
 
     // ── Private helpers
+
+    private static void AddEmailServices(
+        this IServiceCollection services,
+        IConfiguration configuration) {
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+    }
     
     private static void AddHealthCheckServices(this IServiceCollection services) {
         services.AddHealthChecks()
@@ -59,13 +69,13 @@ public static class ServiceCollectionExtensions {
     private static void AddCorsPolicy(
         this IServiceCollection services,
         IConfiguration configuration) {
-        var allowedOrigins = configuration
-            .GetSection("Cors:AllowedOrigins")
-            .Get<string[]>() ?? [];
+        var corsOptions = configuration
+            .GetSection(CorsOptions.SectionName)
+            .Get<CorsOptions>() ?? new CorsOptions();
 
         services.AddCors(options => {
             options.AddPolicy("AllowFrontend", policy => {
-                policy.WithOrigins(allowedOrigins)
+                policy.WithOrigins(corsOptions.AllowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();

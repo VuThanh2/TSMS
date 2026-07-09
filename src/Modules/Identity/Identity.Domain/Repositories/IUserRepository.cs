@@ -20,6 +20,7 @@ public interface IUserRepository
     Task<(IReadOnlyList<AppUser> Items, int TotalCount)> GetPagedAsync(
         string? keyword,
         UserRole? role,
+        bool? isActive,
         int page,
         int pageSize,
         CancellationToken cancellationToken = default);

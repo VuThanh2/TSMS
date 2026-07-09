@@ -49,6 +49,14 @@ public sealed class MarkAttendanceCommandHandler
         if (course is null || course.LecturerId != request.LecturerId)
             return Result.Failure<MarkAttendanceOutputDto>(EnrollmentErrors.NotCourseOwner);
 
+        // Precondition 3: Buổi học không được ở trạng thái đã hủy (vd nghỉ lễ) — Course BC
+        // sở hữu dữ liệu này, Enrollment chỉ đọc qua interface, không tự lưu trạng thái hủy.
+        var classSession = await _courseEnrollmentService.GetClassSessionAsync(
+            attendance.ClassSessionId, cancellationToken);
+
+        if (classSession is not null && classSession.IsCancelled)
+            return Result.Failure<MarkAttendanceOutputDto>(EnrollmentErrors.SessionCancelled);
+
         if (!Enum.TryParse<AttendanceStatus>(request.AttendanceStatus, ignoreCase: true, out var status))
             return Result.Failure<MarkAttendanceOutputDto>(EnrollmentErrors.AttendanceNotFound);
 

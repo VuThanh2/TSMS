@@ -57,7 +57,8 @@ public static class ReportingMapper {
             TotalSessions: view.TotalSessions,
             PresentCount: view.PresentCount,
             ExcusedCount: view.ExcusedCount,
-            AbsentCount: view.AbsentCount,
+            AbsentCount: CalculateEndedAbsentCount(
+                view.PresentCount, view.ExcusedCount, endedSessionCount),
             AttendanceRate: CalculateAttendanceRate(
                 view.PresentCount, view.ExcusedCount, endedSessionCount));
 
@@ -74,7 +75,8 @@ public static class ReportingMapper {
             TotalSessions: view.TotalSessions,
             PresentCount: view.PresentCount,
             ExcusedCount: view.ExcusedCount,
-            AbsentCount: view.AbsentCount,
+            AbsentCount: CalculateEndedAbsentCount(
+                view.PresentCount, view.ExcusedCount, endedSessionCount),
             AttendanceRate: CalculateAttendanceRate(
                 view.PresentCount, view.ExcusedCount, endedSessionCount));
 
@@ -89,4 +91,15 @@ public static class ReportingMapper {
         endedSessionCount > 0
             ? Math.Round((decimal)(presentCount + excusedCount) / endedSessionCount, 4)
             : 0m;
+
+    // AbsentCount lưu trên View bị seed = TOÀN BỘ ClassSession của Course (kể cả buổi
+    // tương lai — xem comment InitializeAbsentCount trên CourseAttendanceReportView /
+    // StudentPersonalSummaryView), nên không thể trả thẳng ra DTO — sẽ đếm nhầm buổi
+    // chưa diễn ra là "Absent". Suy ra lại từ endedSessionCount (cùng mẫu số với
+    // AttendanceRate) để chỉ tính Absent cho các ca đã kết thúc mà không Present/Excused.
+    private static int CalculateEndedAbsentCount(
+        int presentCount,
+        int excusedCount,
+        int endedSessionCount) =>
+        Math.Max(0, endedSessionCount - presentCount - excusedCount);
 }

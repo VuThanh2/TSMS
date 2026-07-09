@@ -12,10 +12,36 @@ public interface ICourseEnrollmentService {
     // Lấy MaxCapacity của course — check trước khi enroll.
     Task<int?> GetMaxCapacityAsync(Guid courseId, CancellationToken cancellationToken = default);
 
+    // Lấy tất cả WeeklySlot của course kèm SessionType — dùng để: (1) validate Student chọn đúng 2 slot,
+    // (2) build candidate cho ScheduleConflictChecker, (3) hiển thị DayOfWeek cho response DTO.
+    Task<IReadOnlyList<WeeklySlotLookup>> GetWeeklySlotsAsync(
+        Guid courseId,
+        CancellationToken cancellationToken = default);
+
+    // Lấy WeeklySlot của NHIỀU course cùng lúc — dùng cho ScheduleConflictChecker, tránh N+1
+    // khi Student đã enroll nhiều Course khác nhau.
+    Task<IReadOnlyList<WeeklySlotLookup>> GetWeeklySlotsByCourseIdsAsync(
+        IReadOnlyList<Guid> courseIds,
+        CancellationToken cancellationToken = default);
+
+    // Lấy 1 ClassSession cụ thể — dùng để check IsCancelled trước khi cho phép MarkAttendance
+    // (Lecturer không được điểm danh cho buổi đã bị hủy, vd nghỉ lễ).
+    Task<ClassSessionLookup?> GetClassSessionAsync(
+        Guid classSessionId,
+        CancellationToken cancellationToken = default);
+
     // Lấy tất cả ClassSessions của course kèm SessionType.
-    // Dùng để: (1) validate Student chọn đúng 2 session, (2) pre-populate Attendance records.
+    // Dùng cho: enrich TotalSessionsInCourse của StudentEnrolledEvent (đếm TOÀN BỘ course,
+    // không lọc theo slot Student chọn).
     Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsAsync(
         Guid courseId,
+        CancellationToken cancellationToken = default);
+
+    // Lấy các ClassSessions thuộc đúng những WeeklySlotId được chỉ định.
+    // Dùng để pre-populate Attendance CHỈ cho 2 slot Student thực sự chọn (EnrollCourse),
+    // và để đồng bộ Attendance khi đổi slot (AdjustSession) — KHÔNG lấy toàn bộ ClassSession của course.
+    Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsByWeeklySlotIdsAsync(
+        IReadOnlyList<Guid> weeklySlotIds,
         CancellationToken cancellationToken = default);
 
     // Lấy CourseLookup cho nhiều courseIds — dùng cho enrich response DTO.
@@ -32,13 +58,27 @@ public interface ICourseEnrollmentService {
     Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsByCourseIdsAsync(
         IReadOnlyList<Guid> courseIds,
         CancellationToken cancellationToken = default);
+    
+    // Lấy tất cả ClassSession diễn ra vào 1 ngày cụ thể, ở TẤT CẢ Course — dùng cho
+    // SendSessionReminderJobService
+    Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsByDateAsync(
+        DateOnly date,
+        CancellationToken cancellationToken = default);
 }
+
+public sealed record WeeklySlotLookup(
+    Guid WeeklySlotId,
+    Guid CourseId,
+    string DayOfWeek,
+    string SessionType);
 
 public sealed record ClassSessionLookup(
     Guid ClassSessionId,
     Guid CourseId,
+    Guid WeeklySlotId,
     DateOnly SessionDate,
-    string SessionType);
+    string SessionType,
+    bool IsCancelled);
 
 public sealed record CourseLookup(
     Guid CourseId,

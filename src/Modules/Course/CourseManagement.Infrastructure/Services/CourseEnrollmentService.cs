@@ -40,6 +40,51 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<WeeklySlotLookup>> GetWeeklySlotsAsync(
+        Guid courseId,
+        CancellationToken cancellationToken = default) {
+        return await _context.WeeklySlots
+            .Where(s => s.CourseId == courseId)
+            .OrderBy(s => s.DayOfWeek)
+            .ThenBy(s => s.SessionType)
+            .Select(s => new WeeklySlotLookup(
+                s.Id,
+                s.CourseId,
+                s.DayOfWeek.ToString(),
+                s.SessionType.ToString()))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<WeeklySlotLookup>> GetWeeklySlotsByCourseIdsAsync(
+        IReadOnlyList<Guid> courseIds,
+        CancellationToken cancellationToken = default) {
+        return await _context.WeeklySlots
+            .Where(s => courseIds.Contains(s.CourseId))
+            .OrderBy(s => s.DayOfWeek)
+            .ThenBy(s => s.SessionType)
+            .Select(s => new WeeklySlotLookup(
+                s.Id,
+                s.CourseId,
+                s.DayOfWeek.ToString(),
+                s.SessionType.ToString()))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<ClassSessionLookup?> GetClassSessionAsync(
+        Guid classSessionId,
+        CancellationToken cancellationToken = default) {
+        return await _context.ClassSessions
+            .Where(s => s.Id == classSessionId)
+            .Select(s => new ClassSessionLookup(
+                s.Id,
+                s.CourseId,
+                s.WeeklySlotId,
+                s.SessionDate,
+                s.SessionType.ToString(),
+                s.IsCancelled))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsAsync(
         Guid courseId,
         CancellationToken cancellationToken = default) {
@@ -50,8 +95,27 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
             .Select(s => new ClassSessionLookup(
                 s.Id,
                 s.CourseId,
+                s.WeeklySlotId,
                 s.SessionDate,
-                s.SessionType.ToString()))
+                s.SessionType.ToString(),
+                s.IsCancelled))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsByWeeklySlotIdsAsync(
+        IReadOnlyList<Guid> weeklySlotIds,
+        CancellationToken cancellationToken = default) {
+        return await _context.ClassSessions
+            .Where(s => weeklySlotIds.Contains(s.WeeklySlotId))
+            .OrderBy(s => s.SessionDate)
+            .ThenBy(s => s.SessionType)
+            .Select(s => new ClassSessionLookup(
+                s.Id,
+                s.CourseId,
+                s.WeeklySlotId,
+                s.SessionDate,
+                s.SessionType.ToString(),
+                s.IsCancelled))
             .ToListAsync(cancellationToken);
     }
 
@@ -83,8 +147,25 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
             .Select(s => new ClassSessionLookup(
                 s.Id,
                 s.CourseId,
+                s.WeeklySlotId,
                 s.SessionDate,
-                s.SessionType.ToString()))
+                s.SessionType.ToString(),
+                s.IsCancelled))
+            .ToListAsync(cancellationToken);
+    }
+    
+    public async Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsByDateAsync(
+        DateOnly date,
+        CancellationToken cancellationToken = default) {
+        return await _context.ClassSessions
+            .Where(s => s.SessionDate == date)
+            .Select(s => new ClassSessionLookup(
+                s.Id,
+                s.CourseId,
+                s.WeeklySlotId,
+                s.SessionDate,
+                s.SessionType.ToString(),
+                s.IsCancelled))
             .ToListAsync(cancellationToken);
     }
 }

@@ -27,9 +27,9 @@ public static class EnrollmentErrors {
         Error.Create("Enrollment.InvalidSessionCount",
             "Enrollment requires exactly 2 class sessions.");
 
-    public static readonly Error DuplicateSessionType =
-        Error.Create("Enrollment.DuplicateSessionType",
-            "The 2 enrolled sessions must have different session types (Morning and Afternoon).");
+    public static readonly Error DuplicateSession =
+        Error.Create("Enrollment.DuplicateSession",
+            "The 2 selected class sessions must be different.");
 
     public static readonly Error SessionNotInCourse =
         Error.Create("Enrollment.SessionNotInCourse",
@@ -38,6 +38,10 @@ public static class EnrollmentErrors {
     public static readonly Error SessionAlreadyEnrolled =
         Error.Create("Enrollment.SessionAlreadyEnrolled",
             "The selected class session is already part of this enrollment.");
+    
+    public static readonly Error ScheduleConflict =
+        Error.Create("Enrollment.ScheduleConflict",
+            "The selected session conflicts with a session in another course you are already enrolled in.");
 
     // ── Grade
     public static readonly Error GradeOutOfRange =
@@ -78,4 +82,9 @@ public static class EnrollmentErrors {
     public static readonly Error AttendanceNotFound =
         Error.Create("Enrollment.AttendanceNotFound",
             "Attendance record was not found.");
+
+    // Buổi học đã bị Admin hủy (vd nghỉ lễ) — không cho phép điểm danh cho buổi không diễn ra.
+    public static readonly Error SessionCancelled =
+        Error.Create("Enrollment.SessionCancelled",
+            "Cannot mark attendance for a class session that has been cancelled.");
 }

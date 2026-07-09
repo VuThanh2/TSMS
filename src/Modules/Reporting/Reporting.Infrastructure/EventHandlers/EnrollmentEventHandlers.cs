@@ -24,9 +24,22 @@ public class EnrollmentEventHandler :
     }
 
     // StudentEnrolledEvent → khởi tạo row trên 4 views cùng lúc.
+    // Outbox là at-least-once delivery nên event này có thể tới trùng (redelivered) — check
+    // StudentGradeReportView theo EnrollmentId TRƯỚC khi ghi bất kỳ side-effect nào (kể cả
+    // IncrementEnrolledCount) để đảm bảo idempotent, tránh đếm trùng EnrolledCount.
     public async Task Handle(
         StudentEnrolledEvent notification,
         CancellationToken cancellationToken) {
+        var existingGradeReport = await _repository.GetStudentGradeReportAsync(
+            notification.EnrollmentId, cancellationToken);
+
+        if (existingGradeReport is not null) {
+            _logger.LogWarning(
+                "Reporting projections already initialized for EnrollmentId {EnrollmentId}. Skipping duplicate StudentEnrolledEvent.",
+                notification.EnrollmentId);
+            return;
+        }
+
         // 1. CourseStatisticsView
         var stats = await _repository.GetCourseStatisticsAsync(
             notification.CourseId, cancellationToken);
@@ -39,36 +52,26 @@ public class EnrollmentEventHandler :
                 notification.CourseId);
 
         // 2. StudentGradeReportView
-        var existingGradeReport = await _repository.GetStudentGradeReportAsync(
-            notification.EnrollmentId, cancellationToken);
-
-        if (existingGradeReport is null) {
-            _repository.AddStudentGradeReport(StudentGradeReportView.Create(
-                enrollmentId: notification.EnrollmentId,
-                courseId: notification.CourseId,
-                courseName: notification.CourseName,
-                studentId: notification.StudentId,
-                studentFullName: notification.StudentFullName,
-                studentEmail: notification.StudentEmail));
-        }
+        _repository.AddStudentGradeReport(StudentGradeReportView.Create(
+            enrollmentId: notification.EnrollmentId,
+            courseId: notification.CourseId,
+            courseName: notification.CourseName,
+            studentId: notification.StudentId,
+            studentFullName: notification.StudentFullName,
+            studentEmail: notification.StudentEmail));
 
         // 3. CourseAttendanceReportView
-        var existingAttendance = await _repository.GetAttendanceReportAsync(
-            notification.EnrollmentId, cancellationToken);
+        var attendanceReport = CourseAttendanceReportView.Create(
+            enrollmentId: notification.EnrollmentId,
+            courseId: notification.CourseId,
+            courseName: notification.CourseName,
+            studentId: notification.StudentId,
+            studentFullName: notification.StudentFullName,
+            studentEmail: notification.StudentEmail,
+            totalSessions: 2);
 
-        if (existingAttendance is null) {
-            var attendanceReport = CourseAttendanceReportView.Create(
-                enrollmentId: notification.EnrollmentId,
-                courseId: notification.CourseId,
-                courseName: notification.CourseName,
-                studentId: notification.StudentId,
-                studentFullName: notification.StudentFullName,
-                studentEmail: notification.StudentEmail,
-                totalSessions: 2);
-
-            attendanceReport.InitializeAbsentCount(notification.TotalSessionsInCourse);
-            _repository.AddAttendanceReport(attendanceReport);
-        }
+        attendanceReport.InitializeAbsentCount(notification.TotalSessionsInCourse);
+        _repository.AddAttendanceReport(attendanceReport);
 
         // 4. StudentPersonalSummaryView
         var existingSummary = await _repository.GetPersonalSummaryAsync(
