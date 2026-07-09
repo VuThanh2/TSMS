@@ -51,9 +51,9 @@ export default function CreateCourseModal({ open, onClose }: CreateCourseModalPr
         <Form.Item
           label="Course name"
           name="name"
-          rules={[{ required: true, message: 'Vui lòng nhập tên khóa học' }]}
+          rules={[{ required: true, message: 'Please enter the course name' }]}
         >
-          <Input placeholder="e.g. Cơ sở Dữ liệu" />
+          <Input placeholder="e.g. Databases" />
         </Form.Item>
 
         <Form.Item label="Description" name="description">
@@ -64,14 +64,14 @@ export default function CreateCourseModal({ open, onClose }: CreateCourseModalPr
           <Form.Item
             label="Start date"
             name="startDate"
-            rules={[{ required: true, message: 'Chọn ngày bắt đầu' }]}
+            rules={[{ required: true, message: 'Select a start date' }]}
           >
             <DatePicker className="w-full" />
           </Form.Item>
           <Form.Item
             label="End date"
             name="endDate"
-            rules={[{ required: true, message: 'Chọn ngày kết thúc' }]}
+            rules={[{ required: true, message: 'Select an end date' }]}
           >
             <DatePicker className="w-full" />
           </Form.Item>
@@ -81,14 +81,14 @@ export default function CreateCourseModal({ open, onClose }: CreateCourseModalPr
           <Form.Item
             label="Max capacity"
             name="maxCapacity"
-            rules={[{ required: true, message: 'Nhập sĩ số tối đa' }]}
+            rules={[{ required: true, message: 'Enter the maximum capacity' }]}
           >
             <InputNumber min={1} placeholder="30" className="w-full font-mono" />
           </Form.Item>
           <Form.Item
             label="Lecturer"
             name="lecturerId"
-            rules={[{ required: true, message: 'Chọn giảng viên' }]}
+            rules={[{ required: true, message: 'Select a lecturer' }]}
           >
             <LecturerPicker />
           </Form.Item>

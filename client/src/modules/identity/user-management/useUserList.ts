@@ -51,9 +51,9 @@ export function useUserDetail(userId: string | null) {
 }
 
 const STATUS_ERROR_MESSAGES: Record<string, string> = {
-  'User.CannotDeactivateSelf': 'Không thể vô hiệu hóa tài khoản của chính bạn.',
-  'Lecturer.HasActiveCourses': 'Giảng viên này đang có khóa học đang hoạt động.',
-  'Student.HasActiveEnrollment': 'Sinh viên này đang có đăng ký đang hoạt động.',
+  'User.CannotDeactivateSelf': 'You cannot deactivate your own account.',
+  'Lecturer.HasActiveCourses': 'This lecturer still has active courses.',
+  'Student.HasActiveEnrollment': 'This student still has active enrollments.',
 };
 
 export function useCreateUser(onSuccess?: () => void) {
@@ -62,18 +62,18 @@ export function useCreateUser(onSuccess?: () => void) {
   return useMutation({
     mutationFn: createUserApi,
     onSuccess: () => {
-      void message.success('Tạo người dùng thành công!');
+      void message.success('User created successfully!');
       void queryClient.invalidateQueries({ queryKey: ['users'] });
       onSuccess?.();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const code = error.response?.data?.code ?? '';
       const messages: Record<string, string> = {
-        EmailAlreadyExists: 'Email đã tồn tại trong hệ thống.',
-        InvalidRole: 'Role không hợp lệ.',
-        PasswordPolicyViolation: 'Mật khẩu không đủ mạnh.',
+        EmailAlreadyExists: 'This email already exists in the system.',
+        InvalidRole: 'Invalid role.',
+        PasswordPolicyViolation: 'Password is not strong enough.',
       };
-      void message.error(messages[code] ?? error.response?.data?.message ?? 'Đã có lỗi xảy ra.');
+      void message.error(messages[code] ?? error.response?.data?.message ?? 'Something went wrong.');
     },
   });
 }
@@ -85,12 +85,12 @@ export function useEditUser(onSuccess?: () => void) {
     mutationFn: ({ userId, ...data }: { userId: string; fullName: string; email: string; department?: string; major?: string }) =>
       updateUserApi(userId, data),
     onSuccess: () => {
-      void message.success('Cập nhật thành công!');
+      void message.success('Updated successfully!');
       void queryClient.invalidateQueries({ queryKey: ['users'] });
       onSuccess?.();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
-      void message.error(error.response?.data?.message ?? 'Đã có lỗi xảy ra.');
+      void message.error(error.response?.data?.message ?? 'Something went wrong.');
     },
   });
 }
@@ -102,12 +102,12 @@ export function useToggleUserStatus() {
     mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
       updateUserStatusApi(userId, { isActive }),
     onSuccess: () => {
-      void message.success('Cập nhật trạng thái thành công!');
+      void message.success('Status updated successfully!');
       void queryClient.invalidateQueries({ queryKey: ['users'] });
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const code = error.response?.data?.code ?? '';
-      void message.error(STATUS_ERROR_MESSAGES[code] ?? error.response?.data?.message ?? 'Đã có lỗi xảy ra.');
+      void message.error(STATUS_ERROR_MESSAGES[code] ?? error.response?.data?.message ?? 'Something went wrong.');
     },
   });
 }
@@ -120,14 +120,14 @@ export function useImportCsv() {
     onSuccess: (res) => {
       const { successCount, failureCount } = res.data;
       if (failureCount === 0) {
-        void message.success(`Import thành công ${successCount} người dùng!`);
+        void message.success(`Imported ${successCount} users successfully!`);
       } else {
-        void message.warning(`Thành công: ${successCount}, Thất bại: ${failureCount}`);
+        void message.warning(`Succeeded: ${successCount}, Failed: ${failureCount}`);
       }
       void queryClient.invalidateQueries({ queryKey: ['users'] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
-      void message.error(error.response?.data?.message ?? 'Lỗi khi import CSV.');
+      void message.error(error.response?.data?.message ?? 'Failed to import CSV.');
     },
   });
 }

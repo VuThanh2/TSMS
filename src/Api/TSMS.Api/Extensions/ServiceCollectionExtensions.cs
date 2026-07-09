@@ -12,6 +12,7 @@ using Identity.Presentation.Controllers;
 using Reporting.Infrastructure.Extensions;
 using Reporting.Infrastructure.Persistence;
 using Reporting.Presentation.Controllers;
+using SharedInfrastructure.Email;
 using TSMS.Api.Options;
 
 namespace TSMS.Api.Extensions;
@@ -31,11 +32,19 @@ public static class ServiceCollectionExtensions {
         services.AddMediatRWithValidation();
         services.AddHangfireServices(configuration);
         services.AddHealthCheckServices();
+        services.AddEmailServices(configuration);
 
         return services;
     }
 
     // ── Private helpers
+
+    private static void AddEmailServices(
+        this IServiceCollection services,
+        IConfiguration configuration) {
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+    }
     
     private static void AddHealthCheckServices(this IServiceCollection services) {
         services.AddHealthChecks()

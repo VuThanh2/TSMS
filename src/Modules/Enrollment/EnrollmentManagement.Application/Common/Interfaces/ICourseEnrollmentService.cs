@@ -58,6 +58,12 @@ public interface ICourseEnrollmentService {
     Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsByCourseIdsAsync(
         IReadOnlyList<Guid> courseIds,
         CancellationToken cancellationToken = default);
+    
+    // Lấy tất cả ClassSession diễn ra vào 1 ngày cụ thể, ở TẤT CẢ Course — dùng cho
+    // SendSessionReminderJobService
+    Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsByDateAsync(
+        DateOnly date,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record WeeklySlotLookup(

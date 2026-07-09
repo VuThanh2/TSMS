@@ -5,9 +5,9 @@ import type { AxiosError } from 'axios';
 import { createCourseApi, type CreateCourseRequest } from './create-course.api';
 
 const ERROR_MESSAGES: Record<string, string> = {
-  'Lecturer.NotFound': 'Không tìm thấy giảng viên.',
-  'Lecturer.NotActive': 'Giảng viên đã bị vô hiệu hóa.',
-  'Lecturer.ScheduleConflict': 'Giảng viên bị trùng lịch dạy.',
+  'Lecturer.NotFound': 'Lecturer not found.',
+  'Lecturer.NotActive': 'This lecturer has been deactivated.',
+  'Lecturer.ScheduleConflict': 'This lecturer has a teaching schedule conflict.',
 };
 
 export function useCreateCourse(onSuccess?: () => void) {
@@ -17,13 +17,13 @@ export function useCreateCourse(onSuccess?: () => void) {
   return useMutation({
     mutationFn: (data: CreateCourseRequest) => createCourseApi(data),
     onSuccess: () => {
-      void message.success('Tạo khóa học thành công!');
+      void message.success('Course created successfully!');
       void queryClient.invalidateQueries({ queryKey: ['courses'] });
       onSuccess?.();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const code = error.response?.data?.code ?? '';
-      const msg = ERROR_MESSAGES[code] ?? error.response?.data?.message ?? 'Đã có lỗi xảy ra.';
+      const msg = ERROR_MESSAGES[code] ?? error.response?.data?.message ?? 'Something went wrong.';
       void message.error(msg);
     },
   });

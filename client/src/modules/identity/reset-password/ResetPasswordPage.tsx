@@ -30,12 +30,10 @@ export default function ResetPasswordPage() {
       <h1 className="m-0 mb-2 text-[34px] font-bold leading-tight tracking-tight">
         Reset password
       </h1>
-      <p className="m-0 mb-6 text-[16px] leading-normal text-text-secondary">
+      <p className="m-0 mb-7 text-[16px] leading-normal text-text-secondary">
         Enter your email and a new password to reset access.
       </p>
 
-      {/* 3 field thay vì 2 như Login nên rút gọn margin mỗi Form.Item (24px mặc định
-      của antd -> 16px) để vừa 1 màn hình, không bị dư khoảng phải cuộn nhẹ. */}
       <Form<ResetPasswordFormValues>
         layout="vertical"
         onFinish={handleFinish}
@@ -46,10 +44,10 @@ export default function ResetPasswordPage() {
           label={<span className="text-[14px] font-semibold">Email</span>}
           name="email"
           rules={[
-            { required: true, message: 'Vui lòng nhập email' },
-            { type: 'email', message: 'Email không hợp lệ' },
+            { required: true, message: 'Please enter your email' },
+            { type: 'email', message: 'Invalid email' },
           ]}
-          className="!mb-4"
+          className="!mb-2 [&_.ant-form-item-label]:!pb-1.5"
         >
           <Input prefix={<MailOutlined />} placeholder="you@university.edu" className="h-12" />
         </Form.Item>
@@ -58,10 +56,10 @@ export default function ResetPasswordPage() {
           label={<span className="text-[14px] font-semibold">New password</span>}
           name="newPassword"
           rules={[
-            { required: true, message: 'Vui lòng nhập mật khẩu mới' },
-            { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
+            { required: true, message: 'Please enter a new password' },
+            { min: 6, message: 'Password must be at least 6 characters' },
           ]}
-          className="!mb-4"
+          className="!mb-2 [&_.ant-form-item-label]:!pb-1.5"
         >
           <Input.Password
             prefix={<LockOutlined />}
@@ -75,17 +73,17 @@ export default function ResetPasswordPage() {
           name="confirmPassword"
           dependencies={['newPassword']}
           rules={[
-            { required: true, message: 'Vui lòng xác nhận mật khẩu' },
+            { required: true, message: 'Please confirm your password' },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('newPassword') === value) {
                   return Promise.resolve();
                 }
-                return Promise.reject(new Error('Mật khẩu xác nhận không khớp'));
+                return Promise.reject(new Error('The confirmation password does not match'));
               },
             }),
           ]}
-          className="!mb-5"
+          className="!mb-6 [&_.ant-form-item-label]:!pb-1.5"
         >
           <Input.Password
             prefix={<LockOutlined />}
@@ -94,17 +92,18 @@ export default function ResetPasswordPage() {
           />
         </Form.Item>
 
-        <Form.Item className="!mb-2">
+        <Form.Item className="!mb-3">
           <Button type="primary" htmlType="submit" block loading={isPending} className="h-12">
             Reset password
           </Button>
         </Form.Item>
 
-        <div className="text-center">
+        <div className="text-center text-[14px] text-text-secondary">
+          Remembered your password?{' '}
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="h-10 w-full cursor-pointer border-none bg-transparent text-[15px] font-semibold text-primary hover:underline"
+            className="cursor-pointer border-none bg-transparent p-0 text-[14px] font-semibold text-primary hover:underline"
           >
             Back to sign in
           </button>

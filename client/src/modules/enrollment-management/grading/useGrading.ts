@@ -6,10 +6,10 @@ import type { AxiosError } from 'axios';
 import { getCourseEnrollmentsApi, updateGradeApi } from './grading.api';
 
 const GRADE_ERROR_MESSAGES: Record<string, string> = {
-  'Enrollment.CourseNotGradeable': 'Chỉ có thể nhập điểm khi khóa học đang Active hoặc Completed.',
-  'Enrollment.NotCourseOwner': 'Bạn không phải là giảng viên phụ trách khóa học này.',
-  'Enrollment.NotFound': 'Không tìm thấy đăng ký.',
-  'Validation.Failed': 'Điểm phải nằm trong khoảng 0–10.',
+  'Enrollment.CourseNotGradeable': 'Grades can only be entered when the course is Active or Completed.',
+  'Enrollment.NotCourseOwner': 'You are not the lecturer in charge of this course.',
+  'Enrollment.NotFound': 'Enrollment not found.',
+  'Validation.Failed': 'The grade must be between 0 and 10.',
 };
 
 export function useGrading(courseId: string) {
@@ -35,7 +35,7 @@ export function useGrading(courseId: string) {
     mutationFn: ({ enrollmentId, grade }: { enrollmentId: string; grade: number }) =>
       updateGradeApi(enrollmentId, grade),
     onSuccess: () => {
-      void message.success('Điểm đã được lưu. Hệ thống sẽ tự gửi email thông báo cho sinh viên.');
+      void message.success('Grade saved. The system will automatically email a notification to the student.');
       void queryClient.invalidateQueries({ queryKey: ['enrollments', courseId] });
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
@@ -43,7 +43,7 @@ export function useGrading(courseId: string) {
       const msg =
         GRADE_ERROR_MESSAGES[code] ??
         error.response?.data?.message ??
-        'Lưu điểm thất bại.';
+        'Failed to save grade.';
       void message.error(msg);
     },
   });

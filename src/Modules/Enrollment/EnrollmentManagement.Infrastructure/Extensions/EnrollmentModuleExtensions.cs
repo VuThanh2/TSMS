@@ -2,6 +2,7 @@ using System.Reflection;
 using EnrollmentManagement.Application.Common.Interfaces;
 using EnrollmentManagement.Application.Common.Services;
 using EnrollmentManagement.Domain.Repositories;
+using EnrollmentManagement.Domain.ValueObjects;
 using EnrollmentManagement.Infrastructure.Persistence;
 using EnrollmentManagement.Infrastructure.Repositories;
 using EnrollmentManagement.Infrastructure.Services;
@@ -11,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SharedInfrastructure.Persistence;
+using SharedInfrastructure.Time;
 using SharedKernel.Abstractions;
 
 namespace EnrollmentManagement.Infrastructure.Extensions;
@@ -38,6 +40,7 @@ public static class EnrollmentModuleExtensions {
 
         services.AddScoped<INotificationService, SignalRNotificationService>();
         services.AddScoped<EnrollmentOutboxProcessor>();
+        services.AddScoped<SendSessionReminderJobService>();
 
         services.AddSignalR();
 
@@ -53,5 +56,22 @@ public static class EnrollmentModuleExtensions {
             recurringJobId: "process-enrollment-outbox",
             methodCall: job => job.ExecuteAsync(CancellationToken.None),
             cronExpression: "*/1 * * * *");
+
+        // 30 phút trước mỗi ca học cố định (Sáng 07:00, Chiều 13:00) theo GIỜ VN. Cron mặc định
+        // của Hangfire chạy theo UTC, nên bắt buộc truyền TimeZone = VN để 06:30/12:30 là giờ địa
+        // phương — khớp với cách SendSessionReminderJobService tính "hôm nay" theo giờ VN.
+        var vnJobOptions = new RecurringJobOptions { TimeZone = VietnamTimeZone.Instance };
+
+        recurringJobManager.AddOrUpdate<SendSessionReminderJobService>(
+            recurringJobId: "send-morning-session-reminder",
+            methodCall: job => job.ExecuteAsync(SessionType.Morning, CancellationToken.None),
+            cronExpression: "30 6 * * *",
+            options: vnJobOptions);
+
+        recurringJobManager.AddOrUpdate<SendSessionReminderJobService>(
+            recurringJobId: "send-afternoon-session-reminder",
+            methodCall: job => job.ExecuteAsync(SessionType.Afternoon, CancellationToken.None),
+            cronExpression: "30 12 * * *",
+            options: vnJobOptions);
     }
 }

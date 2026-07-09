@@ -43,8 +43,8 @@ export default function LoginPage() {
           label={<span className="text-[14px] font-semibold">Email</span>}
           name="email"
           rules={[
-            { required: true, message: 'Vui lòng nhập email' },
-            { type: 'email', message: 'Email không hợp lệ' },
+            { required: true, message: 'Please enter your email' },
+            { type: 'email', message: 'Invalid email' },
           ]}
         >
           <Input prefix={<MailOutlined />} placeholder="you@university.edu" className="h-12" />
@@ -65,7 +65,7 @@ export default function LoginPage() {
         </div>
         <Form.Item
           name="password"
-          rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
+          rules={[{ required: true, message: 'Please enter your password' }]}
         >
           <Input.Password
             prefix={<LockOutlined />}

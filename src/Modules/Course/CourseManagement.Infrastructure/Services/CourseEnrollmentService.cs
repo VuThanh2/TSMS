@@ -153,4 +153,19 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
                 s.IsCancelled))
             .ToListAsync(cancellationToken);
     }
+    
+    public async Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsByDateAsync(
+        DateOnly date,
+        CancellationToken cancellationToken = default) {
+        return await _context.ClassSessions
+            .Where(s => s.SessionDate == date)
+            .Select(s => new ClassSessionLookup(
+                s.Id,
+                s.CourseId,
+                s.WeeklySlotId,
+                s.SessionDate,
+                s.SessionType.ToString(),
+                s.IsCancelled))
+            .ToListAsync(cancellationToken);
+    }
 }

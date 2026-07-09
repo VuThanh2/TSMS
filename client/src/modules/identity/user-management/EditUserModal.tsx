@@ -51,7 +51,7 @@ export default function EditUserModal({ userId, open, onClose }: EditUserModalPr
           <Form.Item
             label="Full name"
             name="fullName"
-            rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
+            rules={[{ required: true, message: 'Please enter the full name' }]}
           >
             <Input />
           </Form.Item>
@@ -60,8 +60,8 @@ export default function EditUserModal({ userId, open, onClose }: EditUserModalPr
             label="Email"
             name="email"
             rules={[
-              { required: true, message: 'Vui lòng nhập email' },
-              { type: 'email', message: 'Email không hợp lệ' },
+              { required: true, message: 'Please enter the email' },
+              { type: 'email', message: 'Invalid email' },
             ]}
           >
             <Input className="font-mono" />
@@ -70,12 +70,12 @@ export default function EditUserModal({ userId, open, onClose }: EditUserModalPr
           {/* Profile field tuỳ theo role */}
           {user?.role === 'Lecturer' && (
             <Form.Item label="Department" name="department">
-              <Input placeholder="e.g. Khoa Công nghệ Thông tin" />
+              <Input placeholder="e.g. Faculty of Information Technology" />
             </Form.Item>
           )}
           {user?.role === 'Student' && (
             <Form.Item label="Major" name="major">
-              <Input placeholder="e.g. Kỹ thuật Phần mềm" />
+              <Input placeholder="e.g. Software Engineering" />
             </Form.Item>
           )}
 

@@ -6,10 +6,10 @@ import { getSessionAttendancesApi, updateAttendanceApi } from './attendance.api'
 import type { AttendanceStatus } from './attendance.types';
 
 const ATTENDANCE_ERROR_MESSAGES: Record<string, string> = {
-  'Enrollment.SessionCancelled': 'Buổi học đã bị hủy, không thể cập nhật điểm danh.',
-  'Enrollment.AttendanceNotFound': 'Không tìm thấy bản ghi điểm danh.',
-  'Enrollment.NotCourseOwner': 'Bạn không phải là giảng viên phụ trách buổi học này.',
-  'Validation.Failed': 'Dữ liệu điểm danh không hợp lệ.',
+  'Enrollment.SessionCancelled': 'This session has been cancelled; attendance cannot be updated.',
+  'Enrollment.AttendanceNotFound': 'Attendance record not found.',
+  'Enrollment.NotCourseOwner': 'You are not the lecturer in charge of this session.',
+  'Validation.Failed': 'Invalid attendance data.',
 };
 
 export function useAttendance(courseId: string, sessionId: string) {
@@ -35,7 +35,7 @@ export function useAttendance(courseId: string, sessionId: string) {
       const msg =
         ATTENDANCE_ERROR_MESSAGES[code] ??
         error.response?.data?.message ??
-        'Cập nhật điểm danh thất bại.';
+        'Failed to update attendance.';
       void message.error(msg);
     },
   });

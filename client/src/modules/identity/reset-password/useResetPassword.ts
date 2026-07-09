@@ -5,11 +5,11 @@ import type { AxiosError } from 'axios';
 
 import { resetPasswordApi } from './reset-password.api';
 
-// Error code → thông báo tiếng Việt thân thiện
+// Error code → thông báo thân thiện cho người dùng
 const ERROR_MESSAGES: Record<string, string> = {
-  'User.NotFound': 'Không tìm thấy tài khoản với email này.',
-  'User.AccountIsInactive': 'Tài khoản đã bị vô hiệu hóa, vui lòng liên hệ Admin.',
-  'User.PasswordPolicyViolation': 'Mật khẩu không đủ mạnh. Cần ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số.',
+  'User.NotFound': 'No account was found with this email.',
+  'User.AccountIsInactive': 'This account has been deactivated, please contact an Admin.',
+  'User.PasswordPolicyViolation': 'Password is not strong enough. It needs at least 6 characters, including uppercase, lowercase and a number.',
 };
 
 export function useResetPassword() {
@@ -19,14 +19,14 @@ export function useResetPassword() {
   return useMutation({
     mutationFn: resetPasswordApi,
     onSuccess: () => {
-      void message.success('Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.');
+      void message.success('Password reset successfully! Please sign in again.');
       navigate('/login', { replace: true });
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const code = error.response?.data?.code ?? '';
       const msg = ERROR_MESSAGES[code]
         ?? error.response?.data?.message
-        ?? 'Đã có lỗi xảy ra, vui lòng thử lại.';
+        ?? 'Something went wrong, please try again.';
       void message.error(msg);
     },
   });

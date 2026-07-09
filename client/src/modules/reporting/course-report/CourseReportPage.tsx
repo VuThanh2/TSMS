@@ -114,7 +114,7 @@ export default function CourseReportPage() {
                   children: report.grades.isLoading ? (
                     <div className="flex justify-center py-8"><Spin /></div>
                   ) : report.grades.isError ? (
-                    <Empty description="Chưa có dữ liệu điểm cho khóa học này." className="py-12" />
+                    <Empty description="No grade data for this course yet." className="py-12" />
                   ) : (
                     <Table<StudentGradeItem>
                       columns={gradeColumns}
@@ -132,7 +132,7 @@ export default function CourseReportPage() {
             children: report.attendance.isLoading ? (
               <div className="flex justify-center py-8"><Spin /></div>
             ) : report.attendance.isError ? (
-              <Empty description="Chưa có dữ liệu điểm danh cho khóa học này." className="py-12" />
+              <Empty description="No attendance data for this course yet." className="py-12" />
             ) : (
               <Table<AttendanceReportItem>
                 columns={attendanceColumns}
@@ -150,7 +150,7 @@ export default function CourseReportPage() {
                   children: report.distribution.isLoading ? (
                     <div className="flex justify-center py-8"><Spin /></div>
                   ) : report.distribution.isError || distItems.length === 0 ? (
-                    <Empty description="Chưa có dữ liệu — chưa có sinh viên nào được chấm điểm." className="py-12" />
+                    <Empty description="No data — no students have been graded yet." className="py-12" />
                   ) : (
                     <div className="flex items-center gap-12 rounded-xl border border-border bg-white p-8 shadow-sm">
                       <div className="w-[200px] flex-none">

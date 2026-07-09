@@ -69,13 +69,13 @@ export default function ScheduleCalendar<T>({
               <Button
                 icon={<LeftOutlined />}
                 onClick={() => setValue(value.clone().subtract(1, 'month'))}
-                aria-label="Tháng trước"
+                aria-label="Previous month"
               />
-              <Button onClick={() => setValue(dayjs())}>Hôm nay</Button>
+              <Button onClick={() => setValue(dayjs())}>Today</Button>
               <Button
                 icon={<RightOutlined />}
                 onClick={() => setValue(value.clone().add(1, 'month'))}
-                aria-label="Tháng sau"
+                aria-label="Next month"
               />
             </div>
           </div>

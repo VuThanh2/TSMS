@@ -6,11 +6,11 @@ import type { AxiosError } from 'axios';
 import { getMyCourseEnrollmentsApi, adjustSessionApi } from './enrollment.api';
 
 const ADJUST_ERROR_MESSAGES: Record<string, string> = {
-  'Enrollment.CourseAlreadyCompleted': 'Khóa học đã kết thúc, không thể điều chỉnh.',
-  'Enrollment.AdjustSessionTypeDuplicate': 'Slot mới trùng ca (Sáng/Chiều) với slot còn lại.',
-  'Enrollment.ScheduleConflict': 'Slot mới trùng lịch với khóa học khác của bạn.',
-  'Enrollment.NotFound': 'Không tìm thấy đăng ký.',
-  'Validation.Failed': 'Dữ liệu không hợp lệ.',
+  'Enrollment.CourseAlreadyCompleted': 'This course has ended and can no longer be adjusted.',
+  'Enrollment.AdjustSessionTypeDuplicate': 'The new slot has the same session (Morning/Afternoon) as your remaining slot.',
+  'Enrollment.ScheduleConflict': 'The new slot conflicts with the schedule of another course you are enrolled in.',
+  'Enrollment.NotFound': 'Enrollment not found.',
+  'Validation.Failed': 'Invalid data.',
 };
 
 export function useMyEnrollments() {
@@ -36,7 +36,7 @@ export function useMyEnrollments() {
       newWeeklySlotId: string;
     }) => adjustSessionApi(enrollmentId, { oldWeeklySlotId, newWeeklySlotId }),
     onSuccess: () => {
-      void message.success('Điều chỉnh ca học thành công!');
+      void message.success('Session adjusted successfully!');
       void queryClient.invalidateQueries({ queryKey: ['my-course-enrollments'] });
       void queryClient.invalidateQueries({ queryKey: ['student-schedule'] });
     },
@@ -45,7 +45,7 @@ export function useMyEnrollments() {
       const msg =
         ADJUST_ERROR_MESSAGES[code] ??
         error.response?.data?.message ??
-        'Điều chỉnh thất bại.';
+        'Adjustment failed.';
       void message.error(msg);
     },
   });

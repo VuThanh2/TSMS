@@ -6,12 +6,12 @@ import type { AxiosError } from 'axios';
 import { getAvailableCoursesApi, enrollCourseApi } from './enrollment.api';
 
 const ENROLL_ERROR_MESSAGES: Record<string, string> = {
-  'Enrollment.CourseIsFull': 'Khóa học đã đầy chỗ.',
-  'Enrollment.InvalidSessionCount': 'Phải chọn đúng 2 slot học.',
-  'Enrollment.DuplicateSession': '2 slot đã chọn phải khác nhau.',
-  'Enrollment.SessionNotInCourse': 'Slot không thuộc khóa học này.',
-  'Enrollment.ScheduleConflict': 'Trùng lịch với khóa học bạn đã đăng ký.',
-  'Validation.Failed': 'Dữ liệu không hợp lệ.',
+  'Enrollment.CourseIsFull': 'This course is full.',
+  'Enrollment.InvalidSessionCount': 'You must select exactly 2 slots.',
+  'Enrollment.DuplicateSession': 'The 2 selected slots must be different.',
+  'Enrollment.SessionNotInCourse': 'This slot does not belong to this course.',
+  'Enrollment.ScheduleConflict': 'This conflicts with the schedule of a course you are already enrolled in.',
+  'Validation.Failed': 'Invalid data.',
 };
 
 export function useAvailableCourses() {
@@ -29,7 +29,7 @@ export function useAvailableCourses() {
   const enrollMutation = useMutation({
     mutationFn: enrollCourseApi,
     onSuccess: () => {
-      void message.success('Đăng ký khóa học thành công!');
+      void message.success('Enrolled in the course successfully!');
       void queryClient.invalidateQueries({ queryKey: ['available-courses'] });
       void queryClient.invalidateQueries({ queryKey: ['my-course-enrollments'] });
     },
@@ -38,7 +38,7 @@ export function useAvailableCourses() {
       const msg =
         ENROLL_ERROR_MESSAGES[code] ??
         error.response?.data?.message ??
-        'Đăng ký thất bại.';
+        'Enrollment failed.';
       void message.error(msg);
     },
   });

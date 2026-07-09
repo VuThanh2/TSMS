@@ -11,4 +11,9 @@ public interface IStudentEnrollmentService {
 
     // Lấy Email của Student — enrich GetCourseEnrollments response cho Lecturer.
     Task<string?> GetEmailAsync(Guid studentId, CancellationToken cancellationToken = default);
+    
+    // Batch lookup — tránh N+1 khi 1 session có nhiều Student
+    Task<IReadOnlyDictionary<Guid, string>> GetEmailsAsync(
+        IReadOnlyList<Guid> studentIds,
+        CancellationToken cancellationToken = default);
 }

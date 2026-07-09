@@ -9,10 +9,10 @@ const ATTENDANCE_CONFIG: Record<
   Exclude<StudentAttendanceStatus, null> | 'pending',
   { color: string; bg: string; label: string }
 > = {
-  Present: { color: '#1E875F', bg: '#EBF7F1', label: 'Có mặt' },
-  Absent: { color: '#D7372C', bg: '#FEF0EE', label: 'Vắng' },
-  Excused: { color: '#E5A20B', bg: '#FDF6E7', label: 'Có phép' },
-  pending: { color: '#8A847E', bg: '#F5F4F3', label: 'Chưa điểm danh' },
+  Present: { color: '#1E875F', bg: '#EBF7F1', label: 'Present' },
+  Absent: { color: '#D7372C', bg: '#FEF0EE', label: 'Absent' },
+  Excused: { color: '#E5A20B', bg: '#FDF6E7', label: 'Excused' },
+  pending: { color: '#8A847E', bg: '#F5F4F3', label: 'Not marked' },
 };
 
 function getConfig(status: StudentAttendanceStatus) {
@@ -25,7 +25,7 @@ function SessionChip({ session }: { session: StudentScheduleSession }) {
 
   return (
     <div
-      title={`${session.courseName} — ${isAM ? 'Sáng' : 'Chiều'} · ${cfg.label}`}
+      title={`${session.courseName} — ${isAM ? 'Morning' : 'Afternoon'} · ${cfg.label}`}
       style={{ background: cfg.bg, color: cfg.color }}
       className="mb-0.5 flex w-full items-center gap-1 overflow-hidden rounded px-1.5 py-[3px]"
     >
@@ -57,7 +57,7 @@ export default function StudentSchedulePage() {
       <div className="mb-7">
         <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">My Schedule</h1>
         <p className="m-0 text-[15px] text-text-secondary">
-          Lịch học của bạn — chuyển tháng để xem, màu thể hiện trạng thái điểm danh.
+          Your class schedule — switch months to view; colors show attendance status.
         </p>
       </div>
 

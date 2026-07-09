@@ -7,18 +7,8 @@ import SessionPicker from './SessionPicker';
 import type { AvailableCourse } from './enrollment.types';
 import type { WeeklySlot } from '@/modules/course-management/shared/course.types';
 
-const DAY_VN: Record<string, string> = {
-  Monday: 'Thứ Hai',
-  Tuesday: 'Thứ Ba',
-  Wednesday: 'Thứ Tư',
-  Thursday: 'Thứ Năm',
-  Friday: 'Thứ Sáu',
-  Saturday: 'Thứ Bảy',
-  Sunday: 'Chủ Nhật',
-};
-
 function formatSlot(slot: WeeklySlot) {
-  return `${DAY_VN[slot.dayOfWeek] ?? slot.dayOfWeek} — ${slot.sessionType === 'Morning' ? 'Sáng (AM)' : 'Chiều (PM)'}`;
+  return `${slot.dayOfWeek} — ${slot.sessionType === 'Morning' ? 'Morning (AM)' : 'Afternoon (PM)'}`;
 }
 
 function capacityColor(pct: number) {
@@ -67,11 +57,11 @@ export default function EnrollModal({ course, onClose, onConfirm, isLoading }: P
 
   return (
     <Modal
-      title={`Đăng ký: ${course?.name ?? ''}`}
+      title={`Enroll: ${course?.name ?? ''}`}
       open={!!course}
       onOk={handleOk}
       onCancel={onClose}
-      okText="Đăng ký"
+      okText="Enroll"
       okButtonProps={{ disabled: !isExactTwo, loading: isLoading }}
       destroyOnHidden
       afterOpenChange={afterOpenChange}
@@ -100,7 +90,7 @@ export default function EnrollModal({ course, onClose, onConfirm, isLoading }: P
           <Spin />
         </div>
       ) : slots.length === 0 ? (
-        <Alert type="warning" description="Khóa học chưa có slot học nào." showIcon />
+        <Alert type="warning" description="This course has no slots yet." showIcon />
       ) : pickerIndex !== null ? (
         <SessionPicker
           slots={slots}
@@ -125,7 +115,7 @@ export default function EnrollModal({ course, onClose, onConfirm, isLoading }: P
                 className="flex h-12 w-full items-center justify-between rounded-lg border border-border-input bg-white px-3.5 text-[15px] font-semibold"
                 style={{ color: slot ? '#1C1B1A' : '#8A847E' }}
               >
-                <span>{slot ? formatSlot(slot) : `Chọn slot ${i + 1}`}</span>
+                <span>{slot ? formatSlot(slot) : `Select slot ${i + 1}`}</span>
                 <span className="text-[13px] font-medium text-text-muted">Change</span>
               </button>
             );
@@ -135,8 +125,8 @@ export default function EnrollModal({ course, onClose, onConfirm, isLoading }: P
 
       <div className="mt-3 text-[13px] text-text-muted">
         {!isExactTwo && (slotIds[0] || slotIds[1])
-          ? 'Đã chọn 1/2 slot. Chọn thêm 1 slot nữa để hoàn tất.'
-          : 'Slot đã chọn phải khác nhau và không trùng với các khóa học khác của bạn.'}
+          ? 'Selected 1/2 slots. Select 1 more slot to finish.'
+          : 'The selected slots must be different and must not conflict with your other courses.'}
       </div>
     </Modal>
   );

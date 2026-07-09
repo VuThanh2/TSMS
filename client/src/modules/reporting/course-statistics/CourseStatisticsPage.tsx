@@ -65,10 +65,6 @@ export default function CourseStatisticsPage() {
 
   const categoryAxisLabel = { rotate: 0, fontSize: 11, interval: 0, formatter: truncateCourseName };
 
-  // Không để ECharts tự suy max từ giá trị lớn nhất trong data — khi lớp đông
-  // nhất chỉ có vài sinh viên, max tự sinh sẽ bám sát đỉnh cột (vd max=1), nhìn
-  // như biểu đồ lỗi. Chừa thêm ~20% khoảng trống phía trên rồi làm tròn lên một
-  // mốc "đẹp" (bội số của 5/10/20/50 tùy độ lớn) để cột không bị dồn sát trần.
   function niceAxisMax(maxValue: number) {
     const padded = Math.max(5, maxValue + Math.max(1, Math.ceil(maxValue * 0.2)));
     const step = padded <= 10 ? 5 : padded <= 50 ? 10 : padded <= 200 ? 20 : 50;

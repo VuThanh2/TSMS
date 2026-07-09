@@ -285,7 +285,7 @@ export default function CourseDetailPage() {
           Currently assigned: <strong>{c.lecturerName}</strong>
         </p>
         <Form form={replaceForm} layout="vertical" requiredMark={false}>
-          <Form.Item label="New lecturer" name="lecturerId" rules={[{ required: true, message: 'Chọn giảng viên mới' }]}>
+          <Form.Item label="New lecturer" name="lecturerId" rules={[{ required: true, message: 'Select a new lecturer' }]}>
             <LecturerPicker />
           </Form.Item>
         </Form>

@@ -85,7 +85,7 @@ export default function UserListPage() {
           </Button>
           <Popconfirm
             title={record.isActive ? 'Deactivate this user?' : 'Activate this user?'}
-            description={record.isActive ? 'User sẽ không thể đăng nhập.' : 'User sẽ được phép đăng nhập trở lại.'}
+            description={record.isActive ? 'The user will not be able to sign in.' : 'The user will be able to sign in again.'}
             onConfirm={() => toggleStatus.mutate({ userId: record.userId, isActive: !record.isActive })}
             okText={record.isActive ? 'Deactivate' : 'Activate'}
             cancelText="Cancel"

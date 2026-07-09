@@ -26,15 +26,15 @@ export function useLogin() {
         ?? payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
         ?? 'Student';
 
-      void message.success('Đăng nhập thành công!');
+      void message.success('Signed in successfully!');
       navigate(getDefaultRouteForRole(role), { replace: true });
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       if (error.response?.status === 401) {
-        void message.error('Email hoặc mật khẩu không đúng.');
+        void message.error('Incorrect email or password.');
         return;
       }
-      const msg = error.response?.data?.message ?? 'Đã có lỗi xảy ra, vui lòng thử lại.';
+      const msg = error.response?.data?.message ?? 'Something went wrong, please try again.';
       void message.error(msg);
     },
   });

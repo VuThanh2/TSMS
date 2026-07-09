@@ -61,7 +61,7 @@ export default function AppLayout() {
       // Server logout chỉ ghi audit log — lỗi không ảnh hưởng client logout
     }
     logout();
-    void message.success('Đã đăng xuất.');
+    void message.success('Signed out.');
     navigate('/login', { replace: true });
   }
 

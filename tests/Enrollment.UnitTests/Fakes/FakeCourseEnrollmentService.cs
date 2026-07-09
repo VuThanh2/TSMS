@@ -7,8 +7,15 @@ namespace Enrollment.UnitTests.Fakes;
 public sealed class FakeCourseEnrollmentService : ICourseEnrollmentService {
     private readonly List<WeeklySlotLookup> _weeklySlots;
 
-    public FakeCourseEnrollmentService(IEnumerable<WeeklySlotLookup> weeklySlots) {
-        _weeklySlots = weeklySlots.ToList();
+    // Cấu hình cho SendSessionReminderJobService test — set trực tiếp từ test.
+    public List<ClassSessionLookup> ClassSessionsByDate { get; set; } = new();
+    public List<CourseLookup> Courses { get; set; } = new();
+
+    // Ghi lại các date mà job thực sự query — dùng để assert job dùng đúng "hôm nay".
+    public List<DateOnly> RequestedDates { get; } = new();
+
+    public FakeCourseEnrollmentService(IEnumerable<WeeklySlotLookup>? weeklySlots = null) {
+        _weeklySlots = weeklySlots?.ToList() ?? new List<WeeklySlotLookup>();
     }
 
     public Task<bool> IsUpcomingAsync(Guid courseId, CancellationToken cancellationToken = default) =>
@@ -43,7 +50,8 @@ public sealed class FakeCourseEnrollmentService : ICourseEnrollmentService {
 
     public Task<IReadOnlyList<CourseLookup>> GetCoursesByIdsAsync(
         IReadOnlyList<Guid> courseIds, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+        Task.FromResult<IReadOnlyList<CourseLookup>>(
+            Courses.Where(c => courseIds.Contains(c.CourseId)).ToList());
 
     public Task<IReadOnlyList<CourseLookup>> GetCoursesByLecturerAsync(
         Guid lecturerId, CancellationToken cancellationToken = default) =>
@@ -52,4 +60,10 @@ public sealed class FakeCourseEnrollmentService : ICourseEnrollmentService {
     public Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsByCourseIdsAsync(
         IReadOnlyList<Guid> courseIds, CancellationToken cancellationToken = default) =>
         throw new NotImplementedException();
+
+    public Task<IReadOnlyList<ClassSessionLookup>> GetClassSessionsByDateAsync(
+        DateOnly date, CancellationToken cancellationToken = default) {
+        RequestedDates.Add(date);
+        return Task.FromResult<IReadOnlyList<ClassSessionLookup>>(ClassSessionsByDate.ToList());
+    }
 }

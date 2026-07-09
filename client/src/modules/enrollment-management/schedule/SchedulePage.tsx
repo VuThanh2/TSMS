@@ -27,7 +27,7 @@ function SessionChip({
         e.stopPropagation();
         onClick();
       }}
-      title={`${session.courseName} — ${isAM ? 'Sáng' : 'Chiều'} · nhấn để điểm danh`}
+      title={`${session.courseName} — ${isAM ? 'Morning' : 'Afternoon'} · click to mark attendance`}
       style={{ background: bg, color }}
       className="mb-0.5 flex w-full cursor-pointer items-center gap-1 overflow-hidden rounded border-none px-1.5 py-[3px] text-left transition-opacity hover:opacity-80"
     >
@@ -49,18 +49,18 @@ export default function SchedulePage() {
       <div className="mb-7">
         <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">My Schedule</h1>
         <p className="m-0 text-[15px] text-text-secondary">
-          Lịch dạy của bạn — chuyển tháng để xem lịch, nhấn vào buổi học để mở điểm danh.
+          Your teaching schedule — switch months to view; click a session to open attendance.
         </p>
       </div>
 
       <div className="mb-5 flex gap-6">
         <div className="flex items-center gap-2 text-[13px] text-text-secondary">
           <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: AM_TEXT }} />
-          Sáng (AM)
+          Morning (AM)
         </div>
         <div className="flex items-center gap-2 text-[13px] text-text-secondary">
           <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: PM_TEXT }} />
-          Chiều (PM)
+          Afternoon (PM)
         </div>
       </div>
 

@@ -35,26 +35,26 @@ export default function CreateUserModal({ open, onClose }: CreateUserModalProps)
         <Form.Item
           label="Full name"
           name="fullName"
-          rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
+          rules={[{ required: true, message: 'Please enter the full name' }]}
         >
-          <Input placeholder="e.g. Nguyễn Văn An" />
+          <Input placeholder="e.g. John Smith" />
         </Form.Item>
 
         <Form.Item
           label="Email"
           name="email"
           rules={[
-            { required: true, message: 'Vui lòng nhập email' },
-            { type: 'email', message: 'Email không hợp lệ' },
+            { required: true, message: 'Please enter the email' },
+            { type: 'email', message: 'Invalid email' },
           ]}
         >
-          <Input placeholder="an.nguyen@university.edu" />
+          <Input placeholder="john.smith@university.edu" />
         </Form.Item>
 
         <Form.Item
           label="Role"
           name="role"
-          rules={[{ required: true, message: 'Chọn role' }]}
+          rules={[{ required: true, message: 'Select a role' }]}
         >
           <Radio.Group
             optionType="button"
@@ -72,12 +72,12 @@ export default function CreateUserModal({ open, onClose }: CreateUserModalProps)
           label="Password"
           name="password"
           rules={[
-            { required: true, message: 'Vui lòng nhập mật khẩu' },
-            { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
+            { required: true, message: 'Please enter a password' },
+            { min: 6, message: 'Password must be at least 6 characters' },
           ]}
           hasFeedback
         >
-          <Input.Password placeholder="Tối thiểu 6 ký tự" />
+          <Input.Password placeholder="At least 6 characters" />
         </Form.Item>
 
         <Form.Item
@@ -86,18 +86,18 @@ export default function CreateUserModal({ open, onClose }: CreateUserModalProps)
           dependencies={['password']}
           hasFeedback
           rules={[
-            { required: true, message: 'Vui lòng nhập lại mật khẩu' },
+            { required: true, message: 'Please re-enter the password' },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('password') === value) {
                   return Promise.resolve();
                 }
-                return Promise.reject(new Error('Mật khẩu xác nhận không khớp'));
+                return Promise.reject(new Error('The confirmation password does not match'));
               },
             }),
           ]}
         >
-          <Input.Password placeholder="Nhập lại mật khẩu" />
+          <Input.Password placeholder="Re-enter the password" />
         </Form.Item>
       </Form>
     </Modal>

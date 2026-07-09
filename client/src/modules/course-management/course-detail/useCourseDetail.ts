@@ -43,17 +43,17 @@ export function useUpdateCourse(courseId: string, onSuccess?: () => void) {
     mutationFn: (data: { name: string; description?: string; endDate: string; maxCapacity: number }) =>
       updateCourseApi(courseId, data),
     onSuccess: () => {
-      void message.success('Cập nhật khóa học thành công!');
+      void message.success('Course updated successfully!');
       invalidate();
       onSuccess?.();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const msgs: Record<string, string> = {
-        'Course.AlreadyCompleted': 'Khóa học đã kết thúc, không thể chỉnh sửa.',
-        'Course.MaxCapacityBelowEnrolledCount': 'Sĩ số tối đa không thể nhỏ hơn số sinh viên đã đăng ký.',
+        'Course.AlreadyCompleted': 'This course has ended and can no longer be edited.',
+        'Course.MaxCapacityBelowEnrolledCount': 'Maximum capacity cannot be lower than the number of enrolled students.',
       };
       const code = error.response?.data?.code ?? '';
-      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Đã có lỗi xảy ra.');
+      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong.');
     },
   });
 }
@@ -64,18 +64,18 @@ export function useReplaceLecturer(courseId: string, onSuccess?: () => void) {
   return useMutation({
     mutationFn: (data: { lecturerId: string }) => replaceLecturerApi(courseId, data),
     onSuccess: () => {
-      void message.success('Thay đổi giảng viên thành công!');
+      void message.success('Lecturer changed successfully!');
       invalidate();
       onSuccess?.();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const msgs: Record<string, string> = {
-        'Course.SameLecturer': 'Giảng viên này đã được gán cho khóa học.',
-        'Lecturer.ScheduleConflict': 'Giảng viên bị trùng lịch dạy.',
-        'Course.AlreadyCompleted': 'Khóa học đã kết thúc.',
+        'Course.SameLecturer': 'This lecturer is already assigned to the course.',
+        'Lecturer.ScheduleConflict': 'This lecturer has a teaching schedule conflict.',
+        'Course.AlreadyCompleted': 'This course has ended.',
       };
       const code = error.response?.data?.code ?? '';
-      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Đã có lỗi xảy ra.');
+      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong.');
     },
   });
 }
@@ -86,16 +86,16 @@ export function useAddWeeklySlot(courseId: string, onSuccess?: () => void) {
   return useMutation({
     mutationFn: (data: { dayOfWeek: string; sessionType: string }) => addWeeklySlotApi(courseId, data),
     onSuccess: (res) => {
-      void message.success(`Đã thêm slot — tự sinh ${res.data.generatedSessionCount} buổi học.`);
+      void message.success(`Slot added — automatically generated ${res.data.generatedSessionCount} sessions.`);
       invalidate();
       onSuccess?.();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const code = error.response?.data?.code ?? '';
       if (code === 'WeeklySlot.Duplicate') {
-        void message.error('Slot này đã tồn tại.');
+        void message.error('This slot already exists.');
       } else {
-        void message.error(error.response?.data?.message ?? 'Đã có lỗi xảy ra.');
+        void message.error(error.response?.data?.message ?? 'Something went wrong.');
       }
     },
   });
@@ -107,16 +107,16 @@ export function useRemoveWeeklySlot(courseId: string) {
   return useMutation({
     mutationFn: (weeklySlotId: string) => removeWeeklySlotApi(courseId, weeklySlotId),
     onSuccess: () => {
-      void message.success('Đã xóa slot.');
+      void message.success('Slot removed.');
       invalidate();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const msgs: Record<string, string> = {
-        'WeeklySlot.InUse': 'Không thể xóa — còn sinh viên đang đăng ký slot này.',
-        'WeeklySlot.MinimumRequired': 'Cần tối thiểu 2 slot — không thể xóa thêm.',
+        'WeeklySlot.InUse': 'Cannot remove — students are still enrolled in this slot.',
+        'WeeklySlot.MinimumRequired': 'At least 2 slots are required — cannot remove any more.',
       };
       const code = error.response?.data?.code ?? '';
-      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Đã có lỗi xảy ra.');
+      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong.');
     },
   });
 }
