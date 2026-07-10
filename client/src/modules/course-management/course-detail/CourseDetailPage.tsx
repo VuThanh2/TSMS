@@ -125,7 +125,10 @@ export default function CourseDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [hidePast, setHidePast] = useState(false);
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') ?? 'detail');
+  const [activeTab, setActiveTab] = useState(() => {
+    const t = searchParams.get('tab');
+    return t === 'attendance' || t === 'grading' ? t : 'detail';
+  });
   const [editForm] = Form.useForm();
   const [replaceForm] = Form.useForm();
 

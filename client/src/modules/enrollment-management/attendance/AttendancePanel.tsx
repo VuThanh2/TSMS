@@ -57,12 +57,16 @@ export default function AttendancePanel({
 
   const { attendances, isLoading, updateAttendance } = useAttendance(courseId, sessionId);
 
-  // Tuần mặc định: chứa buổi sắp tới gần nhất, hoặc buổi đầu nếu tất cả đã qua
+  // Tuần mặc định: ưu tiên tuần chứa buổi deep-link (từ Schedule), rồi buổi sắp tới gần nhất,
+  // cuối cùng là buổi đầu — để mở đúng tuần và highlight được buổi vừa chọn.
   const defaultAnchor = useMemo(() => {
-    const firstUpcoming = sessions.find((s) => !s.isPast) ?? sessions[0];
-    return firstUpcoming ? dayjs(firstUpcoming.sessionDate) : dayjs();
+    const deepLinked = initialSessionId
+      ? sessions.find((s) => s.classSessionId === initialSessionId)
+      : undefined;
+    const anchor = deepLinked ?? sessions.find((s) => !s.isPast) ?? sessions[0];
+    return anchor ? dayjs(anchor.sessionDate) : dayjs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId, sessions.length]);
+  }, [courseId, sessions.length, initialSessionId]);
 
   const weekStart = startOfWeek(defaultAnchor).add(weekOffset * 7, 'day');
   const weekDays = useMemo(

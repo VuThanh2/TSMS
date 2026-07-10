@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { App } from 'antd';
 import type { AxiosError } from 'axios';
 
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { getCourseEnrollmentsApi, updateGradeApi } from './grading.api';
 
 const GRADE_ERROR_MESSAGES: Record<string, string> = {
@@ -19,11 +20,14 @@ export function useGrading(courseId: string) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  // Debounce: chỉ gọi API sau khi ngừng gõ, tránh 1 request mỗi keystroke gây lag.
+  const debouncedKeyword = useDebouncedValue(keyword);
+
   const enrollments = useQuery({
-    queryKey: ['enrollments', courseId, { keyword, page, pageSize }],
+    queryKey: ['enrollments', courseId, { keyword: debouncedKeyword, page, pageSize }],
     queryFn: () =>
       getCourseEnrollmentsApi(courseId, {
-        keyword: keyword || undefined,
+        keyword: debouncedKeyword || undefined,
         page,
         pageSize,
       }),
