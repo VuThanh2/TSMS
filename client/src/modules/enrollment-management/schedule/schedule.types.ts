@@ -9,6 +9,7 @@ export interface LecturerScheduleSession {
   sessionDate: string; // "YYYY-MM-DD"
   dayOfWeek: string;
   sessionType: SessionType;
+  isCancelled: boolean;
 }
 
 export interface StudentScheduleSession {
@@ -18,5 +19,6 @@ export interface StudentScheduleSession {
   sessionDate: string; // "YYYY-MM-DD"
   dayOfWeek: string;
   sessionType: SessionType;
+  isCancelled: boolean;
   attendanceStatus: StudentAttendanceStatus;
 }

@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import ProtectedRoute from '@/app/routes/ProtectedRoute';
 import AppLayout from '@/app/layouts/AppLayout';
+import LoadingScreen from '@/shared/components/LoadingScreen';
 import { useAuth, getDefaultRouteForRole } from '@/shared/lib/auth-context';
 import LoginPage from '@/modules/identity/login/LoginPage';
 import ResetPasswordPage from '@/modules/identity/reset-password/ResetPasswordPage';
@@ -24,7 +25,7 @@ function RootRedirect() {
   const { state } = useAuth();
 
   if (state.status === 'loading') {
-    return null;
+    return <LoadingScreen />;
   }
 
   if (state.status === 'unauthenticated') {

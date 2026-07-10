@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth, getDefaultRouteForRole, type Role } from '@/shared/lib/auth-context';
+import LoadingScreen from '@/shared/components/LoadingScreen';
 
 interface ProtectedRouteProps {
   allowedRoles: Role[];
@@ -12,7 +13,7 @@ function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   // vì chưa biết chắc user có đăng nhập hay không. Render null (hoặc spinner)
   // thay vì đoán bừa "chưa đăng nhập" rồi đá về /login nhầm mỗi lần F5.
   if (state.status === 'loading') {
-    return null; // TODO: thay bằng spinner/skeleton chung của app khi có component đó
+    return <LoadingScreen />;
   }
 
   if (state.status === 'unauthenticated') {

@@ -54,10 +54,13 @@ public class UserRepository : IUserRepository {
             .AsQueryable();
  
         if (!string.IsNullOrWhiteSpace(keyword)) {
-            var lower = keyword.Trim().ToLower();
+            var term = keyword.Trim();
+            // COLLATE ..._CI_AI: CI bỏ qua hoa/thường, AI bỏ qua dấu (gõ "Vu" khớp "Vũ").
+            // Không cần .ToLower() nữa vì collation đã lo case-insensitive.
             query = query.Where(u =>
-                u.FullName.ToLower().Contains(lower) ||
-                (u.Email != null && u.Email.ToLower().Contains(lower)));
+                EF.Functions.Collate(u.FullName, "SQL_Latin1_General_CP1_CI_AI").Contains(term) ||
+                (u.Email != null &&
+                    EF.Functions.Collate(u.Email, "SQL_Latin1_General_CP1_CI_AI").Contains(term)));
         }
  
         if (role.HasValue)

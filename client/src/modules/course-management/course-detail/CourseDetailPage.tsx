@@ -1,11 +1,13 @@
 import { Fragment, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Modal, Form, Input, InputNumber, DatePicker, Spin, Popconfirm, Table, Tag } from 'antd';
+import { Button, Modal, Form, Input, InputNumber, DatePicker, Spin, Popconfirm, Switch, Table, Tag } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import dayjs from 'dayjs';
 
 import StatusTag from '@/shared/components/StatusTag';
 import LecturerPicker from '@/modules/course-management/shared/LecturerPicker';
+import CourseWeeklySchedule from './CourseWeeklySchedule';
 import type { ClassSession, WeeklySlot } from '@/modules/course-management/shared/course.types';
 import { useAuth, getDefaultRouteForRole } from '@/shared/lib/auth-context';
 import {
@@ -20,16 +22,16 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const SESSION_TYPES = ['Morning', 'Afternoon'];
 
+// Lưới weekly pattern chỉ dùng cho Admin (thêm/xóa slot). Lecturer xem lịch thật
+// qua CourseWeeklySchedule nên grid này không còn cần chế độ read-only.
 function WeeklySlotGrid({
   slots,
   onAdd,
   onRemove,
-  readOnly,
 }: {
   slots: WeeklySlot[];
   onAdd: (dayOfWeek: string, sessionType: string) => void;
   onRemove: (slot: WeeklySlot) => void;
-  readOnly?: boolean;
 }) {
   function findSlot(day: string, type: string) {
     return slots.find((s) => s.dayOfWeek === day && s.sessionType === type);
@@ -51,24 +53,6 @@ function WeeklySlotGrid({
             </div>
             {DAYS.map((day) => {
               const slot = findSlot(day, type);
-              if (slot && readOnly) {
-                return (
-                  <div
-                    key={`${day}-${type}`}
-                    className="flex h-10 items-center justify-center rounded-lg border-none bg-primary text-[13px] font-semibold text-white"
-                  >
-                    ✓
-                  </div>
-                );
-              }
-              if (!slot && readOnly) {
-                return (
-                  <div
-                    key={`${day}-${type}`}
-                    className="flex h-10 items-center justify-center rounded-lg border border-dashed border-border-input bg-transparent text-[16px] text-text-muted"
-                  />
-                );
-              }
               return slot ? (
                 <Popconfirm
                   key={`${day}-${type}`}
@@ -136,6 +120,7 @@ export default function CourseDetailPage() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
+  const [hidePast, setHidePast] = useState(false);
   const [editForm] = Form.useForm();
   const [replaceForm] = Form.useForm();
 
@@ -186,7 +171,13 @@ export default function CourseDetailPage() {
           <div className="flex flex-none gap-2">
             <Button onClick={() => setReplaceOpen(true)}>Replace lecturer</Button>
             <Button onClick={() => {
-              editForm.setFieldsValue({ name: c.name, description: c.description, maxCapacity: c.maxCapacity });
+              // DatePicker cần Dayjs, không nhận string — convert endDate khi mở modal
+              editForm.setFieldsValue({
+                name: c.name,
+                description: c.description,
+                maxCapacity: c.maxCapacity,
+                endDate: c.endDate ? dayjs(c.endDate) : undefined,
+              });
               setEditOpen(true);
             }}>
               Edit course
@@ -214,31 +205,46 @@ export default function CourseDetailPage() {
         ))}
       </div>
 
-      {/* Class sessions — weekly pattern grid (this IS the add/remove session mechanism, matches mock's isCourseDetail section) */}
-      <div className="mb-3.5 flex items-center justify-between">
-        <h2 className="m-0 text-[20px] font-semibold tracking-tight">Class sessions</h2>
-      </div>
-      <WeeklySlotGrid
-        slots={weeklySlots.data ?? []}
-        onAdd={(dayOfWeek, sessionType) => addSlot.mutate({ dayOfWeek, sessionType })}
-        onRemove={(slot) => removeSlot.mutate(slot.weeklySlotId)}
-        readOnly={!canManage}
-      />
-      {canManage && (
-        <p className="mt-3 text-[13px] text-text-muted">
-          Click a day &amp; shift to edit the weekly pattern. Sessions repeat every week from start to end date.
-        </p>
-      )}
+      {canManage ? (
+        <>
+          {/* Admin: lưới weekly pattern để thêm/xóa slot (cơ chế tạo ClassSession) */}
+          <div className="mb-3.5 flex items-center justify-between">
+            <h2 className="m-0 text-[20px] font-semibold tracking-tight">Class sessions</h2>
+          </div>
+          <WeeklySlotGrid
+            slots={weeklySlots.data ?? []}
+            onAdd={(dayOfWeek, sessionType) => addSlot.mutate({ dayOfWeek, sessionType })}
+            onRemove={(slot) => removeSlot.mutate(slot.weeklySlotId)}
+          />
+          <p className="mt-3 text-[13px] text-text-muted">
+            Click a day &amp; shift to edit the weekly pattern. Sessions repeat every week from start to end date.
+          </p>
 
-      {/* Session list (detail beyond the mock's weekly grid — kept as it surfaces real per-date data: cancellations, past/upcoming) */}
-      <h2 className="mb-3.5 mt-8 text-[20px] font-semibold tracking-tight">Session history</h2>
-      <Table<ClassSession>
-        columns={sessionColumns}
-        dataSource={c.classSessions}
-        rowKey="classSessionId"
-        pagination={{ pageSize: 10 }}
-        rowClassName={(record) => (record.isCancelled ? 'line-through opacity-50' : '')}
-      />
+          {/* Session history: bảng chi tiết per-date (cancellations, past/upcoming) — chỉ Admin */}
+          <div className="mb-3.5 mt-8 flex items-center justify-between">
+            <h2 className="m-0 text-[20px] font-semibold tracking-tight">Session history</h2>
+            <label className="flex cursor-pointer items-center gap-2 text-[13px] text-text-secondary">
+              <Switch size="small" checked={hidePast} onChange={setHidePast} />
+              Hide past sessions
+            </label>
+          </div>
+          <Table<ClassSession>
+            columns={sessionColumns}
+            dataSource={hidePast ? (c.classSessions ?? []).filter((s) => !s.isPast) : c.classSessions}
+            rowKey="classSessionId"
+            pagination={{ pageSize: 10 }}
+            rowClassName={(record) => (record.isCancelled ? 'line-through opacity-50' : '')}
+          />
+        </>
+      ) : (
+        <>
+          {/* Lecturer: lịch dạy thật theo tuần, read-only, có điều hướng tuần + đánh dấu ca hủy */}
+          <div className="mb-3.5 flex items-center justify-between">
+            <h2 className="m-0 text-[20px] font-semibold tracking-tight">Class schedule</h2>
+          </div>
+          <CourseWeeklySchedule sessions={c.classSessions ?? []} />
+        </>
+      )}
 
       {/* Edit Course Modal */}
       <Modal

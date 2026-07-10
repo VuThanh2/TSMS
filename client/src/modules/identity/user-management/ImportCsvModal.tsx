@@ -1,10 +1,34 @@
-import { Modal, Upload, Table } from 'antd';
+import { Modal, Upload, Table, Button } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
 
 import { useImportCsv } from './useUserList';
 
 interface ImportCsvModalProps {
   open: boolean;
   onClose: () => void;
+}
+
+// Nguồn sự thật DUY NHẤT cho định dạng CSV import — vừa hiển thị hint, vừa sinh
+// file template. Phải khớp đúng thứ tự cột backend đọc (ImportUsersCsvCommand:
+// FullName, Email, Role, Password) và dùng delimiter dấu phẩy vì CsvHelper cấu
+// hình InvariantCulture.
+const CSV_COLUMNS = ['FullName', 'Email', 'Role', 'Password'] as const;
+const CSV_SAMPLE_ROWS = [
+  ['Nguyen Van A', 'vana@example.com', 'Student', 'Passw0rd!'],
+  ['Tran Thi B', 'thib@example.com', 'Lecturer', 'Passw0rd!'],
+];
+
+// Tạo file CSV ngay ở client rồi trigger download — template là dữ liệu tĩnh,
+// không cần endpoint backend. Prefix BOM (﻿) để Excel mở đúng UTF-8.
+function downloadCsvTemplate() {
+  const lines = [CSV_COLUMNS.join(','), ...CSV_SAMPLE_ROWS.map((r) => r.join(','))];
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'user-import-template.csv';
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 export default function ImportCsvModal({ open, onClose }: ImportCsvModalProps) {
@@ -40,9 +64,17 @@ export default function ImportCsvModal({ open, onClose }: ImportCsvModalProps) {
           {isPending ? 'Importing…' : 'Drop a CSV file here'}
         </p>
         <p className="ant-upload-hint text-[13px] text-text-muted">
-          Columns: FullName, Email, Role, Password
+          Columns: {CSV_COLUMNS.join(', ')}
         </p>
       </Upload.Dragger>
+
+      {/* Tải file mẫu — user điền theo đúng định dạng rồi upload lại */}
+      <div className="mt-3 flex items-center justify-between text-[13px] text-text-muted">
+        <span>Not sure about the format?</span>
+        <Button type="link" size="small" icon={<DownloadOutlined />} onClick={downloadCsvTemplate} className="px-0">
+          Download template
+        </Button>
+      </div>
 
       {/* Kết quả import */}
       {result && (

@@ -54,12 +54,6 @@ const courseListColumns: ColumnsType<CourseListItem> = [
     key: 'sessions',
     render: () => <span className="text-[14px] text-text-muted">—</span>,
   },
-  {
-    title: '',
-    key: 'arrow',
-    align: 'right',
-    render: () => <span className="text-[18px] text-text-muted">→</span>,
-  },
 ];
 
 export default function AttendancePage() {

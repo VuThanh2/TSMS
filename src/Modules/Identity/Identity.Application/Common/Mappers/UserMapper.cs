@@ -38,7 +38,8 @@ public static class UserMapper {
         new(
             UserId: user.Id,
             FullName: user.FullName,
-            Email: user.Email!);
+            Email: user.Email!,
+            Department: user.LecturerProfile?.Department);
 
     // profile null nếu Admin, có giá trị nếu Lecturer hoặc Student.
     private static UserProfileDto? BuildProfile(AppUser user) =>
