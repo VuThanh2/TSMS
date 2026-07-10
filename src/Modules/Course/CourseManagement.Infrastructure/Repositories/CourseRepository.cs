@@ -20,6 +20,10 @@ public class CourseRepository : ICourseRepository {
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 
+    public void Remove(Course course) {
+        _context.Courses.Remove(course);
+    }
+
     public async Task<Course?> GetByIdWithSessionsAsync(
         Guid id,
         CancellationToken cancellationToken = default) {

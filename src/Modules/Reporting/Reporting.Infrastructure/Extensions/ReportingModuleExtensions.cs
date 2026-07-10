@@ -35,6 +35,7 @@ public static class ReportingModuleExtensions {
         services.AddScoped<INotificationHandler<CourseUpdatedEvent>>(sp => sp.GetRequiredService<CourseEventHandler>());
         services.AddScoped<INotificationHandler<CourseStatusChangedEvent>>(sp => sp.GetRequiredService<CourseEventHandler>());
         services.AddScoped<INotificationHandler<LecturerReplacedEvent>>(sp => sp.GetRequiredService<CourseEventHandler>());
+        services.AddScoped<INotificationHandler<CourseDeletedEvent>>(sp => sp.GetRequiredService<CourseEventHandler>());
 
         services.AddScoped<EnrollmentEventHandler>();
         services.AddScoped<INotificationHandler<StudentEnrolledEvent>>(sp => sp.GetRequiredService<EnrollmentEventHandler>());

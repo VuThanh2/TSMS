@@ -40,6 +40,10 @@ public class ReportingRepository : IReportingRepository {
         _context.CourseStatistics.Add(view);
     }
 
+    public void RemoveCourseStatistics(CourseStatisticsView view) {
+        _context.CourseStatistics.Remove(view);
+    }
+
     // ── StudentGradeReportView
 
     public async Task<StudentGradeReportView?> GetStudentGradeReportAsync(
@@ -79,6 +83,10 @@ public class ReportingRepository : IReportingRepository {
             .Where(v => v.CourseId == courseId)
             .OrderByDescending(v => v.RangeStart)
             .ToListAsync(cancellationToken);
+    }
+
+    public void RemoveScoreDistributions(IEnumerable<CourseScoreDistributionView> views) {
+        _context.ScoreDistributions.RemoveRange(views);
     }
 
     public void AddScoreDistribution(CourseScoreDistributionView view) {

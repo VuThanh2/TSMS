@@ -2,14 +2,15 @@ import { useMemo, useState } from 'react';
 import dayjs, { type Dayjs } from 'dayjs';
 
 import type { ClassSession } from '@/modules/course-management/shared/course.types';
+import {
+  getSessionState,
+  SESSION_STATE_LABEL,
+  SESSION_STATE_STYLE,
+  type SessionState,
+} from '@/modules/course-management/shared/session-status';
 
 const DAY_SHORT = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-
-// Màu theo ca — đồng bộ với lịch Lecturer/Student (SchedulePage) để nhìn nhất quán.
-const AM_BG = '#EBF3FC';
-const AM_TEXT = '#2E73C4';
-const PM_BG = '#FEF0EE';
-const PM_TEXT = '#F45D48';
+const LEGEND_STATES: SessionState[] = ['upcoming', 'today', 'past', 'cancelled'];
 
 // Tuần bắt đầu từ Thứ Hai (khớp convention ở AttendancePage/ScheduleCalendar).
 function startOfWeek(d: Dayjs) {
@@ -41,32 +42,27 @@ export default function CourseWeeklySchedule({ sessions }: { sessions: ClassSess
   }
 
   function renderRow(type: 'Morning' | 'Afternoon') {
-    const isAM = type === 'Morning';
+    const shift = type === 'Morning' ? 'Morning' : 'Afternoon';
     return weekDays.map((d) => {
       const s = sessionOn(d, type);
       const key = `${type}-${d.format('YYYY-MM-DD')}`;
       if (!s) {
         return <div key={key} className="h-10 rounded-lg border border-dashed border-border" />;
       }
-      if (s.isCancelled) {
-        return (
-          <div
-            key={key}
-            title="Session cancelled"
-            className="flex h-10 items-center justify-center rounded-lg bg-bg-card text-[12px] font-semibold text-text-muted line-through"
-          >
-            {isAM ? 'AM' : 'PM'}
-          </div>
-        );
-      }
+      // Nội dung ô = TRẠNG THÁI buổi học (Upcoming/Today/Past/Cancelled) — có ý nghĩa
+      // hơn nhãn AM/PM cũ (ca đã nằm ở nhãn hàng, ngày đã nằm ở tiêu đề cột).
+      const state = getSessionState(s);
+      const st = SESSION_STATE_STYLE[state];
       return (
         <div
           key={key}
-          title={isAM ? 'Morning' : 'Afternoon'}
-          style={{ background: isAM ? AM_BG : PM_BG, color: isAM ? AM_TEXT : PM_TEXT }}
-          className="flex h-10 items-center justify-center rounded-lg text-[12px] font-semibold"
+          title={`${shift} · ${SESSION_STATE_LABEL[state]}`}
+          style={{ background: st.bg, color: st.color }}
+          className={`flex h-10 items-center justify-center rounded-lg text-[11.5px] font-semibold ${
+            state === 'cancelled' ? 'line-through' : ''
+          }`}
         >
-          {isAM ? 'AM' : 'PM'}
+          {SESSION_STATE_LABEL[state]}
         </div>
       );
     });
@@ -94,8 +90,8 @@ export default function CourseWeeklySchedule({ sessions }: { sessions: ClassSess
       </div>
 
       {/* Lưới tuần */}
-      <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
-        <div className="grid items-center gap-2" style={{ gridTemplateColumns: '44px repeat(7, 1fr)' }}>
+      <div className="overflow-x-auto rounded-xl border border-border bg-white p-4 shadow-sm">
+        <div className="grid items-center gap-2" style={{ gridTemplateColumns: '44px repeat(7, 1fr)', minWidth: 520 }}>
           <div />
           {weekDays.map((d) => (
             <div key={d.format('YYYY-MM-DD')} className="text-center">
@@ -114,20 +110,19 @@ export default function CourseWeeklySchedule({ sessions }: { sessions: ClassSess
         </div>
       </div>
 
-      {/* Chú thích */}
-      <div className="mt-3 flex flex-wrap gap-5">
-        <div className="flex items-center gap-2 text-[13px] text-text-secondary">
-          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: AM_TEXT }} />
-          Morning (AM)
-        </div>
-        <div className="flex items-center gap-2 text-[13px] text-text-secondary">
-          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: PM_TEXT }} />
-          Afternoon (PM)
-        </div>
-        <div className="flex items-center gap-2 text-[13px] text-text-secondary">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-text-muted" />
-          <span className="line-through">Cancelled</span>
-        </div>
+      {/* Chú thích theo trạng thái */}
+      <div className="mt-3 flex flex-wrap gap-4">
+        {LEGEND_STATES.map((state) => (
+          <div key={state} className="flex items-center gap-2 text-[13px] text-text-secondary">
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{ background: SESSION_STATE_STYLE[state].color }}
+            />
+            <span className={state === 'cancelled' ? 'line-through' : ''}>
+              {SESSION_STATE_LABEL[state]}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

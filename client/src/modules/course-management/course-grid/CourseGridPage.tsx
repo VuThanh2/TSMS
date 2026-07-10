@@ -55,7 +55,7 @@ export default function CourseGridPage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
-    <div className="p-10 px-12">
+    <div className="p-5 sm:p-8 md:p-10 md:px-12">
       {/* Header */}
       <div className="mb-7 flex items-start justify-between gap-4">
         <div>

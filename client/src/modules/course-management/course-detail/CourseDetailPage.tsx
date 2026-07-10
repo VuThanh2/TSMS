@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Modal, Form, Input, InputNumber, DatePicker, Spin, Popconfirm, Switch, Table, Tag } from 'antd';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { Button, Modal, Form, Input, InputNumber, DatePicker, Spin, Popconfirm, Switch, Table, Tabs, Tag } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -8,6 +8,8 @@ import dayjs from 'dayjs';
 import StatusTag from '@/shared/components/StatusTag';
 import LecturerPicker from '@/modules/course-management/shared/LecturerPicker';
 import CourseWeeklySchedule from './CourseWeeklySchedule';
+import AttendancePanel from '@/modules/enrollment-management/attendance/AttendancePanel';
+import GradingPanel from '@/modules/enrollment-management/grading/GradingPanel';
 import type { ClassSession, WeeklySlot } from '@/modules/course-management/shared/course.types';
 import { useAuth, getDefaultRouteForRole } from '@/shared/lib/auth-context';
 import {
@@ -16,6 +18,7 @@ import {
   useReplaceLecturer,
   useAddWeeklySlot,
   useRemoveWeeklySlot,
+  useDeleteCourse,
 } from './useCourseDetail';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -38,8 +41,8 @@ function WeeklySlotGrid({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-white p-4 shadow-sm">
-      <div className="grid items-center gap-2" style={{ gridTemplateColumns: '56px repeat(7, 1fr)' }}>
+    <div className="overflow-x-auto rounded-xl border border-border bg-white p-4 shadow-sm">
+      <div className="grid items-center gap-2" style={{ gridTemplateColumns: '56px repeat(7, 1fr)', minWidth: 540 }}>
         <div />
         {DAY_SHORT.map((d) => (
           <div key={d} className="text-center text-[12px] font-semibold uppercase tracking-wide text-text-muted">
@@ -115,12 +118,14 @@ const sessionColumns: ColumnsType<ClassSession> = [
 export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { state } = useAuth();
   const { course, weeklySlots } = useCourseDetail(courseId!);
 
   const [editOpen, setEditOpen] = useState(false);
   const [replaceOpen, setReplaceOpen] = useState(false);
   const [hidePast, setHidePast] = useState(false);
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') ?? 'detail');
   const [editForm] = Form.useForm();
   const [replaceForm] = Form.useForm();
 
@@ -128,6 +133,7 @@ export default function CourseDetailPage() {
   const replaceLecturer = useReplaceLecturer(courseId!, () => setReplaceOpen(false));
   const addSlot = useAddWeeklySlot(courseId!);
   const removeSlot = useRemoveWeeklySlot(courseId!);
+  const deleteCourse = useDeleteCourse(courseId!);
 
   if (course.isLoading) {
     return <div className="flex justify-center pt-20"><Spin size="large" /></div>;
@@ -142,8 +148,32 @@ export default function CourseDetailPage() {
   const canManage = role === 'Admin';
   const backTo = role ? getDefaultRouteForRole(role) : '/admin/dashboard';
 
+  // Deep-link: Schedule bấm 1 buổi → mở CourseDetail ở tab Attendance với buổi đã chọn.
+  // (activeTab dùng useState khai báo cùng các hook khác — PHẢI trước early return.)
+  const initialSessionId = searchParams.get('sessionId') ?? '';
+
+  const statCards = (
+    <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {[
+        { label: 'Lecturer', value: c.lecturerName ?? '—' },
+        { label: 'Enrolled', value: `${c.enrolledCount}/${c.maxCapacity}`, mono: true },
+        { label: 'Start', value: c.startDate, mono: true },
+        { label: 'End', value: c.endDate, mono: true },
+      ].map((card) => (
+        <div key={card.label} className="rounded-xl border border-border bg-white px-5 py-[18px]">
+          <div className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-text-muted">
+            {card.label}
+          </div>
+          <div className={`text-[16px] font-semibold ${card.mono ? 'font-mono' : ''}`}>
+            {card.value}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="max-w-[1040px] p-10 px-12">
+    <div className="max-w-[1040px] p-5 sm:p-8 md:p-10 md:px-12">
       {/* Back */}
       <Button
         type="text"
@@ -182,31 +212,29 @@ export default function CourseDetailPage() {
             }}>
               Edit course
             </Button>
+            {/* Chỉ Upcoming mới xóa được (khớp ràng buộc backend) — ẩn nút ở trạng thái khác
+                để tránh Admin bấm rồi nhận lỗi. Backend vẫn chặn kể cả khi gọi trực tiếp. */}
+            {c.status === 'Upcoming' && (
+              <Popconfirm
+                title="Delete this course?"
+                description="This permanently removes the course and all its sessions. Only allowed if no students are enrolled."
+                okText="Delete"
+                okButtonProps={{ danger: true, loading: deleteCourse.isPending }}
+                onConfirm={() =>
+                  deleteCourse.mutate(undefined, { onSuccess: () => navigate(backTo) })
+                }
+              >
+                <Button danger>Delete course</Button>
+              </Popconfirm>
+            )}
           </div>
         )}
       </div>
 
-      {/* Stat cards */}
-      <div className="mb-8 grid grid-cols-4 gap-4">
-        {[
-          { label: 'Lecturer', value: c.lecturerName ?? '—' },
-          { label: 'Enrolled', value: `${c.enrolledCount}/${c.maxCapacity}`, mono: true },
-          { label: 'Start', value: c.startDate, mono: true },
-          { label: 'End', value: c.endDate, mono: true },
-        ].map((card) => (
-          <div key={card.label} className="rounded-xl border border-border bg-white px-5 py-[18px]">
-            <div className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-text-muted">
-              {card.label}
-            </div>
-            <div className={`text-[16px] font-semibold ${card.mono ? 'font-mono' : ''}`}>
-              {card.value}
-            </div>
-          </div>
-        ))}
-      </div>
-
       {canManage ? (
         <>
+          {statCards}
+
           {/* Admin: lưới weekly pattern để thêm/xóa slot (cơ chế tạo ClassSession) */}
           <div className="mb-3.5 flex items-center justify-between">
             <h2 className="m-0 text-[20px] font-semibold tracking-tight">Class sessions</h2>
@@ -237,13 +265,37 @@ export default function CourseDetailPage() {
           />
         </>
       ) : (
-        <>
-          {/* Lecturer: lịch dạy thật theo tuần, read-only, có điều hướng tuần + đánh dấu ca hủy */}
-          <div className="mb-3.5 flex items-center justify-between">
-            <h2 className="m-0 text-[20px] font-semibold tracking-tight">Class schedule</h2>
-          </div>
-          <CourseWeeklySchedule sessions={c.classSessions ?? []} />
-        </>
+        // Lecturer: 3 tab — Detail (thông tin + lịch tuần), Attendance, Grading.
+        // (Attendance/Grading là hoạt động của Lecturer; Admin không có 2 tab này.)
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'detail',
+              label: 'Detail',
+              children: (
+                <>
+                  {statCards}
+                  <div className="mb-3.5 flex items-center justify-between">
+                    <h2 className="m-0 text-[20px] font-semibold tracking-tight">Class schedule</h2>
+                  </div>
+                  <CourseWeeklySchedule sessions={c.classSessions ?? []} />
+                </>
+              ),
+            },
+            {
+              key: 'attendance',
+              label: 'Attendance',
+              children: <AttendancePanel courseId={courseId!} initialSessionId={initialSessionId} />,
+            },
+            {
+              key: 'grading',
+              label: 'Grading',
+              children: <GradingPanel courseId={courseId!} courseStatus={c.status} />,
+            },
+          ]}
+        />
       )}
 
       {/* Edit Course Modal */}

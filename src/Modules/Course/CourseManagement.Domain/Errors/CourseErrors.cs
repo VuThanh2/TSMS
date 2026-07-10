@@ -49,6 +49,15 @@ public static class CourseErrors {
         Error.Create("Course.InvalidStatusTransition",
             "Course status can only transition forward: Upcoming → Active → Completed.");
 
+    // ── Delete
+    public static readonly Error OnlyUpcomingCourseCanBeDeleted =
+        Error.Create("Course.OnlyUpcomingCourseCanBeDeleted",
+            "Only an upcoming course (not yet started) can be deleted.");
+
+    public static readonly Error CourseHasEnrollments =
+        Error.Create("Course.CourseHasEnrollments",
+            "Cannot delete a course that students are already enrolled in.");
+
     // ── Lecturer
     public static readonly Error LecturerNotFound =
         Error.Create("Course.LecturerNotFound",

@@ -35,6 +35,10 @@ public static class EnrollmentModuleExtensions {
         services.AddScoped<EnrollmentQueryService>();
         services.AddScoped<CourseManagement.Application.Common.Interfaces.IEnrollmentCourseService>(
             sp => sp.GetRequiredService<EnrollmentQueryService>());
+
+        // Cross-BC: Course nhờ Enrollment back-fill Attendance khi lịch học đổi (gia hạn EndDate).
+        services.AddScoped<CourseManagement.Application.Common.Interfaces.IEnrollmentAttendanceSync,
+            EnrollmentAttendanceSyncService>();
         services.AddScoped<Identity.Application.Common.Interfaces.IEnrollmentIdentityService>(
             sp => sp.GetRequiredService<EnrollmentQueryService>());
 

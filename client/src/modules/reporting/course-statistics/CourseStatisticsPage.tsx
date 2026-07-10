@@ -99,14 +99,14 @@ export default function CourseStatisticsPage() {
   };
 
   return (
-    <div className="p-10 px-12">
+    <div className="p-5 sm:p-8 md:p-10 md:px-12">
       <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">Course statistics</h1>
       <p className="m-0 mb-7 text-[15px] text-text-secondary">
         Enrollment and grade overview across all courses.
       </p>
 
       {/* Charts */}
-      <div className="mb-7 grid grid-cols-2 gap-5">
+      <div className="mb-7 grid grid-cols-1 gap-5 lg:grid-cols-2">
         <div className="rounded-xl border border-border bg-white p-6 shadow-sm">
           <div className="mb-1 text-[15px] font-semibold">Students enrolled per course</div>
           <div className="mb-6 text-[13px] text-text-muted">Each column is one course</div>

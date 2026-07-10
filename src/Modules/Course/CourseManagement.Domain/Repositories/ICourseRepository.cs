@@ -42,6 +42,10 @@ public interface ICourseRepository {
     void Add(Course course);
     void Update(Course course);
 
+    /// Xóa toàn bộ aggregate Course. WeeklySlots + ClassSessions con được DB cascade
+    /// (OnDelete Cascade đã cấu hình ở CourseConfiguration).
+    void Remove(Course course);
+
     void AddWeeklySlot(WeeklySlot weeklySlot);
 
     void AddClassSession(ClassSession classSession);

@@ -69,7 +69,7 @@ export default function StudentCoursesPage() {
   });
 
   return (
-    <div className="p-10 px-12">
+    <div className="p-5 sm:p-8 md:p-10 md:px-12">
       <div className="mb-7">
         <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">My courses</h1>
         <p className="m-0 text-[15px] text-text-secondary">

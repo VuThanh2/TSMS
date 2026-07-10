@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using CourseManagement.Application.Courses.CreateCourse;
+using CourseManagement.Application.Courses.DeleteCourse;
 using CourseManagement.Application.Courses.GetAvailableCourses;
 using CourseManagement.Application.Courses.GetCourseById;
 using CourseManagement.Application.Courses.GetCourses;
@@ -144,6 +145,24 @@ public class CourseController : ControllerBase {
         var result = await _sender.Send(
             new UpdateCourseCommand(courseId, dto.Name, dto.Description, dto.EndDate, dto.MaxCapacity),
             cancellationToken);
+
+        if (result.IsFailure)
+            return result.Error.Code == "Course.NotFound"
+                ? NotFound(new { result.Error.Code, result.Error.Message })
+                : BadRequest(new { result.Error.Code, result.Error.Message });
+
+        return Ok(result.Value);
+    }
+
+    // DELETE /api/courses/{courseId}
+    // Chỉ Admin. Ràng buộc: course phải Upcoming (chưa bắt đầu) và CHƯA có Student nào enroll.
+    // Dùng cho case Admin tạo nhầm/dư — xóa thật (cascade WeeklySlot + ClassSession).
+    [HttpDelete("{courseId:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteCourse(
+        Guid courseId,
+        CancellationToken cancellationToken) {
+        var result = await _sender.Send(new DeleteCourseCommand(courseId), cancellationToken);
 
         if (result.IsFailure)
             return result.Error.Code == "Course.NotFound"

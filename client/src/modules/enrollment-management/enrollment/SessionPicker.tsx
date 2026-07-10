@@ -55,8 +55,8 @@ export default function SessionPicker({
         Choose a weekday and shift from this course&apos;s schedule.
       </div>
       <div
-        className="grid items-center gap-1.5"
-        style={{ gridTemplateColumns: '36px repeat(7, 1fr)' }}
+        className="grid items-center gap-1.5 overflow-x-auto"
+        style={{ gridTemplateColumns: '36px repeat(7, 1fr)', minWidth: 0 }}
       >
         <div />
         {DAY_SHORT.map((d) => (

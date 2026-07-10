@@ -21,16 +21,19 @@ public sealed class UpdateCourseCommandHandler
     private readonly ICourseRepository _courseRepository;
     private readonly ILecturerLookupService _lecturerLookupService;
     private readonly IEnrollmentCourseService _enrollmentCourseService;
+    private readonly IEnrollmentAttendanceSync _enrollmentAttendanceSync;
     private readonly ICourseUnitOfWork _unitOfWork;
 
     public UpdateCourseCommandHandler(
         ICourseRepository courseRepository,
         ILecturerLookupService lecturerLookupService,
         IEnrollmentCourseService enrollmentCourseService,
+        IEnrollmentAttendanceSync enrollmentAttendanceSync,
         ICourseUnitOfWork unitOfWork) {
         _courseRepository = courseRepository;
         _lecturerLookupService = lecturerLookupService;
         _enrollmentCourseService = enrollmentCourseService;
+        _enrollmentAttendanceSync = enrollmentAttendanceSync;
         _unitOfWork = unitOfWork;
     }
 
@@ -55,6 +58,10 @@ public sealed class UpdateCourseCommandHandler
         if (courseNameResult.IsFailure)
             return Result.Failure<UpdateCourseOutputDto>(courseNameResult.Error);
 
+        // Gia hạn EndDate sẽ SINH THÊM ClassSession cho các WeeklySlot đang có (RegenerateSessionsForNewEndDate).
+        // Ghi nhận trước khi mutate để biết có cần back-fill Attendance không.
+        var wasExtended = request.EndDate > course.EndDate;
+
         // Domain enforces: Completed course immutable, EndDate >= latest session, EndDate > today.
         var updateResult = course.UpdateInfo(
             courseNameResult.Value,
@@ -67,6 +74,13 @@ public sealed class UpdateCourseCommandHandler
 
         _courseRepository.Update(course);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Sau khi ClassSession mới đã được lưu: nhờ Enrollment BC tạo Attendance cho các buổi mới
+        // thuộc slot student đã chọn (cross-BC qua interface, idempotent). Nếu bỏ qua, Lecturer mở
+        // buổi mới sinh ra sẽ thấy trống Attendance.
+        if (wasExtended)
+            await _enrollmentAttendanceSync.BackfillAttendanceForCourseAsync(
+                request.CourseId, cancellationToken);
 
         var lecturerName = await _lecturerLookupService.GetFullNameAsync(
             course.LecturerId, cancellationToken);

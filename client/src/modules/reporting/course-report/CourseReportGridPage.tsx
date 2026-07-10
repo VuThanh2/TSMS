@@ -36,7 +36,7 @@ export default function CourseReportGridPage() {
   }
 
   return (
-    <div className="p-10 px-12">
+    <div className="p-5 sm:p-8 md:p-10 md:px-12">
       <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">Reports</h1>
       <p className="m-0 mb-7 text-[15px] text-text-secondary">
         Select a course to view its grade, attendance and score reports.
@@ -50,7 +50,7 @@ export default function CourseReportGridPage() {
           onChange={(e) => setKeyword(e.target.value)}
           allowClear
           size="large"
-          className="max-w-[360px]"
+          className="w-full sm:max-w-[360px]"
         />
       </div>
 
@@ -61,7 +61,7 @@ export default function CourseReportGridPage() {
       ) : courses.length === 0 ? (
         <Empty description="No courses to report on yet." className="py-16" />
       ) : (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((c) => (
             <button
               key={c.courseId}

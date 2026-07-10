@@ -24,3 +24,7 @@ export function addWeeklySlotApi(courseId: string, data: { dayOfWeek: string; se
 export function removeWeeklySlotApi(courseId: string, weeklySlotId: string) {
   return api.delete(`/courses/${courseId}/weekly-slots/${weeklySlotId}`);
 }
+
+export function deleteCourseApi(courseId: string) {
+  return api.delete(`/courses/${courseId}`);
+}

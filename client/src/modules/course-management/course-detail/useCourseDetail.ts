@@ -9,6 +9,7 @@ import {
   replaceLecturerApi,
   addWeeklySlotApi,
   removeWeeklySlotApi,
+  deleteCourseApi,
 } from './course-detail.api';
 
 export function useCourseDetail(courseId: string) {
@@ -73,6 +74,27 @@ export function useReplaceLecturer(courseId: string, onSuccess?: () => void) {
         'Course.SameLecturer': 'This lecturer is already assigned to the course.',
         'Lecturer.ScheduleConflict': 'This lecturer has a teaching schedule conflict.',
         'Course.AlreadyCompleted': 'This course has ended.',
+      };
+      const code = error.response?.data?.code ?? '';
+      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong.');
+    },
+  });
+}
+
+export function useDeleteCourse(courseId: string) {
+  const { message } = App.useApp();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteCourseApi(courseId),
+    onSuccess: () => {
+      void message.success('Course deleted.');
+      void queryClient.invalidateQueries({ queryKey: ['courses'] });
+    },
+    onError: (error: AxiosError<{ code?: string; message?: string }>) => {
+      const msgs: Record<string, string> = {
+        'Course.CourseHasEnrollments': 'Cannot delete — students are already enrolled in this course.',
+        'Course.OnlyUpcomingCourseCanBeDeleted': 'Only an upcoming course (not yet started) can be deleted.',
+        'Course.NotFound': 'Course not found.',
       };
       const code = error.response?.data?.code ?? '';
       void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong.');
