@@ -71,7 +71,7 @@ public class SendSessionReminderJobServiceTests {
         await SeedEnrollmentAsync(context, studentId, courseId, morningSlot, afternoonSlot);
 
         var courseService = new FakeCourseEnrollmentService {
-            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid())],
+            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid(), "Active")],
             ClassSessionsByDate = [
                 Session(courseId, morningSlot, SessionType.Morning),
                 Session(courseId, afternoonSlot, SessionType.Afternoon)
@@ -103,7 +103,7 @@ public class SendSessionReminderJobServiceTests {
         await SeedEnrollmentAsync(context, studentId, courseId, morningSlot, afternoonSlot);
 
         var courseService = new FakeCourseEnrollmentService {
-            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid())],
+            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid(), "Active")],
             ClassSessionsByDate = [Session(courseId, afternoonSlot, SessionType.Afternoon)]
         };
         var studentService = new FakeStudentEnrollmentService {
@@ -128,7 +128,7 @@ public class SendSessionReminderJobServiceTests {
         await SeedEnrollmentAsync(context, studentId, courseId, morningSlot, afternoonSlot);
 
         var courseService = new FakeCourseEnrollmentService {
-            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid())],
+            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid(), "Active")],
             ClassSessionsByDate = [Session(courseId, morningSlot, SessionType.Morning, isCancelled: true)]
         };
         var studentService = new FakeStudentEnrollmentService {
@@ -152,7 +152,7 @@ public class SendSessionReminderJobServiceTests {
         await SeedEnrollmentAsync(context, studentId, courseId, morningSlot, afternoonSlot);
 
         var courseService = new FakeCourseEnrollmentService {
-            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid())],
+            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid(), "Active")],
             ClassSessionsByDate = [Session(courseId, afternoonSlot, SessionType.Afternoon)]
         };
         var studentService = new FakeStudentEnrollmentService {
@@ -181,7 +181,7 @@ public class SendSessionReminderJobServiceTests {
         await SeedEnrollmentAsync(context, student2, Guid.NewGuid(), otherMorningSlot, Guid.NewGuid());
 
         var courseService = new FakeCourseEnrollmentService {
-            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid())],
+            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid(), "Active")],
             ClassSessionsByDate = [Session(courseId, morningSlot, SessionType.Morning)]
         };
         var studentService = new FakeStudentEnrollmentService {
@@ -206,7 +206,7 @@ public class SendSessionReminderJobServiceTests {
         await SeedEnrollmentAsync(context, studentId, courseId, morningSlot, afternoonSlot);
 
         var courseService = new FakeCourseEnrollmentService {
-            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid())],
+            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid(), "Active")],
             ClassSessionsByDate = [Session(courseId, morningSlot, SessionType.Morning)]
         };
         // Student không có email (deactivate / thiếu email) → GetEmailsAsync không trả về.
@@ -231,7 +231,7 @@ public class SendSessionReminderJobServiceTests {
         await SeedEnrollmentAsync(context, student2, courseId, morningSlot, Guid.NewGuid());
 
         var courseService = new FakeCourseEnrollmentService {
-            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid())],
+            Courses = [new CourseLookup(courseId, "OOP", Guid.NewGuid(), "Active")],
             ClassSessionsByDate = [Session(courseId, morningSlot, SessionType.Morning)]
         };
         var studentService = new FakeStudentEnrollmentService {

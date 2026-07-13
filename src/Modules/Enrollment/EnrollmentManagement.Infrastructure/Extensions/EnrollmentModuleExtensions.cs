@@ -32,6 +32,9 @@ public static class EnrollmentModuleExtensions {
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
         services.AddScoped<IScheduleConflictChecker, ScheduleConflictChecker>();
 
+        // Demo Data Reset (dev-only) — bulk delete Enrollment/EnrolledSession/Attendance.
+        services.AddScoped<IEnrollmentDataResetter, EnrollmentDataResetter>();
+
         services.AddScoped<EnrollmentQueryService>();
         services.AddScoped<CourseManagement.Application.Common.Interfaces.IEnrollmentCourseService>(
             sp => sp.GetRequiredService<EnrollmentQueryService>());

@@ -106,4 +106,9 @@ public static class CourseErrors {
     public static readonly Error WeeklySlotInUse =
         Error.Create("Course.WeeklySlotInUse",
             "Cannot remove a weekly slot that students are currently enrolled in.");
+
+    // ── Demo Data Seeding
+    public static readonly Error NoActiveLecturerForSeeding =
+        Error.Create("Course.NoActiveLecturerForSeeding",
+            "Chưa có Lecturer nào đang Active — hãy Import CSV tạo Lecturer trước khi reset demo data.");
 }

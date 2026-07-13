@@ -6,6 +6,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Reporting.Application.Common.Interfaces;
 using Reporting.Domain.Repositories;
 using Reporting.Infrastructure.EventHandlers;
 using Reporting.Infrastructure.Persistence;
@@ -25,6 +26,9 @@ public static class ReportingModuleExtensions {
             options.UseTsmsSqlServer(configuration.GetConnectionString("ReportingDb")!, TsmsSchemas.Reporting));
 
         services.AddScoped<IReportingRepository, ReportingRepository>();
+
+        // Demo Data Reset (dev-only) — bulk delete cả 5 ReadModel.
+        services.AddScoped<IReportingDataResetter, ReportingDataResetter>();
 
         // EventHandlers sống ở Infrastructure (không phải Application) nên MediatR's
         // RegisterServicesFromAssemblies (chỉ scan *.Application assembly của từng module)

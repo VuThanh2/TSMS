@@ -41,9 +41,13 @@ public sealed class GetMyEnrollmentsQueryHandler
         var courseMap = courses.ToDictionary(c => c.CourseId);
 
         var dtos = enrollments
-            .Select(e => EnrollmentMapper.ToGetMyEnrollmentsOutputDto(
-                e,
-                courseMap.TryGetValue(e.CourseId, out var c) ? c.CourseName : string.Empty))
+            .Select(e => {
+                var hasCourse = courseMap.TryGetValue(e.CourseId, out var c);
+                return EnrollmentMapper.ToGetMyEnrollmentsOutputDto(
+                    e,
+                    hasCourse ? c!.CourseName : string.Empty,
+                    hasCourse ? c!.Status : string.Empty);
+            })
             .ToList();
 
         var paged = PagedList<GetMyEnrollmentsOutputDto>.Create(

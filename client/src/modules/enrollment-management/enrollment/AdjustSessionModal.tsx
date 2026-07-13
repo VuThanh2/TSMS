@@ -54,6 +54,8 @@ export default function AdjustSessionModal({ enrollment, onClose, onConfirm, isL
   }
 
   const slots = slotsQuery.data ?? [];
+  const enrolledIds = enrollment?.enrolledWeeklySlotIds ?? [];
+  const currentSlots = slots.filter((s) => enrolledIds.includes(s.weeklySlotId));
   const canSubmit = !!oldSlotId && !!newSlotId && oldSlotId !== newSlotId;
   const statusColor = enrollment ? (STATUS_COLOR[enrollment.status] ?? '#8A847E') : '#8A847E';
   const oldSlot = slots.find((s) => s.weeklySlotId === oldSlotId);
@@ -116,7 +118,7 @@ export default function AdjustSessionModal({ enrollment, onClose, onConfirm, isL
         </div>
       ) : picker !== null ? (
         <SessionPicker
-          slots={slots}
+          slots={picker === 'from' ? currentSlots : slots}
           disabledSlotIds={[picker === 'from' ? newSlotId : oldSlotId].filter(
             (v): v is string => !!v,
           )}

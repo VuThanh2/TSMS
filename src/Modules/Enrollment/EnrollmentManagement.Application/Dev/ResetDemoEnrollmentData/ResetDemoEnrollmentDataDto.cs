@@ -1,0 +1,3 @@
+namespace EnrollmentManagement.Application.Dev.ResetDemoEnrollmentData;
+
+public sealed record ResetDemoEnrollmentDataOutputDto(bool Success);

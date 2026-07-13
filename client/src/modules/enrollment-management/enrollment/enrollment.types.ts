@@ -1,5 +1,7 @@
 import type { CourseStatus } from '@/modules/course-management/shared/course.types';
 
+export type MyCourseStatus = CourseStatus | 'Graded';
+
 export interface AvailableCourse {
   courseId: string;
   name: string;
@@ -14,6 +16,7 @@ export interface MyCourseItem {
   enrollmentId: string;
   courseId: string;
   courseName: string;
-  status: CourseStatus;
+  status: MyCourseStatus;
   grade: number | null;
+  enrolledWeeklySlotIds: string[];
 }

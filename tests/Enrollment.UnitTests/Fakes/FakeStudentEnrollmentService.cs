@@ -25,4 +25,7 @@ public sealed class FakeStudentEnrollmentService : IStudentEnrollmentService {
             .ToDictionary(id => id, id => Emails[id]);
         return Task.FromResult(result);
     }
+
+    public Task<IReadOnlyList<Guid>> GetActiveStudentIdsAsync(CancellationToken cancellationToken = default) =>
+        throw new NotImplementedException();
 }

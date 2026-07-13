@@ -30,6 +30,9 @@ public static class CourseModuleExtensions {
  
         services.AddScoped<ICourseUnitOfWork>(sp => sp.GetRequiredService<CourseDbContext>());
         services.AddScoped<ICourseRepository, CourseRepository>();
+
+        // Demo Data Reset (dev-only) — bulk delete Course/WeeklySlot/ClassSession.
+        services.AddScoped<ICourseDataResetter, CourseDataResetter>();
  
         // Internal service — dùng cho CourseManagement Application handlers.
         services.AddScoped<ICourseQueryService, CourseQueryService>();
