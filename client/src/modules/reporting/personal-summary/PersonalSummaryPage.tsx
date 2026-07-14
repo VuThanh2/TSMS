@@ -94,7 +94,7 @@ export default function PersonalSummaryPage() {
   const gpaColor = gpa === null ? '#8A847E' : gpa >= 5 ? '#1E875F' : '#D7372C';
 
   return (
-    <div className="max-w-[960px] p-10 px-12">
+    <div className="max-w-[960px] p-5 sm:p-8 md:p-10 md:px-12">
       {/* Header */}
       <div className="mb-7">
         <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">Personal summary</h1>

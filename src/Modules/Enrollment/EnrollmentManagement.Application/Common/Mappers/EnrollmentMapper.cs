@@ -47,13 +47,17 @@ public static class EnrollmentMapper {
 
     public static GetMyEnrollmentsOutputDto ToGetMyEnrollmentsOutputDto(
         Enrollment enrollment,
-        string courseName) =>
+        string courseName,
+        string courseStatus) =>
         new(
             EnrollmentId: enrollment.Id,
             CourseId: enrollment.CourseId,
             CourseName: courseName,
-            Status: enrollment.Status.ToString(),
-            Grade: enrollment.Grade?.Value);
+            Status: enrollment.Status == Domain.ValueObjects.EnrollmentStatus.Graded
+                ? "Graded"
+                : courseStatus,
+            Grade: enrollment.Grade?.Value,
+            EnrolledWeeklySlotIds: enrollment.EnrolledSessions.Select(s => s.WeeklySlotId).ToList());
 
     // ── GetCourseEnrollments
 

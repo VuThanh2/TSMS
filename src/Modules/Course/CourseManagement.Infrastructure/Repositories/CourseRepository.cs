@@ -20,6 +20,10 @@ public class CourseRepository : ICourseRepository {
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 
+    public void Remove(Course course) {
+        _context.Courses.Remove(course);
+    }
+
     public async Task<Course?> GetByIdWithSessionsAsync(
         Guid id,
         CancellationToken cancellationToken = default) {
@@ -56,10 +60,12 @@ public class CourseRepository : ICourseRepository {
         var query = _context.Courses.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(keyword)) {
-            var lower = keyword.Trim().ToLower();
+            var term = keyword.Trim();
             // EF translates shadow property access via EF.Property for backing fields.
+            // COLLATE ..._CI_AI: CI bỏ qua hoa/thường, AI bỏ qua dấu (gõ "Vu" khớp "Vũ").
             query = query.Where(c =>
-                EF.Property<string>(c, "_courseName").ToLower().Contains(lower));
+                EF.Functions.Collate(EF.Property<string>(c, "_courseName"), "SQL_Latin1_General_CP1_CI_AI")
+                    .Contains(term));
         }
 
         if (status.HasValue)

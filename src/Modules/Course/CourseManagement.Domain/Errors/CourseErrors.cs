@@ -49,6 +49,15 @@ public static class CourseErrors {
         Error.Create("Course.InvalidStatusTransition",
             "Course status can only transition forward: Upcoming → Active → Completed.");
 
+    // ── Delete
+    public static readonly Error OnlyUpcomingCourseCanBeDeleted =
+        Error.Create("Course.OnlyUpcomingCourseCanBeDeleted",
+            "Only an upcoming course (not yet started) can be deleted.");
+
+    public static readonly Error CourseHasEnrollments =
+        Error.Create("Course.CourseHasEnrollments",
+            "Cannot delete a course that students are already enrolled in.");
+
     // ── Lecturer
     public static readonly Error LecturerNotFound =
         Error.Create("Course.LecturerNotFound",
@@ -97,4 +106,9 @@ public static class CourseErrors {
     public static readonly Error WeeklySlotInUse =
         Error.Create("Course.WeeklySlotInUse",
             "Cannot remove a weekly slot that students are currently enrolled in.");
+
+    // ── Demo Data Seeding
+    public static readonly Error NoActiveLecturerForSeeding =
+        Error.Create("Course.NoActiveLecturerForSeeding",
+            "Chưa có Lecturer nào đang Active — hãy Import CSV tạo Lecturer trước khi reset demo data.");
 }

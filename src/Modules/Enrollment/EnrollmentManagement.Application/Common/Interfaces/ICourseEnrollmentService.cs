@@ -83,4 +83,5 @@ public sealed record ClassSessionLookup(
 public sealed record CourseLookup(
     Guid CourseId,
     string CourseName,
-    Guid LecturerId);
+    Guid LecturerId,
+    string Status);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { getCoursesApi } from './course-grid.api';
 
 export function useCourseGrid() {
@@ -9,11 +10,14 @@ export function useCourseGrid() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  // Debounce: chỉ gọi API sau khi ngừng gõ, tránh 1 request mỗi keystroke gây lag.
+  const debouncedKeyword = useDebouncedValue(keyword);
+
   const { data, isLoading } = useQuery({
-    queryKey: ['courses', { keyword, status, page, pageSize }],
+    queryKey: ['courses', { keyword: debouncedKeyword, status, page, pageSize }],
     queryFn: () =>
       getCoursesApi({
-        keyword: keyword || undefined,
+        keyword: debouncedKeyword || undefined,
         status: status || undefined,
         page,
         pageSize,

@@ -124,7 +124,7 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
         CancellationToken cancellationToken = default) {
         return await _context.Courses
             .Where(c => courseIds.Contains(c.Id))
-            .Select(c => new CourseLookup(c.Id, c.Name, c.LecturerId))
+            .Select(c => new CourseLookup(c.Id, c.Name, c.LecturerId, c.Status.ToString()))
             .ToListAsync(cancellationToken);
     }
 
@@ -133,7 +133,7 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
         CancellationToken cancellationToken = default) {
         return await _context.Courses
             .Where(c => c.LecturerId == lecturerId)
-            .Select(c => new CourseLookup(c.Id, c.Name, c.LecturerId))
+            .Select(c => new CourseLookup(c.Id, c.Name, c.LecturerId, c.Status.ToString()))
             .ToListAsync(cancellationToken);
     }
 

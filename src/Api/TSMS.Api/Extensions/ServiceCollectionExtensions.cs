@@ -29,6 +29,7 @@ public static class ServiceCollectionExtensions {
             .AddApplicationPart(typeof(EnrollmentsController).Assembly)
             .AddApplicationPart(typeof(ReportingController).Assembly);
         services.AddCorsPolicy(configuration);
+        services.AddDemoOptions(configuration);
         services.AddMediatRWithValidation();
         services.AddHangfireServices(configuration);
         services.AddHealthCheckServices();
@@ -81,6 +82,17 @@ public static class ServiceCollectionExtensions {
                     .AllowCredentials();
             });
         });
+    }
+
+    // Strongly-typed config cho tính năng Demo Data Reset — cùng pattern với AddCorsPolicy.
+    private static void AddDemoOptions(
+        this IServiceCollection services,
+        IConfiguration configuration) {
+        var demoOptions = configuration
+            .GetSection(DemoOptions.SectionName)
+            .Get<DemoOptions>() ?? new DemoOptions();
+
+        services.AddSingleton(demoOptions);
     }
 
     private static void AddMediatRWithValidation(this IServiceCollection services) {

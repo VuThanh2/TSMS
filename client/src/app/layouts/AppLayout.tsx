@@ -19,9 +19,8 @@ const ADMIN_NAV = [
 ];
 
 const LECTURER_NAV = [
+  // Grading & Attendance giờ là tab trong Course Detail (vào qua My Courses → 1 course).
   { to: '/lecturer/dashboard', label: 'My Courses', matchExact: ['/lecturer/dashboard'], matchPrefix: ['/lecturer/courses'] },
-  { to: '/lecturer/grading', label: 'Grading', matchExact: ['/lecturer/grading'], matchPrefix: [] },
-  { to: '/lecturer/attendance', label: 'Attendance', matchExact: ['/lecturer/attendance'], matchPrefix: [] },
   { to: '/lecturer/schedule', label: 'Schedule', matchExact: ['/lecturer/schedule'], matchPrefix: [] },
   { to: '/lecturer/reports', label: 'Reports', matchExact: ['/lecturer/reports'], matchPrefix: ['/lecturer/reports/courses'] },
 ];
@@ -69,9 +68,9 @@ export default function AppLayout() {
     role === 'Admin' ? ADMIN_NAV : role === 'Lecturer' ? LECTURER_NAV : STUDENT_NAV;
 
   return (
-    <div className="grid min-h-screen" style={{ gridTemplateColumns: '248px 1fr' }}>
-      {/* Sidebar */}
-      <aside className="sticky top-0 flex h-screen flex-col border-r border-border bg-white px-4 py-6">
+    <div className="grid min-h-screen grid-cols-[200px_1fr] lg:grid-cols-[248px_1fr]">
+      {/* Sidebar — bề rộng co theo viewport (200px màn nhỏ → 248px màn lớn) thay vì fix cứng */}
+      <aside className="sticky top-0 flex h-screen flex-col border-r border-border bg-white px-3 py-6 lg:px-4">
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-2 pb-6">
           <div className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] bg-primary text-[16px] font-bold text-white">

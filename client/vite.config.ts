@@ -13,9 +13,9 @@ export default defineConfig({
   },
   server: {
     host: true, // lắng nghe trên 0.0.0.0, bắt buộc để ngrok forward request vào được
-    allowedHosts: ['.ngrok-free.dev', '.ngrok-free.app'], // cho phép mọi subdomain ngrok (cả 2 đuôi cũ/mới)
+    allowedHosts: ['.ngrok-free.dev', '.ngrok-free.app', '.trycloudflare.com'],
     proxy: {
-      // Gộp Frontend + Backend qua 1 origin duy nhất -> chỉ cần 1 tunnel ngrok (Free plan giới hạn 1 endpoint)
+      // Gộp Frontend + Backend qua 1 origin duy nhất
       '/api': {
         // Port 7012 chỉ nghe HTTPS bằng self-signed dev cert (dotnet dev-certs) — secure:false
         // để Node bỏ qua bước verify CA, nếu không proxy sẽ reject rồi trả 502.

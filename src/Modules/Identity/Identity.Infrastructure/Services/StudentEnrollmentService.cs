@@ -40,12 +40,21 @@ public class StudentEnrollmentService : IStudentEnrollmentService {
             .Select(u => u.Email)
             .FirstOrDefaultAsync(cancellationToken);
     }
-    
+
     public async Task<IReadOnlyDictionary<Guid, string>> GetEmailsAsync(
         IReadOnlyList<Guid> studentIds,
         CancellationToken cancellationToken = default) {
         return await _context.Users
             .Where(u => studentIds.Contains(u.Id) && u.IsActive && u.Email != null)
             .ToDictionaryAsync(u => u.Id, u => u.Email!, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Guid>> GetActiveStudentIdsAsync(
+        CancellationToken cancellationToken = default) {
+        return await _context.Users
+            .Where(u => u.Role == UserRole.Student && u.IsActive)
+            .OrderBy(u => u.FullName)
+            .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
     }
 }

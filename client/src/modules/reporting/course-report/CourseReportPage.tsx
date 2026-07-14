@@ -75,7 +75,7 @@ export default function CourseReportPage() {
     : null;
 
   return (
-    <div className="max-w-[1000px] p-10 px-12">
+    <div className="max-w-[1000px] p-5 sm:p-8 md:p-10 md:px-12">
       <Button
         type="text"
         icon={<ArrowLeftOutlined />}
@@ -152,7 +152,7 @@ export default function CourseReportPage() {
                   ) : report.distribution.isError || distItems.length === 0 ? (
                     <Empty description="No data — no students have been graded yet." className="py-12" />
                   ) : (
-                    <div className="flex items-center gap-12 rounded-xl border border-border bg-white p-8 shadow-sm">
+                    <div className="flex flex-col items-center gap-8 rounded-xl border border-border bg-white p-6 shadow-sm sm:flex-row sm:gap-12 sm:p-8">
                       <div className="w-[200px] flex-none">
                         <ReactECharts option={pieOption!} style={{ height: 200, width: 200 }} />
                         <div className="mt-2 text-center">

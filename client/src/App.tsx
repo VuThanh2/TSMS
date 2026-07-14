@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import ProtectedRoute from '@/app/routes/ProtectedRoute';
 import AppLayout from '@/app/layouts/AppLayout';
+import LoadingScreen from '@/shared/components/LoadingScreen';
 import { useAuth, getDefaultRouteForRole } from '@/shared/lib/auth-context';
 import LoginPage from '@/modules/identity/login/LoginPage';
 import ResetPasswordPage from '@/modules/identity/reset-password/ResetPasswordPage';
@@ -12,10 +13,8 @@ import UserListPage from '@/modules/identity/user-management/UserListPage';
 import CourseStatisticsPage from '@/modules/reporting/course-statistics/CourseStatisticsPage';
 import CourseReportGridPage from '@/modules/reporting/course-report/CourseReportGridPage';
 import CourseReportPage from '@/modules/reporting/course-report/CourseReportPage';
-import GradingPage from '@/modules/enrollment-management/grading/GradingPage';
 import SchedulePage from '@/modules/enrollment-management/schedule/SchedulePage';
 import StudentSchedulePage from '@/modules/enrollment-management/schedule/StudentSchedulePage';
-import AttendancePage from '@/modules/enrollment-management/attendance/AttendancePage';
 import StudentCoursesPage from '@/modules/enrollment-management/enrollment/StudentCoursesPage';
 import AvailableCoursesPage from '@/modules/enrollment-management/enrollment/AvailableCoursesPage';
 import PersonalSummaryPage from '@/modules/reporting/personal-summary/PersonalSummaryPage';
@@ -24,7 +23,7 @@ function RootRedirect() {
   const { state } = useAuth();
 
   if (state.status === 'loading') {
-    return null;
+    return <LoadingScreen />;
   }
 
   if (state.status === 'unauthenticated') {
@@ -56,8 +55,6 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/lecturer/dashboard" element={<LecturerCourseGridPage />} />
           <Route path="/lecturer/courses/:courseId" element={<CourseDetailPage />} />
-          <Route path="/lecturer/grading" element={<GradingPage />} />
-          <Route path="/lecturer/attendance" element={<AttendancePage />} />
           <Route path="/lecturer/schedule" element={<SchedulePage />} />
           <Route path="/lecturer/reports" element={<CourseReportGridPage />} />
           <Route path="/lecturer/reports/courses/:courseId" element={<CourseReportPage />} />

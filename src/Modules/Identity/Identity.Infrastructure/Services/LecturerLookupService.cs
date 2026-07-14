@@ -31,4 +31,13 @@ public class LecturerLookupService : ILecturerLookupService {
             .Select(u => u.FullName)
             .FirstOrDefaultAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Guid>> GetActiveLecturerIdsAsync(
+        CancellationToken cancellationToken = default) {
+        return await _context.Users
+            .Where(u => u.Role == UserRole.Lecturer && u.IsActive)
+            .OrderBy(u => u.FullName)
+            .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
+    }
 }

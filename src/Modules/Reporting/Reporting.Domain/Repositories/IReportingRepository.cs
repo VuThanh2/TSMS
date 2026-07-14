@@ -19,6 +19,9 @@ public interface IReportingRepository {
 
     void AddCourseStatistics(CourseStatisticsView view);
 
+    /// Dọn projection khi Course bị xóa (CourseDeletedEvent).
+    void RemoveCourseStatistics(CourseStatisticsView view);
+
     // ── StudentGradeReportView
 
     Task<StudentGradeReportView?> GetStudentGradeReportAsync(
@@ -42,6 +45,9 @@ public interface IReportingRepository {
         CancellationToken cancellationToken = default);
 
     void AddScoreDistribution(CourseScoreDistributionView view);
+
+    /// Dọn các dòng phân bố điểm khi Course bị xóa (CourseDeletedEvent).
+    void RemoveScoreDistributions(IEnumerable<CourseScoreDistributionView> views);
 
     // ── CourseAttendanceReportView
 

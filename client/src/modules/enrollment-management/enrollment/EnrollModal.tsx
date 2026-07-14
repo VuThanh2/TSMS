@@ -83,51 +83,63 @@ export default function EnrollModal({ course, onClose, onConfirm, isLoading }: P
         </div>
       )}
 
-      <label className="mb-2.5 block text-[14px] font-semibold">Choose exactly 2 sessions</label>
-
       {slotsQuery.isLoading ? (
         <div className="flex justify-center py-6">
           <Spin />
         </div>
-      ) : slots.length === 0 ? (
-        <Alert type="warning" description="This course has no slots yet." showIcon />
-      ) : pickerIndex !== null ? (
-        <SessionPicker
-          slots={slots}
-          disabledSlotIds={[slotIds[1 - pickerIndex]].filter((v): v is string => !!v)}
-          selectedSlotId={slotIds[pickerIndex]}
-          onPick={(id) => {
-            const next: [string | undefined, string | undefined] = [...slotIds];
-            next[pickerIndex] = id;
-            setSlotIds(next);
-            setPickerIndex(null);
-          }}
+      ) : slots.length < 2 ? (
+        // Rule: mỗi Enrollment cần chọn đúng 2 WeeklySlot. Course chưa đủ 2 slot (Admin
+        // chưa thêm/ mới thêm 1) thì KHÔNG thể đăng ký — báo rõ thay vì để nút disable
+        // im lặng khiến Student không hiểu vì sao.
+        <Alert
+          type="warning"
+          showIcon
+          title="Not open for enrollment yet"
+          description="This course doesn't have enough sessions scheduled yet (at least 2 are required). Please check back later."
         />
       ) : (
-        <div className="flex flex-col gap-2.5">
-          {([0, 1] as const).map((i) => {
-            const slot = slots.find((s) => s.weeklySlotId === slotIds[i]);
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setPickerIndex(i)}
-                className="flex h-12 w-full items-center justify-between rounded-lg border border-border-input bg-white px-3.5 text-[15px] font-semibold"
-                style={{ color: slot ? '#1C1B1A' : '#8A847E' }}
-              >
-                <span>{slot ? formatSlot(slot) : `Select slot ${i + 1}`}</span>
-                <span className="text-[13px] font-medium text-text-muted">Change</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+        <>
+          <label className="mb-2.5 block text-[14px] font-semibold">Choose exactly 2 sessions</label>
 
-      <div className="mt-3 text-[13px] text-text-muted">
-        {!isExactTwo && (slotIds[0] || slotIds[1])
-          ? 'Selected 1/2 slots. Select 1 more slot to finish.'
-          : 'The selected slots must be different and must not conflict with your other courses.'}
-      </div>
+          {pickerIndex !== null ? (
+            <SessionPicker
+              slots={slots}
+              disabledSlotIds={[slotIds[1 - pickerIndex]].filter((v): v is string => !!v)}
+              selectedSlotId={slotIds[pickerIndex]}
+              onPick={(id) => {
+                const next: [string | undefined, string | undefined] = [...slotIds];
+                next[pickerIndex] = id;
+                setSlotIds(next);
+                setPickerIndex(null);
+              }}
+            />
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {([0, 1] as const).map((i) => {
+                const slot = slots.find((s) => s.weeklySlotId === slotIds[i]);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setPickerIndex(i)}
+                    className="flex h-12 w-full items-center justify-between rounded-lg border border-border-input bg-white px-3.5 text-[15px] font-semibold"
+                    style={{ color: slot ? '#1C1B1A' : '#8A847E' }}
+                  >
+                    <span>{slot ? formatSlot(slot) : `Select slot ${i + 1}`}</span>
+                    <span className="text-[13px] font-medium text-text-muted">Change</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-3 text-[13px] text-text-muted">
+            {!isExactTwo && (slotIds[0] || slotIds[1])
+              ? 'Selected 1/2 slots. Select 1 more slot to finish.'
+              : 'The selected slots must be different and must not conflict with your other courses.'}
+          </div>
+        </>
+      )}
     </Modal>
   );
 }

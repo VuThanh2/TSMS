@@ -39,4 +39,5 @@ export interface LecturerOption {
   userId: string;
   fullName: string;
   email: string;
+  department?: string | null;
 }

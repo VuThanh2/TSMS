@@ -4,17 +4,18 @@ import type { ReactNode } from 'react';
 // Dùng chung cho Login và Reset Password
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-screen" style={{ gridTemplateColumns: '1.05fr 0.95fr' }}>
-      <div className="flex items-center justify-center p-12">
+    <div className="grid min-h-screen grid-cols-1 md:grid-cols-[1.05fr_0.95fr]">
+      <div className="flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-[400px]">
           {children}
         </div>
       </div>
 
       {/* Cột phải — hero gradient: logo phóng to ở trên cùng để user chú ý ngay,
-          câu giới thiệu neo ở dưới cùng (justify-between) */}
+          câu giới thiệu neo ở dưới cùng (justify-between). Ẩn trên màn nhỏ để form
+          chiếm trọn chiều ngang (tránh cột hẹp bị bóp). */}
       <div
-        className="relative flex flex-col justify-between overflow-hidden p-14"
+        className="relative hidden flex-col justify-between overflow-hidden p-14 md:flex"
         style={{ background: 'linear-gradient(155deg, #F45D48 0%, #E04A36 100%)' }}
       >
         {/* Decorative circles */}

@@ -140,6 +140,19 @@ public class Course : AggregateRoot {
         return Result.Success();
     }
 
+    /// Xóa Course. Domain invariant: chỉ được xóa khi còn Upcoming — course đã Active/Completed
+    /// đã phát sinh buổi học đã diễn ra / lịch sử nên không được xóa. Precondition "không có
+    /// Student enroll" thuộc Application layer (cross-BC). Raise CourseDeletedEvent để Reporting
+    /// dọn projection tương ứng. Việc remove khỏi DB do repository thực hiện ở handler.
+    public Result Delete() {
+        if (Status != CourseStatus.Upcoming)
+            return Result.Failure(CourseErrors.OnlyUpcomingCourseCanBeDeleted);
+
+        RaiseDomainEvent(CourseDeletedEvent.Create(Id));
+
+        return Result.Success();
+    }
+
     // ── WeeklySlot behaviour
 
     /// Tạo 1 WeeklySlot mới và SINH TOÀN BỘ ClassSession tương ứng từ StartDate đến EndDate

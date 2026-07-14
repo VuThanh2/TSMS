@@ -12,7 +12,8 @@ public class CourseEventHandler :
     INotificationHandler<CourseCreatedEvent>,
     INotificationHandler<CourseUpdatedEvent>,
     INotificationHandler<CourseStatusChangedEvent>,
-    INotificationHandler<LecturerReplacedEvent> {
+    INotificationHandler<LecturerReplacedEvent>,
+    INotificationHandler<CourseDeletedEvent> {
  
     private readonly IReportingRepository _repository;
     private readonly ILogger<CourseEventHandler> _logger;
@@ -144,6 +145,36 @@ public class CourseEventHandler :
             newStatus, notification.CourseId);
     }
  
+    // CourseDeletedEvent → dọn projection của course bị xóa. Course chỉ xóa được khi Upcoming
+    // và chưa có Student enroll, nên chỉ tồn tại CourseStatisticsView + 4 ScoreDistribution rows
+    // (chưa có grade/attendance/summary). Xóa 2 loại này là đủ, không để lại phantom trong thống kê.
+    public async Task Handle(
+        CourseDeletedEvent notification,
+        CancellationToken cancellationToken) {
+        var stats = await _repository.GetCourseStatisticsAsync(
+            notification.CourseId, cancellationToken);
+
+        if (stats is null) {
+            _logger.LogWarning(
+                "CourseStatisticsView not found for CourseDeletedEvent. CourseId: {CourseId}",
+                notification.CourseId);
+            return;
+        }
+
+        _repository.RemoveCourseStatistics(stats);
+
+        var distributions = await _repository.GetScoreDistributionByCourseAsync(
+            notification.CourseId, cancellationToken);
+        if (distributions.Count > 0)
+            _repository.RemoveScoreDistributions(distributions);
+
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Removed Reporting projections for deleted CourseId {CourseId}.",
+            notification.CourseId);
+    }
+
     // LecturerReplacedEvent → cập nhật LecturerId và LecturerName trên CourseStatisticsView.
     // NewLecturerName đã được enrich vào event tại ReplaceLecturerCommandHandler.
     public async Task Handle(

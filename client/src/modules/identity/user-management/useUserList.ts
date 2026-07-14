@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { App } from 'antd';
 import type { AxiosError } from 'axios';
 
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import {
   getUsersApi,
   getUserByIdApi,
@@ -18,11 +19,14 @@ export function useUserList() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  // Debounce: chỉ gọi API sau khi ngừng gõ, tránh 1 request mỗi keystroke gây lag.
+  const debouncedSearch = useDebouncedValue(search);
+
   const { data, isLoading } = useQuery({
-    queryKey: ['users', { search, role, page, pageSize }],
+    queryKey: ['users', { search: debouncedSearch, role, page, pageSize }],
     queryFn: () =>
       getUsersApi({
-        search: search || undefined,
+        search: debouncedSearch || undefined,
         role: role || undefined,
         page,
         pageSize,

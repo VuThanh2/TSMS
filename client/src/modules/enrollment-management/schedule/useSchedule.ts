@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getLecturerScheduleApi } from './schedule.api';
+import { sortSessionsByShift } from './schedule.utils';
 import type { LecturerScheduleSession } from './schedule.types';
 
 export function useSchedule() {
@@ -17,6 +18,7 @@ export function useSchedule() {
     },
     {},
   );
+  for (const key in sessionsByDate) sortSessionsByShift(sessionsByDate[key]);
 
   return {
     sessions: data ?? [],

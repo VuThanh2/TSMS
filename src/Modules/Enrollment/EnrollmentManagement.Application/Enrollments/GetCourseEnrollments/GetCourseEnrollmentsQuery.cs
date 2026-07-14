@@ -58,13 +58,15 @@ public sealed class GetCourseEnrollmentsQueryHandler
             dtos.Add(EnrollmentMapper.ToGetCourseEnrollmentsOutputDto(enrollment, fullName, email));
         }
  
-        // Search theo tên hoặc email, không phân biệt hoa thường.
+        // Search theo tên hoặc email, bỏ qua hoa/thường LẪN dấu tiếng Việt
+        // (gõ "Vu" khớp "Vũ"). Search này chạy in-memory nên dùng TextSearch;
+        // không dùng OrdinalIgnoreCase vì nó vẫn phân biệt dấu.
         if (!string.IsNullOrWhiteSpace(request.Keyword)) {
             var keyword = request.Keyword.Trim();
- 
+
             dtos = dtos.Where(dto =>
-                (dto.StudentFullName?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (dto.StudentEmail?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false)
+                TextSearch.ContainsNormalized(dto.StudentFullName, keyword) ||
+                TextSearch.ContainsNormalized(dto.StudentEmail, keyword)
             ).ToList();
         }
  

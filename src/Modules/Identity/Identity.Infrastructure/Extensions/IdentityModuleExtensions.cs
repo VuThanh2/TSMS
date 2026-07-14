@@ -108,14 +108,16 @@ public static class IdentityModuleExtensions {
                         Encoding.UTF8.GetBytes(jwtOptions.SecretKey))
                 };
  
-                // SignalR (WebSocket) không cho phép Client gắn header Authorization thủ công
-                // khi bắt tay kết nối — bắt buộc phải nhận token qua query string.
+                // SignalR (WebSocket) và Hangfire Dashboard (browser navigate trực tiếp) không cho
+                // phép Client gắn header Authorization thủ công khi bắt tay/điều hướng — bắt buộc
+                // phải nhận token qua query string cho 2 path này.
                 options.Events = new JwtBearerEvents {
                     OnMessageReceived = context => {
                         var accessToken = context.Request.Query["access_token"];
                         var path = context.HttpContext.Request.Path;
  
-                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/hangfire")))
                             context.Token = accessToken;
  
                         return Task.CompletedTask;

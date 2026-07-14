@@ -24,3 +24,13 @@ export function addWeeklySlotApi(courseId: string, data: { dayOfWeek: string; se
 export function removeWeeklySlotApi(courseId: string, weeklySlotId: string) {
   return api.delete(`/courses/${courseId}/weekly-slots/${weeklySlotId}`);
 }
+
+export function deleteCourseApi(courseId: string) {
+  return api.delete(`/courses/${courseId}`);
+}
+
+// Soft-cancel 1 buổi học cụ thể (IsCancelled = true) — verb DELETE khớp REST controller,
+// không xóa vật lý. Muốn hủy cả khung giờ lặp lại thì dùng removeWeeklySlotApi.
+export function cancelClassSessionApi(courseId: string, sessionId: string) {
+  return api.delete(`/courses/${courseId}/sessions/${sessionId}`);
+}

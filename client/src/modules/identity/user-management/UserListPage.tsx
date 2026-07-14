@@ -4,6 +4,7 @@ import { PlusOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table';
 
 import type { UserListItem } from '@/modules/identity/shared/user.types';
+import { useAuth } from '@/shared/lib/auth-context';
 import { useUserList, useToggleUserStatus } from './useUserList';
 import CreateUserModal from './CreateUserModal';
 import EditUserModal from './EditUserModal';
@@ -13,6 +14,8 @@ const ROLE_OPTIONS = ['', 'Admin', 'Lecturer', 'Student'] as const;
 const ROLE_LABELS: Record<string, string> = { '': 'All', Admin: 'Admin', Lecturer: 'Lecturer', Student: 'Student' };
 
 export default function UserListPage() {
+  const { state } = useAuth();
+  const currentUserId = state.status === 'authenticated' ? state.user.userId : undefined;
   const list = useUserList();
   const toggleStatus = useToggleUserStatus();
 
@@ -78,34 +81,41 @@ export default function UserListPage() {
       title: 'Actions',
       key: 'actions',
       align: 'right',
-      render: (_, record) => (
-        <div className="flex justify-end gap-1.5">
-          <Button className="h-8 text-[13px]" onClick={() => setEditUserId(record.userId)}>
-            Edit
-          </Button>
-          <Popconfirm
-            title={record.isActive ? 'Deactivate this user?' : 'Activate this user?'}
-            description={record.isActive ? 'The user will not be able to sign in.' : 'The user will be able to sign in again.'}
-            onConfirm={() => toggleStatus.mutate({ userId: record.userId, isActive: !record.isActive })}
-            okText={record.isActive ? 'Deactivate' : 'Activate'}
-            cancelText="Cancel"
-            okButtonProps={{ danger: record.isActive }}
-          >
-            <Button
-              className={`h-8 border-border text-[13px] font-semibold ${
-                record.isActive ? 'text-[#D7372C]' : 'text-[#1E875F]'
-              }`}
-            >
-              {record.isActive ? 'Deactivate' : 'Activate'}
+      render: (_, record) => {
+        // Admin không được tự vô hiệu hoá chính tài khoản mình → ẩn nút toggle
+        // trên đúng dòng của Admin đang đăng nhập (chỉ còn nút Edit).
+        const isSelf = record.userId === currentUserId;
+        return (
+          <div className="flex justify-end gap-1.5">
+            <Button className="h-8 text-[13px]" onClick={() => setEditUserId(record.userId)}>
+              Edit
             </Button>
-          </Popconfirm>
-        </div>
-      ),
+            {!isSelf && (
+              <Popconfirm
+                title={record.isActive ? 'Deactivate this user?' : 'Activate this user?'}
+                description={record.isActive ? 'The user will not be able to sign in.' : 'The user will be able to sign in again.'}
+                onConfirm={() => toggleStatus.mutate({ userId: record.userId, isActive: !record.isActive })}
+                okText={record.isActive ? 'Deactivate' : 'Activate'}
+                cancelText="Cancel"
+                okButtonProps={{ danger: record.isActive }}
+              >
+                <Button
+                  className={`h-8 border-border text-[13px] font-semibold ${
+                    record.isActive ? 'text-[#D7372C]' : 'text-[#1E875F]'
+                  }`}
+                >
+                  {record.isActive ? 'Deactivate' : 'Activate'}
+                </Button>
+              </Popconfirm>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
   return (
-    <div className="p-10 px-12">
+    <div className="p-5 sm:p-8 md:p-10 md:px-12">
       {/* Header */}
       <div className="mb-7 flex items-start justify-between gap-4">
         <div>
