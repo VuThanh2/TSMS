@@ -19,6 +19,7 @@ import {
   useAddWeeklySlot,
   useRemoveWeeklySlot,
   useDeleteCourse,
+  useCancelClassSession,
 } from './useCourseDetail';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -137,6 +138,7 @@ export default function CourseDetailPage() {
   const addSlot = useAddWeeklySlot(courseId!);
   const removeSlot = useRemoveWeeklySlot(courseId!);
   const deleteCourse = useDeleteCourse(courseId!);
+  const cancelSession = useCancelClassSession(courseId!);
 
   if (course.isLoading) {
     return <div className="flex justify-center pt-20"><Spin size="large" /></div>;
@@ -260,7 +262,30 @@ export default function CourseDetailPage() {
             </label>
           </div>
           <Table<ClassSession>
-            columns={sessionColumns}
+            columns={[
+              ...sessionColumns,
+              {
+                title: '',
+                key: 'actions',
+                width: 100,
+                align: 'right',
+                // Chỉ buổi sắp diễn ra & chưa hủy mới cancel được (khớp ràng buộc domain:
+                // past → CannotModifyPastClassSession, đã hủy → AlreadyCancelled). Buổi đã qua
+                // hoặc đã hủy không hiện nút để tránh Admin bấm rồi nhận lỗi.
+                render: (_, record) =>
+                  record.isPast || record.isCancelled ? null : (
+                    <Popconfirm
+                      title="Cancel this session?"
+                      description="Students will see this session as cancelled. This cannot be undone."
+                      okText="Cancel session"
+                      okButtonProps={{ danger: true, loading: cancelSession.isPending }}
+                      onConfirm={() => cancelSession.mutate(record.classSessionId)}
+                    >
+                      <Button danger>Cancel</Button>
+                    </Popconfirm>
+                  ),
+              },
+            ]}
             dataSource={hidePast ? (c.classSessions ?? []).filter((s) => !s.isPast) : c.classSessions}
             rowKey="classSessionId"
             pagination={{ pageSize: 10 }}
@@ -347,7 +372,7 @@ export default function CourseDetailPage() {
         </p>
         <Form form={replaceForm} layout="vertical" requiredMark={false}>
           <Form.Item label="New lecturer" name="lecturerId" rules={[{ required: true, message: 'Select a new lecturer' }]}>
-            <LecturerPicker />
+            <LecturerPicker excludeId={c.lecturerId} />
           </Form.Item>
         </Form>
       </Modal>

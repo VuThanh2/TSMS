@@ -12,6 +12,9 @@ interface LecturerPickerProps {
   // nên các Form.Item (Create Course, Replace Lecturer) không phải sửa gì.
   value?: string;
   onChange?: (value: string) => void;
+  // Ẩn 1 lecturer khỏi danh sách chọn (vd Replace Lecturer: bỏ lecturer đang gán để
+  // tránh chọn trùng — backend cũng chặn bằng Course.SameLecturer, đây là chặn từ UI).
+  excludeId?: string;
 }
 
 const PAGE_SIZE = 8;
@@ -19,7 +22,7 @@ const PAGE_SIZE = 8;
 // Chọn Lecturer qua Modal (danh sách + Department + phân trang + search) thay cho
 // Select-search cũ. Lý do: Select dropdown bất tiện khi nhiều lecturer, và onSearch
 // của Select bắn query mỗi keystroke. Ở đây search được debounce, phân trang server-side.
-export default function LecturerPicker({ value, onChange }: LecturerPickerProps) {
+export default function LecturerPicker({ value, onChange, excludeId }: LecturerPickerProps) {
   const [open, setOpen] = useState(false);
   // Lưu object lecturer đã chọn để hiển thị tên ở ô trigger (value chỉ là id).
   const [selected, setSelected] = useState<LecturerOption | null>(null);
@@ -46,7 +49,9 @@ export default function LecturerPicker({ value, onChange }: LecturerPickerProps)
     placeholderData: keepPreviousData, // giữ data cũ khi lật trang → không nhấp nháy
   });
 
-  const items = data?.items ?? [];
+  // Lọc client-side lecturer bị loại (excludeId). Phân trang server-side nên trang chứa
+  // lecturer này chỉ hiện 7 dòng thay vì 8 — chấp nhận được vì chỉ loại đúng 1 người.
+  const items = (data?.items ?? []).filter((l) => l.userId !== excludeId);
   const total = data?.totalCount ?? 0;
 
   function pick(lecturer: LecturerOption) {
