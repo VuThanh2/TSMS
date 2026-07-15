@@ -21,6 +21,9 @@ public sealed class FakeCourseEnrollmentService : ICourseEnrollmentService {
     public Task<bool> IsUpcomingAsync(Guid courseId, CancellationToken cancellationToken = default) =>
         throw new NotImplementedException();
 
+    public Task<bool> IsOpenForEnrollmentAsync(Guid courseId, CancellationToken cancellationToken = default) =>
+        throw new NotImplementedException();
+
     public Task<string?> GetStatusAsync(Guid courseId, CancellationToken cancellationToken = default) =>
         throw new NotImplementedException();
 

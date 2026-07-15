@@ -1,5 +1,6 @@
 using EnrollmentManagement.Domain.Entities;
 using EnrollmentManagement.Domain.Repositories;
+using EnrollmentManagement.Domain.ValueObjects;
 using EnrollmentManagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,6 +45,20 @@ public class AttendanceRepository : IAttendanceRepository {
         CancellationToken cancellationToken = default) {
         return await _context.Attendances
             .Where(a => a.StudentId == studentId && a.CourseId == courseId)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<SessionAttendanceCount>> GetSessionCountsByCourseAsync(
+        Guid courseId,
+        CancellationToken cancellationToken = default) {
+        return await _context.Attendances
+            .Where(a => a.CourseId == courseId)
+            .GroupBy(a => a.ClassSessionId)
+            .Select(g => new SessionAttendanceCount(
+                g.Key,
+                g.Count(a => a.Status == AttendanceStatus.Present),
+                g.Count(a => a.Status == AttendanceStatus.Excused),
+                g.Count(a => a.Status == AttendanceStatus.Absent)))
             .ToListAsync(cancellationToken);
     }
 

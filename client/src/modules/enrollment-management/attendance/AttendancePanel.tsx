@@ -8,6 +8,8 @@ import { getCourseByIdApi } from '@/modules/course-management/course-detail/cour
 import { getSessionState, SESSION_STATE_LABEL } from '@/modules/course-management/shared/session-status';
 import type { ClassSession } from '@/modules/course-management/shared/course.types';
 import { useAttendance } from './useAttendance';
+import { useCourseAttendanceSummary } from './useCourseAttendanceSummary';
+import { formatAttendanceCell } from './attendance-cell';
 import type { AttendanceRecord, AttendanceStatus } from './attendance.types';
 
 const STATUS_CONFIG: Record<AttendanceStatus, { label: string; color: string }> = {
@@ -56,6 +58,7 @@ export default function AttendancePanel({
   const session = sessions.find((s) => s.classSessionId === sessionId);
 
   const { attendances, isLoading, updateAttendance } = useAttendance(courseId, sessionId);
+  const attendanceSummary = useCourseAttendanceSummary(courseId);
 
   // Tuần mặc định: ưu tiên tuần chứa buổi deep-link (từ Schedule), rồi buổi sắp tới gần nhất,
   // cuối cùng là buổi đầu — để mở đúng tuần và highlight được buổi vừa chọn.
@@ -189,22 +192,32 @@ export default function AttendancePanel({
                   return <div key={key} className="h-9 rounded-lg border border-dashed border-border" />;
                 }
                 const isSelected = s.classSessionId === sessionId;
+                const state = getSessionState(s);
+
+                // Buổi đã qua: hiện số có mặt thay nhãn "Past". Chưa có summary
+                // (chưa ai enroll / query chưa về) → rơi về nhãn trạng thái như cũ.
+                const summary = state === 'past' ? attendanceSummary.get(s.classSessionId) : undefined;
+                const cell = summary ? formatAttendanceCell(summary) : undefined;
+
                 return (
                   <button
                     key={key}
                     onClick={() => setSessionId(s.classSessionId)}
-                    title={sessionLabel(s)}
-                    className={`h-9 cursor-pointer rounded-lg border text-[11px] font-semibold transition-colors ${
+                    title={cell ? `${sessionLabel(s)} · ${cell.title}` : sessionLabel(s)}
+                    className={`h-9 cursor-pointer rounded-lg border font-semibold transition-colors ${
+                      cell ? 'font-mono text-[11.5px]' : 'text-[11px]'
+                    } ${
                       isSelected
                         ? 'border-transparent bg-primary text-white'
                         : s.isCancelled
-                          ? 'border-border-input bg-transparent text-text-muted line-through'
-                          : getSessionState(s) === 'today'
+                          ? // Đỏ + gạch ngang, khớp lưới tab Detail và Tag của Session history.
+                            'border-[#E8B8B2] bg-[#F2D9D5] text-[#D7372C] line-through'
+                          : state === 'today'
                             ? 'border-primary bg-transparent text-primary'
                             : 'border-border-input bg-transparent text-text-secondary hover:border-primary hover:text-primary'
                     }`}
                   >
-                    {SESSION_STATE_LABEL[getSessionState(s)]}
+                    {cell ? cell.label : SESSION_STATE_LABEL[state]}
                   </button>
                 );
               })}

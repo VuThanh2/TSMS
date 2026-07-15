@@ -67,13 +67,26 @@ public sealed class AdjustSessionCommandHandler
             return Result.Failure<AdjustSessionOutputDto>(EnrollmentErrors.SessionNotInCourse);
 
         // Precondition 4: Slot mới không được trùng (DayOfWeek, SessionType) với Course khác
-        // Student đã đăng ký.
+        // Student đã đăng ký VÀ chạy cùng kỳ với Course này.
         var candidateSlots = new List<(DayOfWeek DayOfWeek, string SessionType)> {
             (Enum.Parse<DayOfWeek>(newSlotLookup.DayOfWeek), newSlotLookup.SessionType)
         };
 
+        // Checker cần khoảng ngày của Course đang xét để loại các Course khác kỳ.
+        var courseLookups = await _courseEnrollmentService.GetCoursesByIdsAsync(
+            [enrollment.CourseId], cancellationToken);
+
+        var courseLookup = courseLookups.FirstOrDefault();
+        if (courseLookup is null)
+            return Result.Failure<AdjustSessionOutputDto>(EnrollmentErrors.NotFound);
+
         var hasConflict = await _scheduleConflictChecker.HasConflictAsync(
-            request.StudentId, enrollment.CourseId, candidateSlots, cancellationToken);
+            request.StudentId,
+            enrollment.CourseId,
+            courseLookup.StartDate,
+            courseLookup.EndDate,
+            candidateSlots,
+            cancellationToken);
 
         if (hasConflict)
             return Result.Failure<AdjustSessionOutputDto>(EnrollmentErrors.ScheduleConflict);

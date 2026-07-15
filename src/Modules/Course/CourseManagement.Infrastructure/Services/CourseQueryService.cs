@@ -40,22 +40,40 @@ public class CourseQueryService : ICourseQueryService, ICourseLookupService{
             .FirstOrDefaultAsync(cancellationToken);
     }
  
-    public async Task<bool> HasOverlappingCourseAsync(
+    public async Task<bool> HasLecturerSlotConflictAsync(
         Guid lecturerId,
+        IReadOnlyList<(DayOfWeek DayOfWeek, SessionType SessionType)> candidateSlots,
         DateOnly startDate,
         DateOnly endDate,
         Guid? excludeCourseId = null,
         CancellationToken cancellationToken = default) {
+        if (candidateSlots.Count == 0)
+            return false;
+
+        // Vế 1 (chạy dưới SQL): các Course khác của Lecturer có khoảng ngày GIAO NHAU.
         var query = _context.Courses
             .Where(c => c.LecturerId == lecturerId
                 && c.Status != CourseStatus.Completed
                 && EF.Property<DateOnly>(c, "_startDate") <= endDate
                 && EF.Property<DateOnly>(c, "_endDate") >= startDate);
- 
+
         if (excludeCourseId.HasValue)
             query = query.Where(c => c.Id != excludeCourseId.Value);
- 
-        return await query.AnyAsync(cancellationToken);
+
+        // Chỉ kéo về (DayOfWeek, SessionType) của đúng những course đã lọc ở vế 1 — mỗi Lecturer
+        // chỉ vài course, mỗi course vài slot, nên đây là vài chục dòng. So khớp tuple trong memory
+        // vì EF không dịch được `candidateSlots.Any(...)` trên list tuple truyền từ ngoài vào.
+        var occupiedSlots = await query
+            .SelectMany(c => c.WeeklySlots)
+            .Select(s => new { s.DayOfWeek, s.SessionType })
+            .ToListAsync(cancellationToken);
+
+        // Vế 2: cùng ngày trong tuần + cùng ca thì mới thực sự đụng nhau.
+        var occupied = occupiedSlots
+            .Select(s => (s.DayOfWeek, s.SessionType))
+            .ToHashSet();
+
+        return candidateSlots.Any(occupied.Contains);
     }
  
     public async Task<bool> HasActiveCoursesByLecturerAsync(

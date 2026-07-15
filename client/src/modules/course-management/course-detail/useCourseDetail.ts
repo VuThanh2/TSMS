@@ -11,6 +11,7 @@ import {
   removeWeeklySlotApi,
   deleteCourseApi,
   cancelClassSessionApi,
+  openCourseEnrollmentApi,
 } from './course-detail.api';
 
 export function useCourseDetail(courseId: string) {
@@ -45,17 +46,17 @@ export function useUpdateCourse(courseId: string, onSuccess?: () => void) {
     mutationFn: (data: { name: string; description?: string; endDate: string; maxCapacity: number }) =>
       updateCourseApi(courseId, data),
     onSuccess: () => {
-      void message.success('Course updated successfully!');
+      void message.success('Course updated');
       invalidate();
       onSuccess?.();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const msgs: Record<string, string> = {
-        'Course.AlreadyCompleted': 'This course has ended and can no longer be edited.',
-        'Course.MaxCapacityBelowEnrolledCount': 'Maximum capacity cannot be lower than the number of enrolled students.',
+        'Course.CompletedCourseIsImmutable': 'Course has ended',
+        'Course.MaxCapacityBelowEnrolledCount': 'Capacity is below the enrolled count',
       };
       const code = error.response?.data?.code ?? '';
-      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong.');
+      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong');
     },
   });
 }
@@ -64,20 +65,45 @@ export function useReplaceLecturer(courseId: string, onSuccess?: () => void) {
   const { message } = App.useApp();
   const invalidate = useInvalidateCourse(courseId);
   return useMutation({
-    mutationFn: (data: { lecturerId: string }) => replaceLecturerApi(courseId, data),
+    mutationFn: (data: { newLecturerId: string }) => replaceLecturerApi(courseId, data),
     onSuccess: () => {
-      void message.success('Lecturer changed successfully!');
+      void message.success('Lecturer changed');
       invalidate();
       onSuccess?.();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
+      // 'Lecturer.ScheduleConflict' trước đây được map ở đây nhưng backend không hề có mã đó —
+      // message chết. Mã thật là Course.LecturerSlotConflict.
       const msgs: Record<string, string> = {
-        'Course.SameLecturer': 'This lecturer is already assigned to the course.',
-        'Lecturer.ScheduleConflict': 'This lecturer has a teaching schedule conflict.',
-        'Course.AlreadyCompleted': 'This course has ended.',
+        'Course.LecturerAlreadyAssigned': 'Lecturer already assigned',
+        'Course.LecturerSlotConflict': 'Lecturer already teaches at one of these times',
+        'Course.LecturerNotFound': 'Lecturer unavailable',
+        'Course.CompletedCourseIsImmutable': 'Course has ended',
       };
       const code = error.response?.data?.code ?? '';
-      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong.');
+      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong');
+    },
+  });
+}
+
+export function useOpenCourseEnrollment(courseId: string) {
+  const { message } = App.useApp();
+  const invalidate = useInvalidateCourse(courseId);
+  return useMutation({
+    mutationFn: () => openCourseEnrollmentApi(courseId),
+    onSuccess: () => {
+      void message.success('Enrollment opened');
+      invalidate();
+    },
+    onError: (error: AxiosError<{ code?: string; message?: string }>) => {
+      const msgs: Record<string, string> = {
+        // Giữ dạng hành động vì đây là lỗi user tự sửa được ngay.
+        'Course.MinimumWeeklySlotsRequiredToOpen': 'Add at least 2 slots first',
+        'Course.OnlyUpcomingCourseCanOpenEnrollment': 'Course has already started',
+        'Course.NotFound': 'Course not found',
+      };
+      const code = error.response?.data?.code ?? '';
+      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong');
     },
   });
 }
@@ -88,17 +114,17 @@ export function useDeleteCourse(courseId: string) {
   return useMutation({
     mutationFn: () => deleteCourseApi(courseId),
     onSuccess: () => {
-      void message.success('Course deleted.');
+      void message.success('Course deleted');
       void queryClient.invalidateQueries({ queryKey: ['courses'] });
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const msgs: Record<string, string> = {
-        'Course.CourseHasEnrollments': 'Cannot delete — students are already enrolled in this course.',
-        'Course.OnlyUpcomingCourseCanBeDeleted': 'Only an upcoming course (not yet started) can be deleted.',
-        'Course.NotFound': 'Course not found.',
+        'Course.CourseHasEnrollments': 'Students are already enrolled',
+        'Course.OnlyUpcomingCourseCanBeDeleted': 'Course has already started',
+        'Course.NotFound': 'Course not found',
       };
       const code = error.response?.data?.code ?? '';
-      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong.');
+      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong');
     },
   });
 }
@@ -109,19 +135,19 @@ export function useCancelClassSession(courseId: string) {
   return useMutation({
     mutationFn: (sessionId: string) => cancelClassSessionApi(courseId, sessionId),
     onSuccess: () => {
-      void message.success('Session cancelled.');
+      void message.success('Session cancelled');
       invalidate();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const msgs: Record<string, string> = {
-        'Course.CannotModifyPastClassSession': 'A session that has already passed cannot be cancelled.',
-        'Course.ClassSessionAlreadyCancelled': 'This session has already been cancelled.',
-        'Course.CompletedCourseIsImmutable': 'A completed course can no longer be modified.',
-        'Course.ClassSessionNotFound': 'Session not found.',
-        'Course.NotFound': 'Course not found.',
+        'Course.CannotModifyPastClassSession': 'Session has already passed',
+        'Course.ClassSessionAlreadyCancelled': 'Session already cancelled',
+        'Course.CompletedCourseIsImmutable': 'Course has ended',
+        'Course.ClassSessionNotFound': 'Session not found',
+        'Course.NotFound': 'Course not found',
       };
       const code = error.response?.data?.code ?? '';
-      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong.');
+      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong');
     },
   });
 }
@@ -132,17 +158,20 @@ export function useAddWeeklySlot(courseId: string, onSuccess?: () => void) {
   return useMutation({
     mutationFn: (data: { dayOfWeek: string; sessionType: string }) => addWeeklySlotApi(courseId, data),
     onSuccess: (res) => {
-      void message.success(`Slot added — automatically generated ${res.data.generatedSessionCount} sessions.`);
+      // Giữ số buổi: Admin không thấy con số này ở đâu khác, và nó xác nhận khoảng ngày đúng.
+      void message.success(`Slot added · ${res.data.generatedSessionCount} sessions`);
       invalidate();
       onSuccess?.();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
+      const msgs: Record<string, string> = {
+        'WeeklySlot.Duplicate': 'Slot already exists',
+        // Check trùng lịch dạy nằm ở đây chứ không phải lúc tạo Course — tới bước này mới biết
+        // được ca cụ thể, mà thiếu ca thì không xác định được có đụng nhau thật hay không.
+        'Course.LecturerSlotConflict': 'Lecturer already teaches at this time',
+      };
       const code = error.response?.data?.code ?? '';
-      if (code === 'WeeklySlot.Duplicate') {
-        void message.error('This slot already exists.');
-      } else {
-        void message.error(error.response?.data?.message ?? 'Something went wrong.');
-      }
+      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong');
     },
   });
 }
@@ -153,16 +182,16 @@ export function useRemoveWeeklySlot(courseId: string) {
   return useMutation({
     mutationFn: (weeklySlotId: string) => removeWeeklySlotApi(courseId, weeklySlotId),
     onSuccess: () => {
-      void message.success('Slot removed.');
+      void message.success('Slot removed');
       invalidate();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const msgs: Record<string, string> = {
-        'WeeklySlot.InUse': 'Cannot remove — students are still enrolled in this slot.',
-        'WeeklySlot.MinimumRequired': 'At least 2 slots are required — cannot remove any more.',
+        'WeeklySlot.InUse': 'Students are enrolled in this slot',
+        'WeeklySlot.MinimumRequired': 'At least 2 slots are required',
       };
       const code = error.response?.data?.code ?? '';
-      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong.');
+      void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong');
     },
   });
 }

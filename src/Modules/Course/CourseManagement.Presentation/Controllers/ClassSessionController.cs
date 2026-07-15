@@ -12,7 +12,7 @@ namespace CourseManagement.Presentation.Controllers;
 // Controller này chỉ còn thao tác trên buổi học ĐÃ TỒN TẠI: xem, dời ngày 1 buổi cụ thể
 // (vd nghỉ lễ), hoặc hủy 1 buổi cụ thể mà không ảnh hưởng cả WeeklySlot.
 [ApiController]
-[Route("api/courses/{courseId:guid}/sessions")]
+[Route("api/courses/sessions")]
 [Authorize]
 public class ClassSessionsController : ControllerBase {
     private readonly ISender _sender;
@@ -21,8 +21,8 @@ public class ClassSessionsController : ControllerBase {
         _sender = sender;
     }
 
-    // GET /api/courses/{courseId}/sessions
-    [HttpGet]
+    // GET /api/courses/sessions/{courseId}
+    [HttpGet("{courseId:guid}")]
     [Authorize(Roles = "Admin,Lecturer,Student")]
     public async Task<IActionResult> GetClassSessions(
         Guid courseId,
@@ -36,9 +36,9 @@ public class ClassSessionsController : ControllerBase {
         return Ok(result.Value);
     }
 
-    // PUT /api/courses/{courseId}/sessions/{sessionId}
+    // PUT /api/courses/sessions/{courseId}/{sessionId}
     // Dời ngày 1 buổi cụ thể (vd nghỉ lễ) — không ảnh hưởng WeeklySlot gốc.
-    [HttpPut("{sessionId:guid}")]
+    [HttpPut("{courseId:guid}/{sessionId:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateClassSession(
         Guid courseId,
@@ -60,8 +60,8 @@ public class ClassSessionsController : ControllerBase {
     // Giữ nguyên verb DELETE cho quen thuộc REST (loại buổi này khỏi lịch hoạt động), nhưng bên
     // trong là soft-cancel (IsCancelled = true) — KHÔNG xóa vật lý, vì Attendance có thể đã
     // pre-populate sẵn tham chiếu tới buổi này. Muốn hủy cả khung giờ lặp lại, dùng
-    // DELETE /weekly-slots/{weeklySlotId} thay vì API này.
-    [HttpDelete("{sessionId:guid}")]
+    // DELETE /api/courses/weekly-slots/{courseId}/{weeklySlotId} thay vì API này.
+    [HttpDelete("{courseId:guid}/{sessionId:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CancelClassSession(
         Guid courseId,

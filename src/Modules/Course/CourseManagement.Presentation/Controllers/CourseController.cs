@@ -4,6 +4,7 @@ using CourseManagement.Application.Courses.DeleteCourse;
 using CourseManagement.Application.Courses.GetAvailableCourses;
 using CourseManagement.Application.Courses.GetCourseById;
 using CourseManagement.Application.Courses.GetCourses;
+using CourseManagement.Application.Courses.OpenCourseEnrollment;
 using CourseManagement.Application.Courses.ReplaceLecturer;
 using CourseManagement.Application.Courses.UpdateCourse;
 using MediatR;
@@ -172,8 +173,26 @@ public class CourseController : ControllerBase {
         return Ok(result.Value);
     }
 
-    // PUT /api/courses/{courseId}/lecturer
-    [HttpPut("{courseId:guid}/lecturer")]
+    // PUT /api/courses/open-enrollment/{courseId}
+    // Chỉ Admin. Mở cổng cho Student đăng ký — trước đó Course vô hình với Student, Admin còn
+    // sửa/xóa được. Ràng buộc: course phải Upcoming và đã có tối thiểu 2 WeeklySlot.
+    [HttpPut("open-enrollment/{courseId:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> OpenCourseEnrollment(
+        Guid courseId,
+        CancellationToken cancellationToken) {
+        var result = await _sender.Send(new OpenCourseEnrollmentCommand(courseId), cancellationToken);
+
+        if (result.IsFailure)
+            return result.Error.Code == "Course.NotFound"
+                ? NotFound(new { result.Error.Code, result.Error.Message })
+                : BadRequest(new { result.Error.Code, result.Error.Message });
+
+        return Ok(result.Value);
+    }
+
+    // PUT /api/courses/lecturer/{courseId}
+    [HttpPut("lecturer/{courseId:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> ReplaceLecturer(
         Guid courseId,

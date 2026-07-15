@@ -22,6 +22,13 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
                 cancellationToken);
     }
 
+    public async Task<bool> IsOpenForEnrollmentAsync(
+        Guid courseId,
+        CancellationToken cancellationToken = default) {
+        return await _context.Courses
+            .AnyAsync(c => c.Id == courseId && c.IsOpenForEnrollment, cancellationToken);
+    }
+
     public async Task<string?> GetStatusAsync(
         Guid courseId,
         CancellationToken cancellationToken = default) {
@@ -124,7 +131,7 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
         CancellationToken cancellationToken = default) {
         return await _context.Courses
             .Where(c => courseIds.Contains(c.Id))
-            .Select(c => new CourseLookup(c.Id, c.Name, c.LecturerId, c.Status.ToString()))
+            .Select(c => new CourseLookup(c.Id, c.Name, c.LecturerId, c.Status.ToString(), c.StartDate, c.EndDate))
             .ToListAsync(cancellationToken);
     }
 
@@ -133,7 +140,7 @@ public class CourseEnrollmentService : ICourseEnrollmentService {
         CancellationToken cancellationToken = default) {
         return await _context.Courses
             .Where(c => c.LecturerId == lecturerId)
-            .Select(c => new CourseLookup(c.Id, c.Name, c.LecturerId, c.Status.ToString()))
+            .Select(c => new CourseLookup(c.Id, c.Name, c.LecturerId, c.Status.ToString(), c.StartDate, c.EndDate))
             .ToListAsync(cancellationToken);
     }
 

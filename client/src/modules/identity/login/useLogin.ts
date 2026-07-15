@@ -26,12 +26,12 @@ export function useLogin() {
         ?? payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
         ?? 'Student';
 
-      void message.success('Signed in successfully!');
+      void message.success('Signed in');
       navigate(getDefaultRouteForRole(role), { replace: true });
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       if (error.response?.status === 401) {
-        void message.error('Incorrect email or password.');
+        void message.error('Incorrect email or password');
         return;
       }
       const msg = error.response?.data?.message ?? 'Something went wrong, please try again.';

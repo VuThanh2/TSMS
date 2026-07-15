@@ -6,6 +6,11 @@ public interface ICourseEnrollmentService {
     // Check course có tồn tại và đang ở trạng thái Upcoming không.
     Task<bool> IsUpcomingAsync(Guid courseId, CancellationToken cancellationToken = default);
 
+    // Check Admin đã mở cổng đăng ký cho course này chưa. TÁCH RIÊNG khỏi IsUpcomingAsync:
+    // Upcoming là "chưa tới ngày học" (Hangfire lái), open là "Admin cho phép đăng ký" —
+    // 2 điều kiện độc lập, gộp vào 1 hàm sẽ làm tên hàm nói dối về thứ nó kiểm tra.
+    Task<bool> IsOpenForEnrollmentAsync(Guid courseId, CancellationToken cancellationToken = default);
+
     // Lấy status của course — dùng để validate GradeStudent (Active/Completed) và AdjustSession (not Completed).
     Task<string?> GetStatusAsync(Guid courseId, CancellationToken cancellationToken = default);
 
@@ -80,8 +85,12 @@ public sealed record ClassSessionLookup(
     string SessionType,
     bool IsCancelled);
 
+// StartDate/EndDate cần cho ScheduleConflictChecker: 2 Course cùng "Thứ Hai Sáng" nhưng chạy
+// ở 2 kỳ khác nhau thì KHÔNG đụng nhau — không có khoảng ngày thì không phân biệt được.
 public sealed record CourseLookup(
     Guid CourseId,
     string CourseName,
     Guid LecturerId,
-    string Status);
+    string Status,
+    DateOnly StartDate,
+    DateOnly EndDate);

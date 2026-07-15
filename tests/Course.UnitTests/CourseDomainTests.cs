@@ -150,21 +150,75 @@ public class CourseDomainTests {
         Assert.Equal(2, course.WeeklySlots.Count);
     }
 
+    // Buổi TƯƠNG LAI của slot bị xóa hẳn, KHÔNG soft-cancel: Application layer đã chặn sẵn bằng
+    // IsWeeklySlotInUseAsync nên không có Attendance nào tham chiếu. Nếu chỉ soft-cancel, row còn
+    // lại sẽ chiếm unique index (CourseId, SessionDate, SessionType) và chặn việc thêm lại slot.
     [Fact]
-    public void RemoveWeeklySlot_SoftCancelsFutureSessions_DoesNotDeleteThem() {
+    public void RemoveWeeklySlot_DeletesFutureSessions_ButKeepsPastOnes() {
         var course = CreateCourse();
         var slotA = course.AddWeeklySlot(DayOfWeek.Monday, SessionType.Morning).Value;
         course.AddWeeklySlot(DayOfWeek.Wednesday, SessionType.Afternoon);
         course.AddWeeklySlot(DayOfWeek.Friday, SessionType.Morning);
-        var sessionCountBeforeRemoval = course.ClassSessions.Count;
+
+        // Backdate 1 buổi của slotA thành buổi đã qua — lịch sử điểm danh phải được giữ lại.
+        var pastSession = course.ClassSessions.First(s => s.WeeklySlotId == slotA.Id);
+        var pastDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7));
+        Backdate(pastSession, pastDate);
 
         course.RemoveWeeklySlot(slotA.Id);
 
-        // Session vẫn còn trong danh sách (soft-cancel), không bị xóa khỏi Course.
-        Assert.Equal(sessionCountBeforeRemoval, course.ClassSessions.Count);
-        Assert.All(
-            course.ClassSessions.Where(s => s.WeeklySlotId == slotA.Id),
-            s => Assert.True(s.IsCancelled));
+        var remainingSlotASessions = course.ClassSessions
+            .Where(s => s.WeeklySlotId == slotA.Id)
+            .ToList();
+
+        Assert.Equal(pastSession.Id, Assert.Single(remainingSlotASessions).Id);
+    }
+
+    // Regression: tạo slot → xóa → tạo lại ĐÚNG (DayOfWeek, SessionType) đó. Trước đây buổi tương
+    // lai chỉ bị soft-cancel nên các row cũ vẫn giữ chỗ trong unique index → SaveChanges vỡ ở DB.
+    [Fact]
+    public void AddWeeklySlot_AfterRemovingSlotWithSameDayAndSessionType_RegeneratesAllSessions() {
+        var course = CreateCourse();
+        var slotA = course.AddWeeklySlot(DayOfWeek.Monday, SessionType.Morning).Value;
+        course.AddWeeklySlot(DayOfWeek.Wednesday, SessionType.Afternoon);
+        course.AddWeeklySlot(DayOfWeek.Friday, SessionType.Morning);
+        var originalSessionCount = course.ClassSessions.Count(s => s.WeeklySlotId == slotA.Id);
+
+        course.RemoveWeeklySlot(slotA.Id);
+        var readdResult = course.AddWeeklySlot(DayOfWeek.Monday, SessionType.Morning);
+
+        Assert.True(readdResult.IsSuccess);
+
+        // Slot mới sinh lại đủ buổi như cũ, và không có 2 buổi nào trùng (ngày, ca).
+        var newSlotSessions = course.ClassSessions
+            .Where(s => s.WeeklySlotId == readdResult.Value.Id)
+            .ToList();
+
+        Assert.Equal(originalSessionCount, newSlotSessions.Count);
+        Assert.Distinct(course.ClassSessions.Select(s => (s.SessionDate, s.SessionType)));
+    }
+
+    // Buổi ĐÃ QUA của slot cũ được giữ lại làm lịch sử ⇒ vẫn chiếm chỗ (ngày, ca). Slot mới phải
+    // bỏ qua đúng những ngày đó thay vì sinh trùng.
+    [Fact]
+    public void AddWeeklySlot_SkipsDatesAlreadyOccupiedByKeptPastSessions() {
+        var course = CreateCourse();
+        var slotA = course.AddWeeklySlot(DayOfWeek.Monday, SessionType.Morning).Value;
+        course.AddWeeklySlot(DayOfWeek.Wednesday, SessionType.Afternoon);
+        course.AddWeeklySlot(DayOfWeek.Friday, SessionType.Morning);
+
+        var pastSession = course.ClassSessions.First(s => s.WeeklySlotId == slotA.Id);
+        var pastDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7));
+        Backdate(pastSession, pastDate);
+
+        course.RemoveWeeklySlot(slotA.Id);
+        var readdResult = course.AddWeeklySlot(DayOfWeek.Monday, SessionType.Morning);
+
+        Assert.True(readdResult.IsSuccess);
+        Assert.DoesNotContain(
+            course.ClassSessions.Where(s => s.WeeklySlotId == readdResult.Value.Id),
+            s => s.SessionDate == pastDate);
+        Assert.Distinct(course.ClassSessions.Select(s => (s.SessionDate, s.SessionType)));
     }
 
     // ── TransitionStatus — strict forward-only state machine
@@ -403,5 +457,68 @@ public class CourseDomainTests {
 
         Assert.True(result.IsFailure);
         Assert.Equal(CourseErrors.CompletedCourseIsImmutable, result.Error);
+    }
+
+    // ── Enrollment gate
+
+    [Fact]
+    public void Create_NewCourse_IsNotOpenForEnrollment() {
+        // Đây là invariant chống lại chính vấn đề cổng này sinh ra để giải quyết: Course vừa tạo
+        // KHÔNG được tự enroll được, nếu không Admin lại mất cửa sổ an toàn để sửa/xóa.
+        var course = CreateCourse();
+
+        Assert.False(course.IsOpenForEnrollment);
+    }
+
+    [Fact]
+    public void OpenEnrollment_WithTwoSlots_Succeeds() {
+        var course = CreateCourse();
+        course.AddWeeklySlot(DayOfWeek.Monday, SessionType.Morning);
+        course.AddWeeklySlot(DayOfWeek.Wednesday, SessionType.Afternoon);
+
+        var result = course.OpenEnrollment();
+
+        Assert.True(result.IsSuccess);
+        Assert.True(course.IsOpenForEnrollment);
+    }
+
+    [Fact]
+    public void OpenEnrollment_WithFewerThanTwoSlots_Fails() {
+        // Student bắt buộc chọn đúng 2 ca khi enroll (Enrollment.Create) — mở course chỉ có 1 slot
+        // là đẩy họ vào màn hình chọn ca không thể hoàn thành.
+        var course = CreateCourse();
+        course.AddWeeklySlot(DayOfWeek.Monday, SessionType.Morning);
+
+        var result = course.OpenEnrollment();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(CourseErrors.MinimumWeeklySlotsRequiredToOpen, result.Error);
+        Assert.False(course.IsOpenForEnrollment);
+    }
+
+    [Fact]
+    public void OpenEnrollment_WhenCourseAlreadyActive_Fails() {
+        var course = CreateCourse();
+        course.AddWeeklySlot(DayOfWeek.Monday, SessionType.Morning);
+        course.AddWeeklySlot(DayOfWeek.Wednesday, SessionType.Afternoon);
+        course.TransitionStatus(CourseStatus.Active);
+
+        var result = course.OpenEnrollment();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(CourseErrors.OnlyUpcomingCourseCanOpenEnrollment, result.Error);
+    }
+
+    [Fact]
+    public void OpenEnrollment_CalledTwice_IsIdempotent() {
+        var course = CreateCourse();
+        course.AddWeeklySlot(DayOfWeek.Monday, SessionType.Morning);
+        course.AddWeeklySlot(DayOfWeek.Wednesday, SessionType.Afternoon);
+        course.OpenEnrollment();
+
+        var result = course.OpenEnrollment();
+
+        Assert.True(result.IsSuccess);
+        Assert.True(course.IsOpenForEnrollment);
     }
 }

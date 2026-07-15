@@ -33,7 +33,9 @@ public sealed class ReplaceLecturerCommandHandler
     public async Task<Result<ReplaceLecturerOutputDto>> Handle(
         ReplaceLecturerCommand request,
         CancellationToken cancellationToken) {
-        var course = await _courseRepository.GetByIdAsync(
+        // Load kèm WeeklySlots: precondition 2 so từng ca của course này với lịch Lecturer mới.
+        // GetByIdAsync thường cho collection rỗng ⇒ check sẽ luôn cho qua, im lặng.
+        var course = await _courseRepository.GetByIdWithWeeklySlotsAsync(
             request.CourseId, cancellationToken);
 
         if (course is null)
@@ -46,17 +48,23 @@ public sealed class ReplaceLecturerCommandHandler
         if (!isActiveLecturer)
             return Result.Failure<ReplaceLecturerOutputDto>(CourseErrors.LecturerNotFound);
 
-        // Precondition 2: Date range của course không được overlap với course khác
-        // mà Lecturer mới đang phụ trách (exclude chính course này).
-        var hasOverlap = await _courseQueryService.HasOverlappingCourseAsync(
+        // Precondition 2: các ca của course này không được đụng lịch Lecturer mới — xét CẢ ngày
+        // lẫn ca. Chỉ trùng khoảng ngày thì không phải xung đột (dạy 2 lớp cùng kỳ khác ca là
+        // bình thường), nên không dùng check theo mỗi date range nữa.
+        var candidateSlots = course.WeeklySlots
+            .Select(s => (s.DayOfWeek, s.SessionType))
+            .ToList();
+
+        var hasSlotConflict = await _courseQueryService.HasLecturerSlotConflictAsync(
             request.NewLecturerId,
+            candidateSlots,
             course.StartDate,
             course.EndDate,
             excludeCourseId: course.Id,
             cancellationToken);
 
-        if (hasOverlap)
-            return Result.Failure<ReplaceLecturerOutputDto>(CourseErrors.LecturerDateRangeOverlap);
+        if (hasSlotConflict)
+            return Result.Failure<ReplaceLecturerOutputDto>(CourseErrors.LecturerSlotConflict);
 
         var newLecturerName = await _lecturerLookupService.GetFullNameAsync(
             request.NewLecturerId, cancellationToken) ?? string.Empty;

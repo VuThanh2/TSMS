@@ -1,5 +1,13 @@
 namespace EnrollmentManagement.Domain.Repositories;
 
+// Kết quả GROUP BY của GetSessionCountsByCourseAsync — số lượt mỗi trạng thái trong 1 buổi.
+// Không phải Entity: không identity, không tracking, chỉ là hình dạng đọc.
+public sealed record SessionAttendanceCount(
+    Guid ClassSessionId,
+    int PresentCount,
+    int ExcusedCount,
+    int AbsentCount);
+
 public interface IAttendanceRepository {
     Task<Entities.Attendance?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
@@ -16,6 +24,13 @@ public interface IAttendanceRepository {
     // Dùng cho Schedule query: lấy attendance của Student trong 1 Course.
     Task<List<Entities.Attendance>> GetByStudentAndCourseAsync(
         Guid studentId,
+        Guid courseId,
+        CancellationToken cancellationToken = default);
+
+    // Dùng cho GetCourseAttendanceSummary: đếm điểm danh theo TỪNG BUỔI của cả Course.
+    // GROUP BY chạy dưới SQL (nhờ CourseId đã denormalize sẵn trên Attendance) — không kéo
+    // toàn bộ row lên memory chỉ để đếm. Buổi chưa có Attendance nào sẽ KHÔNG xuất hiện.
+    Task<List<SessionAttendanceCount>> GetSessionCountsByCourseAsync(
         Guid courseId,
         CancellationToken cancellationToken = default);
 

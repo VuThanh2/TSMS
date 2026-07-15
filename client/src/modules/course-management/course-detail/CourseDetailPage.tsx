@@ -20,6 +20,7 @@ import {
   useRemoveWeeklySlot,
   useDeleteCourse,
   useCancelClassSession,
+  useOpenCourseEnrollment,
 } from './useCourseDetail';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -27,13 +28,17 @@ const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const SESSION_TYPES = ['Morning', 'Afternoon'];
 
 // Lưới weekly pattern chỉ dùng cho Admin (thêm/xóa slot). Lecturer xem lịch thật
-// qua CourseWeeklySchedule nên grid này không còn cần chế độ read-only.
+// qua CourseWeeklySchedule nên không dùng grid này.
+// readOnly: Course đã Completed — domain khóa mọi mutation (CompletedCourseIsImmutable),
+// nên chỉ hiển thị pattern, không cho thêm/xóa.
 function WeeklySlotGrid({
   slots,
+  readOnly,
   onAdd,
   onRemove,
 }: {
   slots: WeeklySlot[];
+  readOnly: boolean;
   onAdd: (dayOfWeek: string, sessionType: string) => void;
   onRemove: (slot: WeeklySlot) => void;
 }) {
@@ -57,6 +62,24 @@ function WeeklySlotGrid({
             </div>
             {DAYS.map((day) => {
               const slot = findSlot(day, type);
+
+              // Read-only: ô giữ nguyên hình dáng để đọc được pattern, nhưng bỏ hẳn
+              // Popconfirm/onClick — không có affordance bấm thì user không kỳ vọng bấm được.
+              if (readOnly) {
+                return (
+                  <div
+                    key={`${day}-${type}`}
+                    className={
+                      slot
+                        ? 'flex h-10 items-center justify-center rounded-lg bg-primary/50 text-[13px] font-semibold text-white'
+                        : 'flex h-10 items-center justify-center rounded-lg border border-dashed border-border-input bg-transparent'
+                    }
+                  >
+                    {slot ? '✓' : ''}
+                  </div>
+                );
+              }
+
               return slot ? (
                 <Popconfirm
                   key={`${day}-${type}`}
@@ -139,6 +162,7 @@ export default function CourseDetailPage() {
   const removeSlot = useRemoveWeeklySlot(courseId!);
   const deleteCourse = useDeleteCourse(courseId!);
   const cancelSession = useCancelClassSession(courseId!);
+  const openEnrollment = useOpenCourseEnrollment(courseId!);
 
   if (course.isLoading) {
     return <div className="flex justify-center pt-20"><Spin size="large" /></div>;
@@ -152,6 +176,16 @@ export default function CourseDetailPage() {
   const role = state.status === 'authenticated' ? state.user.role : undefined;
   const canManage = role === 'Admin';
   const backTo = role ? getDefaultRouteForRole(role) : '/admin/dashboard';
+
+  // Course Completed = bất biến: domain chặn UpdateInfo/ReplaceLecturer/AddWeeklySlot/
+  // RemoveWeeklySlot/CancelClassSession bằng CompletedCourseIsImmutable. Ẩn nút thay vì
+  // để Admin bấm rồi nhận lỗi. Vẫn vào xem được thông tin & lịch sử buổi học.
+  const isCompleted = c.status === 'Completed';
+
+  // Cổng đăng ký. Chưa mở = Student không thấy course ⇒ Admin có cửa sổ an toàn để sửa/xóa.
+  // Mở được khi: còn Upcoming + đã đủ 2 WeeklySlot (khớp invariant Course.OpenEnrollment).
+  const slotCount = weeklySlots.data?.length ?? 0;
+  const canOpenEnrollment = c.status === 'Upcoming' && !c.isOpenForEnrollment && slotCount >= 2;
 
   // Deep-link: Schedule bấm 1 buổi → mở CourseDetail ở tab Attendance với buổi đã chọn.
   // (activeTab dùng useState khai báo cùng các hook khác — PHẢI trước early return.)
@@ -195,6 +229,13 @@ export default function CourseDetailPage() {
           <div className="mb-2 flex flex-wrap items-center gap-3">
             <h1 className="m-0 text-[30px] font-bold tracking-tight">{c.name}</h1>
             <StatusTag status={c.status} />
+            {/* Cổng đăng ký là trục riêng, KHÔNG gộp vào StatusTag — Status do job nền lái theo
+                ngày, cổng do Admin bấm. Chỉ Admin thấy: Lecturer không kiểm soát việc này. */}
+            {canManage && c.status === 'Upcoming' && (
+              <Tag color={c.isOpenForEnrollment ? 'green' : 'default'}>
+                {c.isOpenForEnrollment ? 'Enrollment open' : 'Not open for enrollment'}
+              </Tag>
+            )}
           </div>
           {c.description && (
             <p className="m-0 max-w-[620px] text-[15px] leading-relaxed text-text-secondary">
@@ -202,8 +243,21 @@ export default function CourseDetailPage() {
             </p>
           )}
         </div>
-        {canManage && (
+        {canManage && !isCompleted && (
           <div className="flex flex-none gap-2">
+            {/* Chỉ hiện khi thật sự mở được (Upcoming + đủ 2 slot) — thiếu slot thì banner
+                bên dưới hướng dẫn, không để nút bấm được rồi báo lỗi. */}
+            {canOpenEnrollment && (
+              <Popconfirm
+                title="Open this course for enrollment?"
+                description="Students will be able to enroll from now on. Once someone enrolls, you can no longer delete this course."
+                okText="Open enrollment"
+                okButtonProps={{ loading: openEnrollment.isPending }}
+                onConfirm={() => openEnrollment.mutate()}
+              >
+                <Button type="primary">Open enrollment</Button>
+              </Popconfirm>
+            )}
             <Button onClick={() => setReplaceOpen(true)}>Replace lecturer</Button>
             <Button onClick={() => {
               // DatePicker cần Dayjs, không nhận string — convert endDate khi mở modal
@@ -217,12 +271,14 @@ export default function CourseDetailPage() {
             }}>
               Edit course
             </Button>
-            {/* Chỉ Upcoming mới xóa được (khớp ràng buộc backend) — ẩn nút ở trạng thái khác
-                để tránh Admin bấm rồi nhận lỗi. Backend vẫn chặn kể cả khi gọi trực tiếp. */}
-            {c.status === 'Upcoming' && (
+            {/* Backend cho xóa khi: Upcoming (Course.Delete) VÀ chưa ai enroll (DeleteCourseHandler).
+                Ẩn nút ở mọi trường hợp khác thay vì để Admin bấm rồi nhận lỗi — có Student rồi
+                thì xóa là hủy luôn lịch/điểm danh của họ, đó là lý do backend chặn hẳn.
+                Backend vẫn chặn kể cả khi gọi trực tiếp. */}
+            {c.status === 'Upcoming' && c.enrolledCount === 0 && (
               <Popconfirm
                 title="Delete this course?"
-                description="This permanently removes the course and all its sessions. Only allowed if no students are enrolled."
+                description="This permanently removes the course and all its sessions."
                 okText="Delete"
                 okButtonProps={{ danger: true, loading: deleteCourse.isPending }}
                 onConfirm={() =>
@@ -238,6 +294,33 @@ export default function CourseDetailPage() {
 
       {canManage ? (
         <>
+          {/* Không có banner thì Admin sẽ tưởng UI hỏng khi thấy course này thiếu nút so với course khác */}
+          {isCompleted && (
+            <div className="mb-6 rounded-lg border border-border bg-bg-card px-4 py-3 text-[14px] text-text-secondary">
+              This course is <strong>Completed</strong> and can no longer be modified. Details and
+              session history stay available to view.
+            </div>
+          )}
+
+          {/* Giai đoạn dựng course: nói rõ Student chưa thấy gì, và còn thiếu bước nào để mở. */}
+          {c.status === 'Upcoming' && !c.isOpenForEnrollment && (
+            <div className="mb-6 rounded-lg border border-border bg-bg-card px-4 py-3 text-[14px] text-text-secondary">
+              Students can&apos;t see this course yet.{' '}
+              {slotCount < 2
+                ? 'Add at least 2 weekly slots below, then open it for enrollment.'
+                : 'Review the schedule, then use Open enrollment when you’re ready.'}{' '}
+              You can still edit or delete it freely until someone enrolls.
+            </div>
+          )}
+
+          {/* Đã mở + đã có Student: giải thích vì sao nút Delete biến mất. */}
+          {c.status === 'Upcoming' && c.isOpenForEnrollment && c.enrolledCount > 0 && (
+            <div className="mb-6 rounded-lg border border-border bg-bg-card px-4 py-3 text-[14px] text-text-secondary">
+              <strong>{c.enrolledCount}</strong> student{c.enrolledCount !== 1 ? 's have' : ' has'}{' '}
+              enrolled, so this course can no longer be deleted. You can still edit its details.
+            </div>
+          )}
+
           {statCards}
 
           {/* Admin: lưới weekly pattern để thêm/xóa slot (cơ chế tạo ClassSession) */}
@@ -246,11 +329,14 @@ export default function CourseDetailPage() {
           </div>
           <WeeklySlotGrid
             slots={weeklySlots.data ?? []}
+            readOnly={isCompleted}
             onAdd={(dayOfWeek, sessionType) => addSlot.mutate({ dayOfWeek, sessionType })}
             onRemove={(slot) => removeSlot.mutate(slot.weeklySlotId)}
           />
           <p className="mt-3 text-[13px] text-text-muted">
-            Click a day &amp; shift to edit the weekly pattern. Sessions repeat every week from start to end date.
+            {isCompleted
+              ? 'The weekly pattern this course ran on. Completed courses are read-only.'
+              : 'Click a day & shift to edit the weekly pattern. Sessions repeat every week from start to end date.'}
           </p>
 
           {/* Session history: bảng chi tiết per-date (cancellations, past/upcoming) — chỉ Admin */}
@@ -264,27 +350,34 @@ export default function CourseDetailPage() {
           <Table<ClassSession>
             columns={[
               ...sessionColumns,
-              {
-                title: '',
-                key: 'actions',
-                width: 100,
-                align: 'right',
-                // Chỉ buổi sắp diễn ra & chưa hủy mới cancel được (khớp ràng buộc domain:
-                // past → CannotModifyPastClassSession, đã hủy → AlreadyCancelled). Buổi đã qua
-                // hoặc đã hủy không hiện nút để tránh Admin bấm rồi nhận lỗi.
-                render: (_, record) =>
-                  record.isPast || record.isCancelled ? null : (
-                    <Popconfirm
-                      title="Cancel this session?"
-                      description="Students will see this session as cancelled. This cannot be undone."
-                      okText="Cancel session"
-                      okButtonProps={{ danger: true, loading: cancelSession.isPending }}
-                      onConfirm={() => cancelSession.mutate(record.classSessionId)}
-                    >
-                      <Button danger>Cancel</Button>
-                    </Popconfirm>
-                  ),
-              },
+              // Course Completed → bỏ hẳn cột action (domain chặn CancelClassSession).
+              // Trước đây cột này tự rỗng vì mọi buổi đều isPast, nhưng đó là trùng hợp
+              // chứ không phải chủ đích — bỏ cột để bảng đọc gọn hơn.
+              ...(isCompleted
+                ? []
+                : [
+                    {
+                      title: '',
+                      key: 'actions',
+                      width: 100,
+                      align: 'right' as const,
+                      // Chỉ buổi sắp diễn ra & chưa hủy mới cancel được (khớp ràng buộc domain:
+                      // past → CannotModifyPastClassSession, đã hủy → AlreadyCancelled). Buổi đã qua
+                      // hoặc đã hủy không hiện nút để tránh Admin bấm rồi nhận lỗi.
+                      render: (_: unknown, record: ClassSession) =>
+                        record.isPast || record.isCancelled ? null : (
+                          <Popconfirm
+                            title="Cancel this session?"
+                            description="Students will see this session as cancelled. This cannot be undone."
+                            okText="Cancel session"
+                            okButtonProps={{ danger: true, loading: cancelSession.isPending }}
+                            onConfirm={() => cancelSession.mutate(record.classSessionId)}
+                          >
+                            <Button danger>Cancel</Button>
+                          </Popconfirm>
+                        ),
+                    },
+                  ]),
             ]}
             dataSource={hidePast ? (c.classSessions ?? []).filter((s) => !s.isPast) : c.classSessions}
             rowKey="classSessionId"
@@ -308,7 +401,7 @@ export default function CourseDetailPage() {
                   <div className="mb-3.5 flex items-center justify-between">
                     <h2 className="m-0 text-[20px] font-semibold tracking-tight">Class schedule</h2>
                   </div>
-                  <CourseWeeklySchedule sessions={c.classSessions ?? []} />
+                  <CourseWeeklySchedule sessions={c.classSessions ?? []} courseId={courseId!} />
                 </>
               ),
             },
@@ -371,7 +464,9 @@ export default function CourseDetailPage() {
           Currently assigned: <strong>{c.lecturerName}</strong>
         </p>
         <Form form={replaceForm} layout="vertical" requiredMark={false}>
-          <Form.Item label="New lecturer" name="lecturerId" rules={[{ required: true, message: 'Select a new lecturer' }]}>
+          {/* name PHẢI là newLecturerId: giá trị form đi thẳng vào body request, và BE bind theo
+              đúng tên này (ReplaceLecturerInputDto.NewLecturerId). */}
+          <Form.Item label="New lecturer" name="newLecturerId" rules={[{ required: true, message: 'Select a new lecturer' }]}>
             <LecturerPicker excludeId={c.lecturerId} />
           </Form.Item>
         </Form>

@@ -113,8 +113,8 @@ public class UsersController : ControllerBase {
         return Ok(result.Value);
     }
  
-    // PUT /api/users/{userId}/status
-    [HttpPut("{userId:guid}/status")]
+    // PUT /api/users/status/{userId}
+    [HttpPut("status/{userId:guid}")]
     public async Task<IActionResult> UpdateUserStatus(
         Guid userId,
         [FromBody] UpdateUserStatusInputDto dto,

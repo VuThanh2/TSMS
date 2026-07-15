@@ -9,9 +9,9 @@ export interface GradingParams {
 }
 
 export function getCourseEnrollmentsApi(courseId: string, params: GradingParams) {
-  return api.get<PagedResult<EnrollmentItem>>(`/courses/${courseId}/enrollments`, { params });
+  return api.get<PagedResult<EnrollmentItem>>(`/courses/enrollments/${courseId}`, { params });
 }
 
 export function updateGradeApi(enrollmentId: string, grade: number) {
-  return api.put(`/enrollments/${enrollmentId}/grade`, { grade });
+  return api.put(`/enrollments/grade/${enrollmentId}`, { grade });
 }

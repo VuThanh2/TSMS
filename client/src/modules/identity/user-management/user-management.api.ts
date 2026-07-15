@@ -19,7 +19,7 @@ export function updateUserApi(userId: string, data: { fullName: string; email: s
 }
 
 export function updateUserStatusApi(userId: string, data: { isActive: boolean }) {
-  return api.put(`/users/${userId}/status`, data);
+  return api.put(`/users/status/${userId}`, data);
 }
 
 export function importUsersCsvApi(file: File) {

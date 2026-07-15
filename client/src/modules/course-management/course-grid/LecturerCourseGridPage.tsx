@@ -1,14 +1,11 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
 
 import StatusTag from '@/shared/components/StatusTag';
 import type { CourseListItem } from '@/modules/course-management/shared/course.types';
-import { getMyCourseApi } from './course-grid.api';
-import type { CourseGridParams } from './course-grid.api';
+import { useCourseGrid } from './useCourseGrid';
 
 const STATUS_OPTIONS = ['', 'Upcoming', 'Active', 'Completed'] as const;
 const STATUS_LABELS: Record<string, string> = { '': 'All', Upcoming: 'Upcoming', Active: 'Active', Completed: 'Completed' };
@@ -46,26 +43,7 @@ const columns: ColumnsType<CourseListItem> = [
 
 export default function LecturerCourseGridPage() {
   const navigate = useNavigate();
-  const [keyword, setKeyword] = useState('');
-  const [status, setStatus] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const params: CourseGridParams = {
-    keyword: keyword || undefined,
-    status: status || undefined,
-    page,
-    pageSize,
-  };
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['my-courses', params],
-    queryFn: () => getMyCourseApi(params),
-    select: (res) => res.data,
-  });
-
-  const courses = data?.items ?? [];
-  const totalCount = data?.totalCount ?? 0;
+  const grid = useCourseGrid('mine');
 
   return (
     <div className="p-5 sm:p-8 md:p-10 md:px-12">
@@ -73,7 +51,7 @@ export default function LecturerCourseGridPage() {
       <div className="mb-7">
         <h1 className="m-0 mb-1.5 text-[32px] font-bold tracking-tight">My courses</h1>
         <p className="m-0 text-[15px] text-text-secondary">
-          {totalCount} course{totalCount !== 1 ? 's' : ''} assigned to you
+          {grid.totalCount} course{grid.totalCount !== 1 ? 's' : ''} assigned to you
         </p>
       </div>
 
@@ -82,10 +60,10 @@ export default function LecturerCourseGridPage() {
         <Input
           placeholder="Search by course name…"
           prefix={<SearchOutlined />}
-          value={keyword}
+          value={grid.keyword}
           onChange={(e) => {
-            setKeyword(e.target.value);
-            setPage(1);
+            grid.setKeyword(e.target.value);
+            grid.setPage(1);
           }}
           allowClear
           className="h-11 min-w-[240px] flex-1"
@@ -96,11 +74,11 @@ export default function LecturerCourseGridPage() {
             <button
               key={s}
               onClick={() => {
-                setStatus(s);
-                setPage(1);
+                grid.setStatus(s);
+                grid.setPage(1);
               }}
               className={`cursor-pointer rounded-md border-none px-3 py-1.5 text-[13px] font-semibold transition-colors ${
-                status === s
+                grid.status === s
                   ? 'bg-primary text-white'
                   : 'bg-transparent text-text-muted hover:text-text'
               }`}
@@ -114,19 +92,19 @@ export default function LecturerCourseGridPage() {
       {/* Table */}
       <Table<CourseListItem>
         columns={columns}
-        dataSource={courses}
+        dataSource={grid.courses}
         rowKey="courseId"
-        loading={isLoading}
+        loading={grid.isLoading}
         locale={{ emptyText: 'No courses match your search.' }}
         rowClassName="tsms-clickable-row"
         pagination={{
-          current: page,
-          pageSize,
-          total: totalCount,
+          current: grid.page,
+          pageSize: grid.pageSize,
+          total: grid.totalCount,
           showSizeChanger: true,
           onChange: (p, ps) => {
-            setPage(p);
-            setPageSize(ps);
+            grid.setPage(p);
+            grid.setPageSize(ps);
           },
         }}
         onRow={(record) => ({

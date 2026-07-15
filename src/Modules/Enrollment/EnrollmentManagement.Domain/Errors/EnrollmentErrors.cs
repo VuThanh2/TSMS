@@ -23,6 +23,11 @@ public static class EnrollmentErrors {
         Error.Create("Enrollment.CourseNotEnrollable",
             "Only courses with Upcoming status are open for enrollment.");
 
+    // Khác CourseNotEnrollable: course vẫn Upcoming và hợp lệ, chỉ là Admin chưa bấm mở đăng ký.
+    public static readonly Error CourseNotOpenForEnrollment =
+        Error.Create("Enrollment.CourseNotOpenForEnrollment",
+            "This course is not open for enrollment yet.");
+
     public static readonly Error InvalidSessionCount =
         Error.Create("Enrollment.InvalidSessionCount",
             "Enrollment requires exactly 2 class sessions.");
@@ -82,6 +87,11 @@ public static class EnrollmentErrors {
     public static readonly Error AttendanceNotFound =
         Error.Create("Enrollment.AttendanceNotFound",
             "Attendance record was not found.");
+
+    // Ca học không tồn tại — Course BC sở hữu dữ liệu này, Enrollment chỉ đọc qua interface.
+    public static readonly Error ClassSessionNotFound =
+        Error.Create("Enrollment.ClassSessionNotFound",
+            "Class session was not found.");
 
     // Buổi học đã bị Admin hủy (vd nghỉ lễ) — không cho phép điểm danh cho buổi không diễn ra.
     public static readonly Error SessionCancelled =

@@ -50,6 +50,11 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course> {
         builder.Property(c => c.MaxCapacity)
             .IsRequired();
 
+        // Cổng đăng ký. Course cũ (tạo trước khi có cột này) được migration backfill = true
+        // để không đột ngột biến mất khỏi Available Courses của Student.
+        builder.Property(c => c.IsOpenForEnrollment)
+            .IsRequired();
+
         builder.Property(c => c.CreatedAt)
             .IsRequired();
 
