@@ -165,7 +165,7 @@ export function useAddWeeklySlot(courseId: string, onSuccess?: () => void) {
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const msgs: Record<string, string> = {
-        'WeeklySlot.Duplicate': 'Slot already exists',
+        'Course.DuplicateWeeklySlot': 'Slot already exists',
         // Check trùng lịch dạy nằm ở đây chứ không phải lúc tạo Course — tới bước này mới biết
         // được ca cụ thể, mà thiếu ca thì không xác định được có đụng nhau thật hay không.
         'Course.LecturerSlotConflict': 'Lecturer already teaches at this time',
@@ -187,8 +187,8 @@ export function useRemoveWeeklySlot(courseId: string) {
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const msgs: Record<string, string> = {
-        'WeeklySlot.InUse': 'Students are enrolled in this slot',
-        'WeeklySlot.MinimumRequired': 'At least 2 slots are required',
+        'Course.WeeklySlotInUse': 'Students are enrolled in this slot',
+        'Course.MinimumWeeklySlotsRequired': 'At least 2 slots are required',
       };
       const code = error.response?.data?.code ?? '';
       void message.error(msgs[code] ?? error.response?.data?.message ?? 'Something went wrong');

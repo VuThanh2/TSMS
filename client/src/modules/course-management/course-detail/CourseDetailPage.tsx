@@ -187,6 +187,15 @@ export default function CourseDetailPage() {
   const slotCount = weeklySlots.data?.length ?? 0;
   const canOpenEnrollment = c.status === 'Upcoming' && !c.isOpenForEnrollment && slotCount >= 2;
 
+  // weeklySlots là query RIÊNG, không nằm trong early-return theo course.isLoading ở trên.
+  // Lúc nó còn chạy thì slotCount = 0 — không được kết luận "thiếu slot" từ con số đó, nếu không
+  // course đã đủ 4 slot vẫn bị hiện nhầm "Add at least 2 weekly slots" một nhịp rồi mới đổi.
+  const setupHint = weeklySlots.isLoading
+    ? null
+    : slotCount < 2
+      ? 'Add at least 2 weekly slots below, then open it for enrollment.'
+      : 'Review the schedule, then use Open enrollment when you’re ready.';
+
   // Deep-link: Schedule bấm 1 buổi → mở CourseDetail ở tab Attendance với buổi đã chọn.
   // (activeTab dùng useState khai báo cùng các hook khác — PHẢI trước early return.)
   const initialSessionId = searchParams.get('sessionId') ?? '';
@@ -305,10 +314,7 @@ export default function CourseDetailPage() {
           {/* Giai đoạn dựng course: nói rõ Student chưa thấy gì, và còn thiếu bước nào để mở. */}
           {c.status === 'Upcoming' && !c.isOpenForEnrollment && (
             <div className="mb-6 rounded-lg border border-border bg-bg-card px-4 py-3 text-[14px] text-text-secondary">
-              Students can&apos;t see this course yet.{' '}
-              {slotCount < 2
-                ? 'Add at least 2 weekly slots below, then open it for enrollment.'
-                : 'Review the schedule, then use Open enrollment when you’re ready.'}{' '}
+              Students can&apos;t see this course yet.{setupHint ? ` ${setupHint}` : ''}{' '}
               You can still edit or delete it freely until someone enrolls.
             </div>
           )}

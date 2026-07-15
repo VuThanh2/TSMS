@@ -56,8 +56,8 @@ export function useUserDetail(userId: string | null) {
 
 const STATUS_ERROR_MESSAGES: Record<string, string> = {
   'User.CannotDeactivateSelf': 'You can’t deactivate your own account',
-  'Lecturer.HasActiveCourses': 'Lecturer still has active courses',
-  'Student.HasActiveEnrollment': 'Student still has active enrollments',
+  'User.LecturerHasActiveCourses': 'Lecturer still has active courses',
+  'User.StudentHasActiveEnrollments': 'Student still has active enrollments',
 };
 
 export function useCreateUser(onSuccess?: () => void) {
@@ -72,10 +72,11 @@ export function useCreateUser(onSuccess?: () => void) {
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const code = error.response?.data?.code ?? '';
+      // Key phải là mã ĐẦY ĐỦ kèm prefix 'User.' — khớp Error.Create bên Identity BC.
       const messages: Record<string, string> = {
-        EmailAlreadyExists: 'Email already in use',
-        InvalidRole: 'Invalid role',
-        PasswordPolicyViolation: 'Password is not strong enough',
+        'User.EmailAlreadyInUse': 'Email already in use',
+        'User.InvalidRole': 'Invalid role',
+        'User.PasswordPolicyViolation': 'Password needs 6+ characters with upper, lower and a number',
       };
       void message.error(messages[code] ?? error.response?.data?.message ?? 'Something went wrong');
     },
