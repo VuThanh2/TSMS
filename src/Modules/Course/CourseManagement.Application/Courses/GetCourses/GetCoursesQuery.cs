@@ -9,12 +9,15 @@ namespace CourseManagement.Application.Courses.GetCourses;
 
 // Role scoping được thực hiện ở tầng Presentation (truyền lecturerId nếu Lecturer).
 // Admin/Student truyền lecturerId = null để xem toàn bộ.
+// SortBy/SortDir để cuối và có default → mọi call-site cũ không sort vẫn biên dịch nguyên trạng.
 public sealed record GetCoursesQuery(
     string? Keyword,
     string? Status,
     Guid? LecturerId,
     int Page,
-    int PageSize) : IRequest<Result<PagedList<GetCoursesOutputDto>>>;
+    int PageSize,
+    string? SortBy = null,
+    string? SortDir = null) : IRequest<Result<PagedList<GetCoursesOutputDto>>>;
 
 public sealed class GetCoursesQueryHandler
     : IRequestHandler<GetCoursesQuery, Result<PagedList<GetCoursesOutputDto>>> {
@@ -45,6 +48,7 @@ public sealed class GetCoursesQueryHandler
             lecturerId: request.LecturerId,
             page: request.Page,
             pageSize: request.PageSize,
+            sort: new SortInput(request.SortBy, request.SortDir),
             cancellationToken: cancellationToken);
 
         // Enrich với LecturerName/EnrolledCount — số item tối đa là pageSize, nên N calls là chấp nhận được.

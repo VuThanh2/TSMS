@@ -8,6 +8,8 @@ import {
   SESSION_STATE_STYLE,
   type SessionState,
 } from '@/modules/course-management/shared/session-status';
+import { formatAttendanceCell } from '@/modules/enrollment-management/attendance/attendance-cell';
+import { useCourseAttendanceSummary } from '@/modules/enrollment-management/attendance/useCourseAttendanceSummary';
 
 const DAY_SHORT = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 const LEGEND_STATES: SessionState[] = ['upcoming', 'today', 'past', 'cancelled'];
@@ -20,8 +22,17 @@ function startOfWeek(d: Dayjs) {
 
 // Lịch dạy read-only của 1 khóa học, group theo TUẦN (không theo tháng như Schedule Page),
 // điều hướng tuần bằng mũi tên. Ca bị hủy tô xám + gạch ngang để phân biệt.
-export default function CourseWeeklySchedule({ sessions }: { sessions: ClassSession[] }) {
+// Buổi đã qua hiện số có mặt (12/15) thay vì nhãn "Past" — chỉ Lecturer, vì endpoint
+// attendance-summary là Lecturer-only.
+export default function CourseWeeklySchedule({
+  sessions,
+  courseId,
+}: {
+  sessions: ClassSession[];
+  courseId: string;
+}) {
   const [weekOffset, setWeekOffset] = useState(0);
+  const attendanceSummary = useCourseAttendanceSummary(courseId);
 
   // Tuần mặc định: chứa buổi sắp tới gần nhất, hoặc buổi đầu tiên nếu tất cả đã qua.
   const defaultAnchor = useMemo(() => {
@@ -51,18 +62,24 @@ export default function CourseWeeklySchedule({ sessions }: { sessions: ClassSess
       }
       // Nội dung ô = TRẠNG THÁI buổi học (Upcoming/Today/Past/Cancelled) — có ý nghĩa
       // hơn nhãn AM/PM cũ (ca đã nằm ở nhãn hàng, ngày đã nằm ở tiêu đề cột).
+      // Riêng buổi đã qua: thay nhãn "Past" bằng số có mặt, cụ thể hơn hẳn.
       const state = getSessionState(s);
       const st = SESSION_STATE_STYLE[state];
+
+      // Buổi past chưa có summary (course chưa ai enroll, hoặc query chưa về) → giữ nhãn cũ.
+      const summary = state === 'past' ? attendanceSummary.get(s.classSessionId) : undefined;
+      const cell = summary ? formatAttendanceCell(summary) : undefined;
+
       return (
         <div
           key={key}
-          title={`${shift} · ${SESSION_STATE_LABEL[state]}`}
+          title={cell ? `${shift} · ${cell.title}` : `${shift} · ${SESSION_STATE_LABEL[state]}`}
           style={{ background: st.bg, color: st.color }}
-          className={`flex h-10 items-center justify-center rounded-lg text-[11.5px] font-semibold ${
-            state === 'cancelled' ? 'line-through' : ''
-          }`}
+          className={`flex h-10 items-center justify-center rounded-lg font-semibold ${
+            cell ? 'font-mono text-[12px]' : 'text-[11.5px]'
+          } ${state === 'cancelled' ? 'line-through' : ''}`}
         >
-          {SESSION_STATE_LABEL[state]}
+          {cell ? cell.label : SESSION_STATE_LABEL[state]}
         </div>
       );
     });

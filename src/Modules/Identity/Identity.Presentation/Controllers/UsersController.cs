@@ -22,16 +22,19 @@ public class UsersController : ControllerBase {
         _sender = sender;
     }
 
-    // GET /api/users?page=&pageSize=&search=&role=
+    // GET /api/users?page=&pageSize=&search=&role=&sortBy=&sortDir=
+    // sortBy nhận: fullName | email | role | isActive. sortDir: asc | desc.
     [HttpGet]
     public async Task<IActionResult> GetUsers(
         [FromQuery] string? search = null,
         [FromQuery] string? role = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortDir = null,
         CancellationToken cancellationToken = default) {
         var result = await _sender.Send(
-            new GetUsersQuery(search, role, page, pageSize), cancellationToken);
+            new GetUsersQuery(search, role, page, pageSize, sortBy, sortDir), cancellationToken);
  
         return Ok(result.Value);
     }
@@ -113,8 +116,8 @@ public class UsersController : ControllerBase {
         return Ok(result.Value);
     }
  
-    // PUT /api/users/{userId}/status
-    [HttpPut("{userId:guid}/status")]
+    // PUT /api/users/status/{userId}
+    [HttpPut("status/{userId:guid}")]
     public async Task<IActionResult> UpdateUserStatus(
         Guid userId,
         [FromBody] UpdateUserStatusInputDto dto,

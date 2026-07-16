@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CourseManagement.Presentation.Controllers;
 
 [ApiController]
-[Route("api/courses/{courseId:guid}/weekly-slots")]
+[Route("api/courses/weekly-slots")]
 [Authorize]
 public class WeeklySlotsController : ControllerBase {
     private readonly ISender _sender;
@@ -17,9 +17,9 @@ public class WeeklySlotsController : ControllerBase {
         _sender = sender;
     }
 
-    // GET /api/courses/{courseId}/weekly-slots
+    // GET /api/courses/weekly-slots/{courseId}
     // Trả về đúng granularity "khung giờ lặp lại hàng tuần" (2-vài item)
-    [HttpGet]
+    [HttpGet("{courseId:guid}")]
     [Authorize(Roles = "Admin,Lecturer,Student")]
     public async Task<IActionResult> GetWeeklySlots(
         Guid courseId,
@@ -33,10 +33,10 @@ public class WeeklySlotsController : ControllerBase {
         return Ok(result.Value);
     }
 
-    // POST /api/courses/{courseId}/weekly-slots
+    // POST /api/courses/weekly-slots/{courseId}
     // Admin thêm 1 khung giờ lặp lại hàng tuần — hệ thống tự sinh toàn bộ ClassSession
     // từ StartDate đến EndDate của Course.
-    [HttpPost]
+    [HttpPost("{courseId:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AddWeeklySlot(
         Guid courseId,
@@ -54,10 +54,10 @@ public class WeeklySlotsController : ControllerBase {
         return Created(string.Empty, result.Value);
     }
 
-    // DELETE /api/courses/{courseId}/weekly-slots/{weeklySlotId}
-    // Admin xóa 1 khung giờ — chỉ hủy các ClassSession TƯƠNG LAI, buổi đã qua giữ nguyên.
+    // DELETE /api/courses/weekly-slots/{courseId}/{weeklySlotId}
+    // Admin xóa 1 khung giờ — chỉ xóa các ClassSession TƯƠNG LAI, buổi đã qua giữ nguyên.
     // Từ chối nếu còn Student đang enroll vào slot này (cross-BC check).
-    [HttpDelete("{weeklySlotId:guid}")]
+    [HttpDelete("{courseId:guid}/{weeklySlotId:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RemoveWeeklySlot(
         Guid courseId,

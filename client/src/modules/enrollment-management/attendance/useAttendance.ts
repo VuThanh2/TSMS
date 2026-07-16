@@ -6,10 +6,10 @@ import { getSessionAttendancesApi, updateAttendanceApi } from './attendance.api'
 import type { AttendanceStatus } from './attendance.types';
 
 const ATTENDANCE_ERROR_MESSAGES: Record<string, string> = {
-  'Enrollment.SessionCancelled': 'This session has been cancelled; attendance cannot be updated.',
-  'Enrollment.AttendanceNotFound': 'Attendance record not found.',
-  'Enrollment.NotCourseOwner': 'You are not the lecturer in charge of this session.',
-  'Validation.Failed': 'Invalid attendance data.',
+  'Enrollment.SessionCancelled': 'Session was cancelled',
+  'Enrollment.AttendanceNotFound': 'Record not found',
+  'Enrollment.NotCourseOwner': 'You don’t teach this course',
+  'Validation.Failed': 'Invalid attendance data',
 };
 
 export function useAttendance(courseId: string, sessionId: string) {
@@ -18,7 +18,7 @@ export function useAttendance(courseId: string, sessionId: string) {
 
   const attendances = useQuery({
     queryKey: ['attendances', courseId, sessionId],
-    queryFn: () => getSessionAttendancesApi(courseId, sessionId),
+    queryFn: () => getSessionAttendancesApi(sessionId),
     select: (res) => res.data,
     enabled: !!courseId && !!sessionId,
   });
@@ -29,13 +29,16 @@ export function useAttendance(courseId: string, sessionId: string) {
       updateAttendanceApi(attendanceId, status),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['attendances', courseId, sessionId] });
+      // Số có mặt hiển thị trên lưới lịch phải đổi ngay theo, nếu không Lecturer chấm xong
+      // vẫn thấy số cũ ngay trên cùng màn hình.
+      void queryClient.invalidateQueries({ queryKey: ['attendance-summary', courseId] });
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const code = error.response?.data?.code ?? '';
       const msg =
         ATTENDANCE_ERROR_MESSAGES[code] ??
         error.response?.data?.message ??
-        'Failed to update attendance.';
+        'Could not save attendance';
       void message.error(msg);
     },
   });

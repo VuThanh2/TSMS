@@ -17,9 +17,9 @@ public class GradingController : ControllerBase {
         _sender = sender;
     }
 
-    // GET /api/courses/{courseId}/enrollments?page=&pageSize=&keyword=
+    // GET /api/courses/enrollments/{courseId}?page=&pageSize=&keyword=
     // Lecturer xem danh sách Student đã enroll trong Course kèm điểm số.
-    [HttpGet("courses/{courseId:guid}/enrollments")]
+    [HttpGet("courses/enrollments/{courseId:guid}")]
     [Authorize(Roles = "Lecturer")]
     public async Task<IActionResult> GetCourseEnrollments(
         Guid courseId,
@@ -42,8 +42,8 @@ public class GradingController : ControllerBase {
         return Ok(result.Value);
     }
 
-    // PUT /api/enrollments/{enrollmentId}/grade
-    [HttpPut("enrollments/{enrollmentId:guid}/grade")]
+    // PUT /api/enrollments/grade/{enrollmentId}
+    [HttpPut("enrollments/grade/{enrollmentId:guid}")]
     [Authorize(Roles = "Lecturer")]
     public async Task<IActionResult> GradeStudent(
         Guid enrollmentId,

@@ -15,12 +15,15 @@ public sealed record AddWeeklySlotCommand(
 public sealed class AddWeeklySlotCommandHandler
     : IRequestHandler<AddWeeklySlotCommand, Result<AddWeeklySlotOutputDto>> {
     private readonly ICourseRepository _courseRepository;
+    private readonly ICourseQueryService _courseQueryService;
     private readonly ICourseUnitOfWork _unitOfWork;
 
     public AddWeeklySlotCommandHandler(
         ICourseRepository courseRepository,
+        ICourseQueryService courseQueryService,
         ICourseUnitOfWork unitOfWork) {
         _courseRepository = courseRepository;
+        _courseQueryService = courseQueryService;
         _unitOfWork = unitOfWork;
     }
 
@@ -40,6 +43,21 @@ public sealed class AddWeeklySlotCommandHandler
         if (!Enum.TryParse<SessionType>(request.SessionType, ignoreCase: true, out var sessionType))
             return Result.Failure<AddWeeklySlotOutputDto>(
                 Error.Create("Course.InvalidSessionType", "SessionType must be 'Morning' or 'Afternoon'."));
+
+        // Precondition cross-aggregate: Lecturer không được dạy 2 lớp cùng (thứ, ca) trong các kỳ
+        // chồng nhau. Đây là nơi DUY NHẤT check được — CreateCourse chưa biết ca nào, còn tới lúc
+        // này thì cả khoảng ngày lẫn ca đều đã xác định. Phải chạy TRƯỚC AddWeeklySlot vì hàm đó
+        // sinh luôn hàng loạt ClassSession.
+        var hasSlotConflict = await _courseQueryService.HasLecturerSlotConflictAsync(
+            course.LecturerId,
+            [(dayOfWeek, sessionType)],
+            course.StartDate,
+            course.EndDate,
+            excludeCourseId: course.Id,
+            cancellationToken);
+
+        if (hasSlotConflict)
+            return Result.Failure<AddWeeklySlotOutputDto>(CourseErrors.LecturerSlotConflict);
 
         // Domain enforces: Completed immutable, không trùng (DayOfWeek, SessionType).
         // Đồng thời tự sinh toàn bộ ClassSession từ StartDate đến EndDate của Course.

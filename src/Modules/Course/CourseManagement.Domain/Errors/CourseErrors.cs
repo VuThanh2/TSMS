@@ -49,6 +49,15 @@ public static class CourseErrors {
         Error.Create("Course.InvalidStatusTransition",
             "Course status can only transition forward: Upcoming → Active → Completed.");
 
+    // ── Enrollment gate
+    public static readonly Error OnlyUpcomingCourseCanOpenEnrollment =
+        Error.Create("Course.OnlyUpcomingCourseCanOpenEnrollment",
+            "Only an upcoming course (not yet started) can be opened for enrollment.");
+
+    public static readonly Error MinimumWeeklySlotsRequiredToOpen =
+        Error.Create("Course.MinimumWeeklySlotsRequiredToOpen",
+            "Add at least 2 weekly slots before opening the course for enrollment.");
+
     // ── Delete
     public static readonly Error OnlyUpcomingCourseCanBeDeleted =
         Error.Create("Course.OnlyUpcomingCourseCanBeDeleted",
@@ -67,9 +76,11 @@ public static class CourseErrors {
         Error.Create("Course.LecturerAlreadyAssigned",
             "The specified lecturer is already assigned to this course.");
 
-    public static readonly Error LecturerDateRangeOverlap =
-        Error.Create("Course.LecturerDateRangeOverlap",
-            "The lecturer already has a course during the specified date range.");
+    // Trùng lịch dạy = trùng CẢ HAI: khoảng ngày giao nhau VÀ cùng (DayOfWeek, SessionType).
+    // Chỉ trùng khoảng ngày KHÔNG phải xung đột — 1 Lecturer dạy 2 lớp cùng kỳ khác ca là bình thường.
+    public static readonly Error LecturerSlotConflict =
+        Error.Create("Course.LecturerSlotConflict",
+            "The lecturer already teaches another course at this weekday and shift during an overlapping period.");
 
     // ── ClassSession
     public static readonly Error ClassSessionNotFound =

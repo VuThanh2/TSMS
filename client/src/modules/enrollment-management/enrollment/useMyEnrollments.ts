@@ -6,11 +6,11 @@ import type { AxiosError } from 'axios';
 import { getMyCourseEnrollmentsApi, adjustSessionApi } from './enrollment.api';
 
 const ADJUST_ERROR_MESSAGES: Record<string, string> = {
-  'Enrollment.CourseAlreadyCompleted': 'This course has ended and can no longer be adjusted.',
-  'Enrollment.AdjustSessionTypeDuplicate': 'The new slot has the same session (Morning/Afternoon) as your remaining slot.',
-  'Enrollment.ScheduleConflict': 'The new slot conflicts with the schedule of another course you are enrolled in.',
-  'Enrollment.NotFound': 'Enrollment not found.',
-  'Validation.Failed': 'Invalid data.',
+  'Enrollment.CourseAlreadyCompleted': 'Course has ended',
+  'Enrollment.AdjustSessionTypeDuplicate': 'Both slots would be the same shift',
+  'Enrollment.ScheduleConflict': 'Clashes with your schedule',
+  'Enrollment.NotFound': 'Enrollment not found',
+  'Validation.Failed': 'Invalid data',
 };
 
 export function useMyEnrollments() {
@@ -36,7 +36,7 @@ export function useMyEnrollments() {
       newWeeklySlotId: string;
     }) => adjustSessionApi(enrollmentId, { oldWeeklySlotId, newWeeklySlotId }),
     onSuccess: () => {
-      void message.success('Session adjusted successfully!');
+      void message.success('Slot changed');
       void queryClient.invalidateQueries({ queryKey: ['my-course-enrollments'] });
       void queryClient.invalidateQueries({ queryKey: ['student-schedule'] });
     },

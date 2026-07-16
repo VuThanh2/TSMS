@@ -18,7 +18,7 @@ export function getMyCourseEnrollmentsApi(params: CourseListParams) {
 }
 
 export function getCourseWeeklySlotsApi(courseId: string) {
-  return api.get<WeeklySlot[]>(`/courses/${courseId}/weekly-slots`);
+  return api.get<WeeklySlot[]>(`/courses/weekly-slots/${courseId}`);
 }
 
 export function enrollCourseApi(data: { courseId: string; weeklySlotIds: string[] }) {
@@ -29,5 +29,5 @@ export function adjustSessionApi(
   enrollmentId: string,
   data: { oldWeeklySlotId: string; newWeeklySlotId: string },
 ) {
-  return api.put(`/enrollments/${enrollmentId}/sessions`, data);
+  return api.put(`/enrollments/sessions/${enrollmentId}`, data);
 }

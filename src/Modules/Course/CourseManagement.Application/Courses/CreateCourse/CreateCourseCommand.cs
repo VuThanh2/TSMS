@@ -22,17 +22,14 @@ public sealed class CreateCourseCommandHandler
     : IRequestHandler<CreateCourseCommand, Result<CreateCourseOutputDto>> {
     private readonly ICourseRepository _courseRepository;
     private readonly ILecturerLookupService _lecturerLookupService;
-    private readonly ICourseQueryService _courseQueryService;
     private readonly ICourseUnitOfWork _unitOfWork;
 
     public CreateCourseCommandHandler(
         ICourseRepository courseRepository,
         ILecturerLookupService lecturerLookupService,
-        ICourseQueryService courseQueryService,
         ICourseUnitOfWork unitOfWork) {
         _courseRepository = courseRepository;
         _lecturerLookupService = lecturerLookupService;
-        _courseQueryService = courseQueryService;
         _unitOfWork = unitOfWork;
     }
 
@@ -46,16 +43,10 @@ public sealed class CreateCourseCommandHandler
         if (!isActiveLecturer)
             return Result.Failure<CreateCourseOutputDto>(CourseErrors.LecturerNotFound);
 
-        // Precondition 2: Không được trùng date range với course khác của Lecturer này.
-        var hasOverlap = await _courseQueryService.HasOverlappingCourseAsync(
-            request.LecturerId,
-            request.StartDate,
-            request.EndDate,
-            excludeCourseId: null,
-            cancellationToken);
-
-        if (hasOverlap)
-            return Result.Failure<CreateCourseOutputDto>(CourseErrors.LecturerDateRangeOverlap);
+        // KHÔNG check trùng lịch dạy ở đây: Course lúc tạo chưa có WeeklySlot nào (Admin thêm sau
+        // qua AddWeeklySlot), nên không có "ca" nào để so. Check theo mỗi khoảng ngày là chặn nhầm —
+        // 1 Lecturer dạy 2 lớp cùng kỳ khác ca hoàn toàn hợp lệ. Xung đột thật chỉ xác định được
+        // khi biết ca cụ thể ⇒ check nằm ở AddWeeklySlotCommand và ReplaceLecturerCommand.
 
         // Domain factory — validate CourseName, DateRange, MaxCapacity.
         var courseNameResult = CourseName.Create(request.Name);

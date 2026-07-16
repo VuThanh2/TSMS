@@ -135,6 +135,14 @@ public sealed class ResetDemoCourseDataCommandHandler
             AddExtraSlots(course, spec.DayA, spec.SessA, ExtraSlotsPerSession);
             AddExtraSlots(course, spec.DayB, spec.SessB, ExtraSlotsPerSession);
 
+            // Mở cổng đăng ký cho TẤT CẢ course demo. Bắt buộc phải làm ở đây:
+            //   - Course.Create() sinh ra IsOpenForEnrollment = false, mà Student chỉ thấy course
+            //     đã mở ⇒ không mở thì 2 course Upcoming biến mất khỏi Available Courses và demo
+            //     "Student đăng ký khóa học" hỏng, KHÔNG có lỗi nào báo.
+            //   - Phải gọi TRƯỚC TransitionStatus: OpenEnrollment() chỉ chấp nhận Upcoming.
+            // Course Active/Completed cũng mở cho đúng thực tế — chúng đã qua kỳ đăng ký rồi.
+            _ = course.OpenEnrollment();
+
             // Chuyển status qua đúng state machine sẵn có của aggregate (Upcoming→Active→Completed) —
             // không bypass invariant, chỉ gọi sớm hơn bình thường (bình thường job nền gọi).
             if (spec.Status is CourseStatus.Active or CourseStatus.Completed)

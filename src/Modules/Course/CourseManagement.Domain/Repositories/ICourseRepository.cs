@@ -1,5 +1,6 @@
 using CourseManagement.Domain.Entities;
 using CourseManagement.Domain.ValueObjects;
+using SharedKernel.Primitives;
 
 namespace CourseManagement.Domain.Repositories;
 
@@ -21,12 +22,16 @@ public interface ICourseRepository {
         IEnumerable<Guid> ids,
         CancellationToken cancellationToken = default);
 
+    /// sort: optional — bỏ trống thì giữ nguyên thứ tự mặc định (CreatedAt giảm dần).
+    /// Chỉ sort được cột nằm trong schema `course`; LecturerName/EnrolledCount là dữ liệu
+    /// enrich cross-BC sau khi phân trang nên KHÔNG sort được ở tầng này.
     Task<(IReadOnlyList<Entities.Course> Items, int TotalCount)> GetPagedAsync(
         string? keyword,
         CourseStatus? status,
         Guid? lecturerId,
         int page,
         int pageSize,
+        SortInput? sort = null,
         CancellationToken cancellationToken = default);
 
     /// Returns courses assigned to a specific lecturer, optionally filtered by status.

@@ -9,8 +9,12 @@ namespace EnrollmentManagement.Application.Attendances.GetSessionAttendances;
 
 // Lecturer xem danh sách điểm danh của tất cả Student trong một ca học.
 // LecturerId được lấy từ JWT token tại Presentation Layer — verify course ownership.
+//
+// KHÔNG nhận CourseId từ caller: Course sở hữu ca học phải được suy ra từ chính ClassSessionId
+// (xem handler). Nếu nhận CourseId rời rồi chỉ check "Lecturer có sở hữu CourseId đó không",
+// caller có thể ghép CourseId mình sở hữu với ClassSessionId của Course khác và đọc trộm điểm
+// danh của Course đó — cùng lý do MarkAttendanceCommand suy CourseId từ chính bản ghi Attendance.
 public sealed record GetSessionAttendancesQuery(
-    Guid CourseId,
     Guid ClassSessionId,
     Guid LecturerId) : IRequest<Result<IReadOnlyList<GetSessionAttendancesOutputDto>>>;
 
@@ -32,11 +36,19 @@ public sealed class GetSessionAttendancesQueryHandler
     public async Task<Result<IReadOnlyList<GetSessionAttendancesOutputDto>>> Handle(
         GetSessionAttendancesQuery request,
         CancellationToken cancellationToken) {
-        // Precondition: Lecturer phải là người phụ trách Course này.
-        var courses = await _courseEnrollmentService.GetCoursesByIdsAsync(
-            [request.CourseId], cancellationToken);
+        // Ca học phải tồn tại — đồng thời đây là nguồn DUY NHẤT xác định Course sở hữu nó.
+        var classSession = await _courseEnrollmentService.GetClassSessionAsync(
+            request.ClassSessionId, cancellationToken);
 
-        var course = courses.FirstOrDefault(c => c.CourseId == request.CourseId);
+        if (classSession is null)
+            return Result.Failure<IReadOnlyList<GetSessionAttendancesOutputDto>>(
+                EnrollmentErrors.ClassSessionNotFound);
+
+        // Precondition: Lecturer phải là người phụ trách đúng Course chứa ca học này.
+        var courses = await _courseEnrollmentService.GetCoursesByIdsAsync(
+            [classSession.CourseId], cancellationToken);
+
+        var course = courses.FirstOrDefault(c => c.CourseId == classSession.CourseId);
 
         if (course is null || course.LecturerId != request.LecturerId)
             return Result.Failure<IReadOnlyList<GetSessionAttendancesOutputDto>>(

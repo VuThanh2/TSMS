@@ -10,17 +10,20 @@ const GRADE_COLOR = (g: number | null) => {
   return g >= 5 ? 'text-[#1E875F]' : 'text-[#D7372C]';
 };
 
+// Lưới không phân trang → client đã có đủ dữ liệu, sort bằng hàm so sánh là đúng.
 const columns: ColumnsType<PersonalSummaryItem> = [
   {
     title: 'Course',
     dataIndex: 'courseName',
     key: 'name',
+    sorter: (a, b) => a.courseName.localeCompare(b.courseName),
     render: (v: string) => <span className="font-semibold">{v}</span>,
   },
   {
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
+    sorter: (a, b) => a.status.localeCompare(b.status),
     render: (v: PersonalSummaryItem['status']) => <StatusTag status={v} />,
   },
   {
@@ -28,6 +31,8 @@ const columns: ColumnsType<PersonalSummaryItem> = [
     dataIndex: 'grade',
     key: 'grade',
     align: 'right',
+    // Chưa chấm (null) coi như -1 → thấp hơn mọi điểm thật thay vì lẫn vào nhóm điểm 0.
+    sorter: (a, b) => (a.grade ?? -1) - (b.grade ?? -1),
     render: (v: number | null) => (
       <span className={`font-mono text-[15px] font-semibold ${GRADE_COLOR(v)}`}>
         {v !== null ? v.toFixed(1) : 'Not graded yet'}
@@ -39,6 +44,7 @@ const columns: ColumnsType<PersonalSummaryItem> = [
     dataIndex: 'attendanceRate',
     key: 'rate',
     align: 'right',
+    sorter: (a, b) => a.attendanceRate - b.attendanceRate,
     render: (v: number) => (
       <span className="font-mono text-[14px] font-semibold text-text-secondary">
         {(v * 100).toFixed(0)}%

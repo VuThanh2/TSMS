@@ -8,17 +8,21 @@ import { getGradeBand } from '@/shared/lib/grade-band';
 import type { CourseStatisticsItem } from '@/modules/reporting/shared/reporting.types';
 import { useCourseStatistics } from './useCourseStatistics';
 
+// Lưới này KHÔNG phân trang (pagination={false}) — toàn bộ dữ liệu đã nằm ở client,
+// nên sort bằng hàm so sánh của antd là đúng và đủ, không cần đụng tới BE.
 const columns: ColumnsType<CourseStatisticsItem> = [
   {
     title: 'Course',
     dataIndex: 'courseName',
     key: 'courseName',
+    sorter: (a, b) => a.courseName.localeCompare(b.courseName),
     render: (name: string) => <span className="text-[15px] font-semibold">{name}</span>,
   },
   {
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
+    sorter: (a, b) => a.status.localeCompare(b.status),
     render: (status: CourseStatisticsItem['status']) => <StatusTag status={status} />,
   },
   {
@@ -26,6 +30,7 @@ const columns: ColumnsType<CourseStatisticsItem> = [
     dataIndex: 'enrolledCount',
     key: 'enrolledCount',
     align: 'right',
+    sorter: (a, b) => a.enrolledCount - b.enrolledCount,
     render: (v: number) => <span className="font-mono text-[14px] font-medium">{v}</span>,
   },
   {
@@ -33,6 +38,10 @@ const columns: ColumnsType<CourseStatisticsItem> = [
     dataIndex: 'averageScore',
     key: 'averageScore',
     align: 'right',
+    // Course chưa có điểm (null) coi như -1 — thấp hơn mọi điểm thật (thang 0–10) thay vì
+    // lẫn vào nhóm điểm 0. antd dựng desc bằng cách đảo dấu comparator, nên không thể ghim
+    // null xuống cuối ở cả hai chiều: desc (điểm cao trước) đẩy null xuống cuối, asc đưa lên đầu.
+    sorter: (a, b) => (a.averageScore ?? -1) - (b.averageScore ?? -1),
     render: (v: number | null) => (
       <span
         className="font-mono text-[14px] font-semibold"

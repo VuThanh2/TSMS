@@ -4,6 +4,7 @@ import { App } from 'antd';
 import type { AxiosError } from 'axios';
 
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
+import { useTableSort } from '@/shared/hooks/useTableSort';
 import {
   getUsersApi,
   getUserByIdApi,
@@ -18,18 +19,22 @@ export function useUserList() {
   const [role, setRole] = useState<string>('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const { sort, applySorter } = useTableSort();
 
   // Debounce: chỉ gọi API sau khi ngừng gõ, tránh 1 request mỗi keystroke gây lag.
   const debouncedSearch = useDebouncedValue(search);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['users', { search: debouncedSearch, role, page, pageSize }],
+    // sort nằm trong queryKey → đổi sort là refetch, không phải sort lại 10 dòng có sẵn.
+    queryKey: ['users', { search: debouncedSearch, role, page, pageSize, ...sort }],
     queryFn: () =>
       getUsersApi({
         search: debouncedSearch || undefined,
         role: role || undefined,
         page,
         pageSize,
+        sortBy: sort.sortBy,
+        sortDir: sort.sortDir,
       }),
     select: (res) => res.data,
   });
@@ -42,6 +47,7 @@ export function useUserList() {
     role, setRole,
     page, setPage,
     pageSize, setPageSize,
+    sort, applySorter,
   };
 }
 
@@ -55,9 +61,9 @@ export function useUserDetail(userId: string | null) {
 }
 
 const STATUS_ERROR_MESSAGES: Record<string, string> = {
-  'User.CannotDeactivateSelf': 'You cannot deactivate your own account.',
-  'Lecturer.HasActiveCourses': 'This lecturer still has active courses.',
-  'Student.HasActiveEnrollment': 'This student still has active enrollments.',
+  'User.CannotDeactivateSelf': 'You can’t deactivate your own account',
+  'User.LecturerHasActiveCourses': 'Lecturer still has active courses',
+  'User.StudentHasActiveEnrollments': 'Student still has active enrollments',
 };
 
 export function useCreateUser(onSuccess?: () => void) {
@@ -66,18 +72,19 @@ export function useCreateUser(onSuccess?: () => void) {
   return useMutation({
     mutationFn: createUserApi,
     onSuccess: () => {
-      void message.success('User created successfully!');
+      void message.success('User created');
       void queryClient.invalidateQueries({ queryKey: ['users'] });
       onSuccess?.();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const code = error.response?.data?.code ?? '';
+      // Key phải là mã ĐẦY ĐỦ kèm prefix 'User.' — khớp Error.Create bên Identity BC.
       const messages: Record<string, string> = {
-        EmailAlreadyExists: 'This email already exists in the system.',
-        InvalidRole: 'Invalid role.',
-        PasswordPolicyViolation: 'Password is not strong enough.',
+        'User.EmailAlreadyInUse': 'Email already in use',
+        'User.InvalidRole': 'Invalid role',
+        'User.PasswordPolicyViolation': 'Password needs 6+ characters with upper, lower and a number',
       };
-      void message.error(messages[code] ?? error.response?.data?.message ?? 'Something went wrong.');
+      void message.error(messages[code] ?? error.response?.data?.message ?? 'Something went wrong');
     },
   });
 }
@@ -89,12 +96,12 @@ export function useEditUser(onSuccess?: () => void) {
     mutationFn: ({ userId, ...data }: { userId: string; fullName: string; email: string; department?: string; major?: string }) =>
       updateUserApi(userId, data),
     onSuccess: () => {
-      void message.success('Updated successfully!');
+      void message.success('User updated');
       void queryClient.invalidateQueries({ queryKey: ['users'] });
       onSuccess?.();
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
-      void message.error(error.response?.data?.message ?? 'Something went wrong.');
+      void message.error(error.response?.data?.message ?? 'Something went wrong');
     },
   });
 }
@@ -106,12 +113,12 @@ export function useToggleUserStatus() {
     mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
       updateUserStatusApi(userId, { isActive }),
     onSuccess: () => {
-      void message.success('Status updated successfully!');
+      void message.success('Status updated');
       void queryClient.invalidateQueries({ queryKey: ['users'] });
     },
     onError: (error: AxiosError<{ code?: string; message?: string }>) => {
       const code = error.response?.data?.code ?? '';
-      void message.error(STATUS_ERROR_MESSAGES[code] ?? error.response?.data?.message ?? 'Something went wrong.');
+      void message.error(STATUS_ERROR_MESSAGES[code] ?? error.response?.data?.message ?? 'Something went wrong');
     },
   });
 }
@@ -124,14 +131,14 @@ export function useImportCsv() {
     onSuccess: (res) => {
       const { successCount, failureCount } = res.data;
       if (failureCount === 0) {
-        void message.success(`Imported ${successCount} users successfully!`);
+        void message.success(`${successCount} users imported`);
       } else {
-        void message.warning(`Succeeded: ${successCount}, Failed: ${failureCount}`);
+        void message.warning(`${successCount} imported · ${failureCount} failed`);
       }
       void queryClient.invalidateQueries({ queryKey: ['users'] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
-      void message.error(error.response?.data?.message ?? 'Failed to import CSV.');
+      void message.error(error.response?.data?.message ?? 'Could not import CSV');
     },
   });
 }

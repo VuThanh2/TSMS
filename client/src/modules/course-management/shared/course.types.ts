@@ -16,6 +16,9 @@ export interface CourseListItem {
 
 export interface CourseDetail extends CourseListItem {
   classSessions: ClassSession[];
+  // Cổng đăng ký, độc lập với status. false = Admin đang dựng, Student chưa thấy course.
+  // Chỉ có ở CourseDetail — API grid không trả field này.
+  isOpenForEnrollment: boolean;
 }
 
 export interface ClassSession {

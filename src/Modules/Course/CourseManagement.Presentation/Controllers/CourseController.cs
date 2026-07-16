@@ -4,6 +4,7 @@ using CourseManagement.Application.Courses.DeleteCourse;
 using CourseManagement.Application.Courses.GetAvailableCourses;
 using CourseManagement.Application.Courses.GetCourseById;
 using CourseManagement.Application.Courses.GetCourses;
+using CourseManagement.Application.Courses.OpenCourseEnrollment;
 using CourseManagement.Application.Courses.ReplaceLecturer;
 using CourseManagement.Application.Courses.UpdateCourse;
 using MediatR;
@@ -26,14 +27,18 @@ public class CourseController : ControllerBase {
     // Chỉ Admin. Trả về toàn bộ Course, hỗ trợ search theo tên và filter theo status.
     [HttpGet]
     [Authorize(Roles = "Admin")]
+    // sortBy nhận: name | startDate | endDate | status. sortDir: asc | desc.
+    // Không sort được lecturerName/enrolledCount — dữ liệu do BC khác sở hữu, enrich sau phân trang.
     public async Task<IActionResult> GetCourses(
         [FromQuery] string? keyword = null,
         [FromQuery] string? status = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortDir = null,
         CancellationToken cancellationToken = default) {
         var result = await _sender.Send(
-            new GetCoursesQuery(keyword, status, LecturerId: null, page, pageSize),
+            new GetCoursesQuery(keyword, status, LecturerId: null, page, pageSize, sortBy, sortDir),
             cancellationToken);
  
         return Ok(result.Value);
@@ -48,6 +53,8 @@ public class CourseController : ControllerBase {
         [FromQuery] string? status = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortDir = null,
         CancellationToken cancellationToken = default) {
         var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)
                     ?? User.FindFirstValue("sub");
@@ -56,7 +63,7 @@ public class CourseController : ControllerBase {
             return Unauthorized();
  
         var result = await _sender.Send(
-            new GetCoursesQuery(keyword, status, lecturerId, page, pageSize),
+            new GetCoursesQuery(keyword, status, lecturerId, page, pageSize, sortBy, sortDir),
             cancellationToken);
  
         return Ok(result.Value);
@@ -172,8 +179,26 @@ public class CourseController : ControllerBase {
         return Ok(result.Value);
     }
 
-    // PUT /api/courses/{courseId}/lecturer
-    [HttpPut("{courseId:guid}/lecturer")]
+    // PUT /api/courses/open-enrollment/{courseId}
+    // Chỉ Admin. Mở cổng cho Student đăng ký — trước đó Course vô hình với Student, Admin còn
+    // sửa/xóa được. Ràng buộc: course phải Upcoming và đã có tối thiểu 2 WeeklySlot.
+    [HttpPut("open-enrollment/{courseId:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> OpenCourseEnrollment(
+        Guid courseId,
+        CancellationToken cancellationToken) {
+        var result = await _sender.Send(new OpenCourseEnrollmentCommand(courseId), cancellationToken);
+
+        if (result.IsFailure)
+            return result.Error.Code == "Course.NotFound"
+                ? NotFound(new { result.Error.Code, result.Error.Message })
+                : BadRequest(new { result.Error.Code, result.Error.Message });
+
+        return Ok(result.Value);
+    }
+
+    // PUT /api/courses/lecturer/{courseId}
+    [HttpPut("lecturer/{courseId:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> ReplaceLecturer(
         Guid courseId,

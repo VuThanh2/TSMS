@@ -7,7 +7,8 @@ using SharedKernel.Primitives;
 
 namespace CourseManagement.Application.Courses.GetAvailableCourses;
 
-// "Available" = Upcoming + Student chưa đăng ký.
+// "Available" = Upcoming + Admin đã mở đăng ký + Student chưa đăng ký.
+// Course chưa mở là course Admin đang dựng dở → không được lộ cho Student.
 public sealed record GetAvailableCoursesQuery(
     Guid StudentId,
     int Page,
@@ -45,6 +46,7 @@ public sealed class GetAvailableCoursesQueryHandler
             request.StudentId, cancellationToken);
 
         var available = allUpcoming
+            .Where(c => c.IsOpenForEnrollment)
             .Where(c => !enrolledCourseIds.Contains(c.Id))
             .ToList();
 

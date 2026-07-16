@@ -63,9 +63,9 @@ public class EnrollmentsController : ControllerBase {
         return CreatedAtAction(nameof(GetMyEnrollments), result.Value);
     }
 
-    // PUT /api/enrollments/{enrollmentId}/sessions
+    // PUT /api/enrollments/sessions/{enrollmentId}
     // Student điều chỉnh lại 1 WeeklySlot đã chọn trong một Course đã đăng ký.
-    [HttpPut("{enrollmentId:guid}/sessions")]
+    [HttpPut("sessions/{enrollmentId:guid}")]
     [Authorize(Roles = "Student")]
     public async Task<IActionResult> AdjustSession(
         Guid enrollmentId,

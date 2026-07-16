@@ -56,6 +56,14 @@ public sealed class EnrollCourseCommandHandler
         if (!isUpcoming)
             return Result.Failure<EnrollCourseOutputDto>(EnrollmentErrors.CourseNotEnrollable);
 
+        // Precondition 2b: Admin phải đã mở cổng đăng ký. Tách khỏi check Upcoming để Course
+        // đang dựng dở không bị Student chen vào — Admin còn xóa/sửa được cho tới khi bấm mở.
+        var isOpen = await _courseEnrollmentService.IsOpenForEnrollmentAsync(
+            request.CourseId, cancellationToken);
+
+        if (!isOpen)
+            return Result.Failure<EnrollCourseOutputDto>(EnrollmentErrors.CourseNotOpenForEnrollment);
+
         // Precondition 3: Student chưa đăng ký Course này.
         var existing = await _enrollmentRepository.GetByStudentAndCourseAsync(
             request.StudentId, request.CourseId, cancellationToken);
@@ -91,8 +99,17 @@ public sealed class EnrollCourseCommandHandler
             slotPairs.Add((weeklySlotId, sessionType));
         }
 
+        // Lấy sớm (trước precondition 6) vì checker cần khoảng ngày của Course này để biết
+        // Course khác có chạy CÙNG KỲ hay không. Dùng lại luôn cho courseName bên dưới.
+        var courseLookups = await _courseEnrollmentService.GetCoursesByIdsAsync(
+            [request.CourseId], cancellationToken);
+
+        var courseLookup = courseLookups.FirstOrDefault();
+        if (courseLookup is null)
+            return Result.Failure<EnrollCourseOutputDto>(EnrollmentErrors.NotFound);
+
         // Precondition 6: 2 WeeklySlot không được trùng (DayOfWeek, SessionType) với Course khác
-        // Student đã đăng ký — trùng lịch lặp lại hàng tuần, không chỉ 1 ngày cụ thể.
+        // Student đã đăng ký VÀ chạy cùng kỳ — trùng lịch lặp lại hàng tuần, không chỉ 1 ngày cụ thể.
         var candidateSlots = request.WeeklySlotIds
             .Select(id => (
                 DayOfWeek: Enum.Parse<DayOfWeek>(slotMap[id].DayOfWeek),
@@ -100,7 +117,12 @@ public sealed class EnrollCourseCommandHandler
             .ToList();
 
         var hasConflict = await _scheduleConflictChecker.HasConflictAsync(
-            request.StudentId, request.CourseId, candidateSlots, cancellationToken);
+            request.StudentId,
+            request.CourseId,
+            courseLookup.StartDate,
+            courseLookup.EndDate,
+            candidateSlots,
+            cancellationToken);
 
         if (hasConflict)
             return Result.Failure<EnrollCourseOutputDto>(EnrollmentErrors.ScheduleConflict);
@@ -114,9 +136,7 @@ public sealed class EnrollCourseCommandHandler
         var courseStatus = await _courseEnrollmentService.GetStatusAsync(
             request.CourseId, cancellationToken) ?? string.Empty;
 
-        var courseLookups = await _courseEnrollmentService.GetCoursesByIdsAsync(
-            [request.CourseId], cancellationToken);
-        var courseName = courseLookups.FirstOrDefault()?.CourseName ?? string.Empty;
+        var courseName = courseLookup.CourseName;
 
         // TotalSessionsInCourse (cho StudentEnrolledEvent/Reporting) = TOÀN BỘ ClassSession của Course,
         // KHÔNG phải chỉ các buổi Student sẽ tham dự — 2 khái niệm khác nhau, tách riêng nguồn dữ liệu.

@@ -90,6 +90,7 @@ public static class CourseMapper {
             StartDate: course.StartDate,
             EndDate: course.EndDate,
             Status: course.Status.ToString(),
+            IsOpenForEnrollment: course.IsOpenForEnrollment,
             MaxCapacity: course.MaxCapacity,
             EnrolledCount: enrolledCount,
             LecturerId: course.LecturerId,

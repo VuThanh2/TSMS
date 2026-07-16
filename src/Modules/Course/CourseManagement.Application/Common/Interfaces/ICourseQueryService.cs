@@ -11,9 +11,13 @@ public interface ICourseQueryService {
 
     Task<int?> GetMaxCapacityAsync(Guid courseId, CancellationToken cancellationToken = default);
 
-    /// Returns true if the lecturer has any course whose date range overlaps with the given range.
-    Task<bool> HasOverlappingCourseAsync(
+    /// Trùng lịch dạy của Lecturer = khoảng ngày GIAO NHAU **VÀ** cùng (DayOfWeek, SessionType).
+    /// Thiếu vế slot thì chặn nhầm: 1 Lecturer dạy 2 lớp cùng kỳ nhưng khác ca là hợp lệ.
+    /// Thiếu vế ngày cũng chặn nhầm: 2 lớp khác kỳ cùng "Thứ Hai Sáng" không hề đụng nhau.
+    /// Course Completed không tính (đã dạy xong).
+    Task<bool> HasLecturerSlotConflictAsync(
         Guid lecturerId,
+        IReadOnlyList<(DayOfWeek DayOfWeek, SessionType SessionType)> candidateSlots,
         DateOnly startDate,
         DateOnly endDate,
         Guid? excludeCourseId = null,

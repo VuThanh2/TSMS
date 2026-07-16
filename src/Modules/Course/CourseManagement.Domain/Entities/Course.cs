@@ -24,6 +24,12 @@ public class Course : AggregateRoot {
     public int MaxCapacity { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
+    // Cổng đăng ký, TÁCH BIỆT với Status. Course mới tạo = false → Student không thấy, không
+    // enroll được, nên Admin có cửa sổ an toàn để dựng lịch và xóa nếu tạo sai. Không dùng
+    // thêm giá trị CourseStatus vì Status do Hangfire lái theo ngày tháng, còn cổng này do
+    // Admin bấm — 2 trục độc lập, gộp vào 1 enum sẽ phải sửa cả state machine lẫn job.
+    public bool IsOpenForEnrollment { get; private set; }
+
     public IReadOnlyList<WeeklySlot> WeeklySlots => _weeklySlots.AsReadOnly();
     public IReadOnlyList<ClassSession> ClassSessions => _classSessions.AsReadOnly();
 
@@ -51,6 +57,8 @@ public class Course : AggregateRoot {
             _endDate = dateRange.EndDate,
             Status = CourseStatus.Upcoming,
             MaxCapacity = maxCapacity,
+            // Course sinh ra ở trạng thái ĐÓNG — Admin phải chủ động mở sau khi dựng xong lịch.
+            IsOpenForEnrollment = false,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -140,6 +148,23 @@ public class Course : AggregateRoot {
         return Result.Success();
     }
 
+    /// Mở cổng đăng ký cho Student. Invariant:
+    ///   - Chỉ Course Upcoming mới mở được — Active/Completed đã qua kỳ đăng ký.
+    ///   - Phải có tối thiểu 2 WeeklySlot: Student bắt buộc chọn đúng 2 ca khi enroll
+    ///     (Enrollment.Create), mở khi chưa đủ slot sẽ đẩy họ vào màn hình chọn ca bất khả thi.
+    /// Idempotent: mở lại Course đã mở không phải lỗi, chỉ là no-op.
+    public Result OpenEnrollment() {
+        if (Status != CourseStatus.Upcoming)
+            return Result.Failure(CourseErrors.OnlyUpcomingCourseCanOpenEnrollment);
+
+        if (_weeklySlots.Count < 2)
+            return Result.Failure(CourseErrors.MinimumWeeklySlotsRequiredToOpen);
+
+        IsOpenForEnrollment = true;
+
+        return Result.Success();
+    }
+
     /// Xóa Course. Domain invariant: chỉ được xóa khi còn Upcoming — course đã Active/Completed
     /// đã phát sinh buổi học đã diễn ra / lịch sử nên không được xóa. Precondition "không có
     /// Student enroll" thuộc Application layer (cross-BC). Raise CourseDeletedEvent để Reporting
@@ -177,7 +202,7 @@ public class Course : AggregateRoot {
         return Result.Success(slot);
     }
 
-    /// Xóa 1 WeeklySlot. Chỉ xóa các ClassSession TƯƠNG LAI của slot này — buổi đã qua
+    /// Xóa 1 WeeklySlot. XÓA HẲN các ClassSession TƯƠNG LAI của slot này — buổi đã qua
     /// giữ nguyên để bảo toàn lịch sử điểm danh. Enforces tối thiểu 2 WeeklySlot phải còn lại.
     /// Pre-condition Application Layer phải đảm bảo: không còn Enrollment nào đang dùng slot này
     /// (cross-BC check qua IEnrollmentCourseService.IsWeeklySlotInUseAsync).
@@ -197,7 +222,7 @@ public class Course : AggregateRoot {
             .ToList();
 
         foreach (var session in futureSessions)
-            session.Cancel();
+            _classSessions.Remove(session);
 
         _weeklySlots.Remove(slot);
 
@@ -272,18 +297,30 @@ public class Course : AggregateRoot {
 
     /// Sinh danh sách ClassSession cho 1 WeeklySlot, trải từ fromDate đến toDate (inclusive),
     /// mỗi 7 ngày 1 buổi đúng theo DayOfWeek của slot.
-    private static List<ClassSession> GenerateClassSessions(WeeklySlot slot, DateOnly fromDate, DateOnly toDate) {
+    ///
+    /// BỎ QUA ngày đã có ClassSession cùng (SessionDate, SessionType) — invariant "1 Course không
+    /// có 2 buổi trùng ngày + ca" (unique index dưới DB). Các buổi đã chiếm chỗ là buổi LỊCH SỬ
+    /// không thể xóa: buổi đã qua của slot vừa bị xóa, hoặc buổi bị soft-cancel khi rút ngắn
+    /// EndDate. Không bỏ qua thì thêm lại đúng slot cũ / gia hạn lại EndDate sẽ vỡ ở DB.
+    private List<ClassSession> GenerateClassSessions(WeeklySlot slot, DateOnly fromDate, DateOnly toDate) {
         var sessions = new List<ClassSession>();
 
         if (fromDate > toDate)
             return sessions;
+
+        var occupiedDates = _classSessions
+            .Where(s => s.SessionType == slot.SessionType)
+            .Select(s => s.SessionDate)
+            .ToHashSet();
 
         var current = fromDate;
         while (current.DayOfWeek != slot.DayOfWeek)
             current = current.AddDays(1);
 
         while (current <= toDate) {
-            sessions.Add(ClassSession.Create(slot.CourseId, slot.Id, current, slot.SessionType));
+            if (!occupiedDates.Contains(current))
+                sessions.Add(ClassSession.Create(slot.CourseId, slot.Id, current, slot.SessionType));
+
             current = current.AddDays(7);
         }
 

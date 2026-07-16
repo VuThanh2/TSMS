@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '@/shared/lib/auth-context';
 import StatusTag from '@/shared/components/StatusTag';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { getCoursesApi, getMyCourseApi } from '@/modules/course-management/course-grid/course-grid.api';
 
 // Ghi chú: API Contract Mapping (mục "Course Report Grid Screen") quy định tái dùng
@@ -20,7 +21,11 @@ export default function CourseReportGridPage() {
 
   const [keyword, setKeyword] = useState('');
 
-  const params = { keyword: keyword || undefined, page: 1, pageSize: 60 };
+  // Debounce: chỉ gọi API sau khi ngừng gõ, tránh 1 request mỗi keystroke gây lag.
+  // Ô input vẫn bind `keyword` để gõ mượt; chỉ giá trị vào queryKey mới bị trễ.
+  const debouncedKeyword = useDebouncedValue(keyword);
+
+  const params = { keyword: debouncedKeyword || undefined, page: 1, pageSize: 60 };
 
   const { data, isLoading } = useQuery({
     queryKey: ['report-courses', isAdmin ? 'admin' : 'lecturer', params],
