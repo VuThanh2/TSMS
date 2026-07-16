@@ -2,6 +2,7 @@ using Identity.Domain.Entities;
 using Identity.Domain.Repositories;
 using Identity.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
+using SharedKernel.Primitives;
 
 namespace Identity.Infrastructure.Repositories;
 
@@ -41,12 +42,36 @@ public class UserRepository : IUserRepository {
                 cancellationToken);
     }
 
+    // Whitelist cột được phép ORDER BY. Chỉ nhận cột thật sự nằm trong schema `identity`
+    // nên client không thể dò tên cột DB, và mọi cột ở đây đều có sẵn lúc phân trang.
+    // Field lạ → rơi về thứ tự mặc định thay vì ném lỗi: sort là tiện ích hiển thị,
+    // không đáng làm hỏng cả trang lưới chỉ vì 1 query param sai.
+    private static IOrderedQueryable<AppUser> ApplySort(IQueryable<AppUser> query, SortInput? sort) {
+        var descending = sort?.IsDescending ?? false;
+
+        var ordered = sort?.SortBy?.Trim().ToLowerInvariant() switch {
+            "fullname" => query.OrderByDirection(u => u.FullName, descending),
+            "email" => query.OrderByDirection(u => u.Email, descending),
+            // Role được map HasConversion<string> → ORDER BY chạy trên cột nvarchar,
+            // tức thứ tự bảng chữ cái (Admin → Lecturer → Student), không phải thứ tự enum.
+            "role" => query.OrderByDirection(u => u.Role, descending),
+            "isactive" => query.OrderByDirection(u => u.IsActive, descending),
+            _ => query.OrderBy(u => u.FullName),
+        };
+
+        // Tiebreaker bắt buộc khi có phân trang: các row trùng giá trị sort (VD cùng Role)
+        // không có thứ tự xác định trong SQL Server → cùng 1 user có thể hiện ở cả trang 1
+        // lẫn trang 2, hoặc biến mất. ThenBy(Id) khoá thứ tự đó lại.
+        return ordered.ThenBy(u => u.Id);
+    }
+
     public async Task<(IReadOnlyList<AppUser> Items, int TotalCount)> GetPagedAsync(
         string? keyword,
         UserRole? role,
         bool? isActive,
         int page,
         int pageSize,
+        SortInput? sort = null,
         CancellationToken cancellationToken = default) {
         var query = _context.Users
             .Include(u => u.LecturerProfile)
@@ -71,8 +96,7 @@ public class UserRepository : IUserRepository {
  
         var totalCount = await query.CountAsync(cancellationToken);
  
-        var items = await query
-            .OrderBy(u => u.FullName)
+        var items = await ApplySort(query, sort)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);

@@ -3,6 +3,7 @@ using CourseManagement.Domain.Repositories;
 using CourseManagement.Domain.ValueObjects;
 using CourseManagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using SharedKernel.Primitives;
 
 namespace CourseManagement.Infrastructure.Repositories;
 
@@ -50,12 +51,36 @@ public class CourseRepository : ICourseRepository {
             .ToListAsync(cancellationToken);
     }
 
+    // Whitelist cột được phép ORDER BY.
+    // Name/StartDate/EndDate là getter computed trên private field (Course.cs) nên KHÔNG map
+    // sang cột — phải đi qua EF.Property vào backing field, giống cách keyword search đang làm.
+    // Cố tình KHÔNG có lecturerName/enrolledCount: hai cột đó do BC khác sở hữu và chỉ được
+    // enrich sau khi phân trang, muốn ORDER BY chúng thì phải JOIN cross-BC — điều bị cấm.
+    private static IOrderedQueryable<Course> ApplySort(IQueryable<Course> query, SortInput? sort) {
+        var descending = sort?.IsDescending ?? false;
+
+        var ordered = sort?.SortBy?.Trim().ToLowerInvariant() switch {
+            "name" => query.OrderByDirection(c => EF.Property<string>(c, "_courseName"), descending),
+            "startdate" => query.OrderByDirection(c => EF.Property<DateOnly>(c, "_startDate"), descending),
+            "enddate" => query.OrderByDirection(c => EF.Property<DateOnly>(c, "_endDate"), descending),
+            // Status map HasConversion<string> → ORDER BY theo bảng chữ cái
+            // (Active → Completed → Upcoming), KHÔNG theo thứ tự vòng đời.
+            "status" => query.OrderByDirection(c => c.Status, descending),
+            _ => query.OrderByDescending(c => c.CreatedAt),
+        };
+
+        // Tiebreaker: giữ thứ tự ổn định giữa các trang khi giá trị sort trùng nhau
+        // (VD lọc status=Active thì mọi row đều bằng nhau ở cột Status).
+        return ordered.ThenBy(c => c.Id);
+    }
+
     public async Task<(IReadOnlyList<Course> Items, int TotalCount)> GetPagedAsync(
         string? keyword,
         CourseStatus? status,
         Guid? lecturerId,
         int page,
         int pageSize,
+        SortInput? sort = null,
         CancellationToken cancellationToken = default) {
         var query = _context.Courses.AsQueryable();
 
@@ -76,8 +101,7 @@ public class CourseRepository : ICourseRepository {
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-        var items = await query
-            .OrderByDescending(c => c.CreatedAt)
+        var items = await ApplySort(query, sort)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);

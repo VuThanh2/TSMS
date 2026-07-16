@@ -4,6 +4,7 @@ import { App } from 'antd';
 import type { AxiosError } from 'axios';
 
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
+import { useTableSort } from '@/shared/hooks/useTableSort';
 import {
   getUsersApi,
   getUserByIdApi,
@@ -18,18 +19,22 @@ export function useUserList() {
   const [role, setRole] = useState<string>('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const { sort, applySorter } = useTableSort();
 
   // Debounce: chỉ gọi API sau khi ngừng gõ, tránh 1 request mỗi keystroke gây lag.
   const debouncedSearch = useDebouncedValue(search);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['users', { search: debouncedSearch, role, page, pageSize }],
+    // sort nằm trong queryKey → đổi sort là refetch, không phải sort lại 10 dòng có sẵn.
+    queryKey: ['users', { search: debouncedSearch, role, page, pageSize, ...sort }],
     queryFn: () =>
       getUsersApi({
         search: debouncedSearch || undefined,
         role: role || undefined,
         page,
         pageSize,
+        sortBy: sort.sortBy,
+        sortDir: sort.sortDir,
       }),
     select: (res) => res.data,
   });
@@ -42,6 +47,7 @@ export function useUserList() {
     role, setRole,
     page, setPage,
     pageSize, setPageSize,
+    sort, applySorter,
   };
 }
 

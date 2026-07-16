@@ -6,11 +6,14 @@ using SharedKernel.Primitives;
 
 namespace Identity.Application.Users.GetUsers;
 
+// SortBy/SortDir để cuối và có default → mọi call-site cũ không sort vẫn biên dịch nguyên trạng.
 public sealed record GetUsersQuery(
     string? Keyword,
     string? Role,
     int Page,
-    int PageSize) : IRequest<Result<PagedList<GetUsersOutputDto>>>;
+    int PageSize,
+    string? SortBy = null,
+    string? SortDir = null) : IRequest<Result<PagedList<GetUsersOutputDto>>>;
 
 public sealed class GetUsersQueryHandler
     : IRequestHandler<GetUsersQuery, Result<PagedList<GetUsersOutputDto>>> {
@@ -34,6 +37,7 @@ public sealed class GetUsersQueryHandler
             isActive: null,
             page: request.Page,
             pageSize: request.PageSize,
+            sort: new SortInput(request.SortBy, request.SortDir),
             cancellationToken: cancellationToken);
  
         var dtos = items.Select(UserMapper.ToGetUsersOutputDto).ToList();

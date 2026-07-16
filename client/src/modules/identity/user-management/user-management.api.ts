@@ -1,8 +1,16 @@
 import api from '@/shared/lib/axios';
 import type { PagedResult } from '@/shared/types/api.types';
+import type { SortDirection } from '@/shared/hooks/useTableSort';
 import type { UserListItem, UserDetail } from '@/modules/identity/shared/user.types';
 
-export function getUsersApi(params: { search?: string; role?: string; page: number; pageSize: number }) {
+export function getUsersApi(params: {
+  search?: string;
+  role?: string;
+  page: number;
+  pageSize: number;
+  sortBy?: string;
+  sortDir?: SortDirection;
+}) {
   return api.get<PagedResult<UserListItem>>('/users', { params });
 }
 

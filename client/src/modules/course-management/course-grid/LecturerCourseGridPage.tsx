@@ -10,11 +10,14 @@ import { useCourseGrid } from './useCourseGrid';
 const STATUS_OPTIONS = ['', 'Upcoming', 'Active', 'Completed'] as const;
 const STATUS_LABELS: Record<string, string> = { '': 'All', Upcoming: 'Upcoming', Active: 'Active', Completed: 'Completed' };
 
+// Cùng ràng buộc như CourseGridPage: phân trang server-side nên sorter: true, và cột
+// Enrolled không sort được vì enrolledCount là dữ liệu enrich cross-BC sau khi phân trang.
 const columns: ColumnsType<CourseListItem> = [
   {
     title: 'Course',
     dataIndex: 'name',
     key: 'name',
+    sorter: true,
     render: (name: string, record) => (
       <div>
         <div className="text-[15px] font-semibold">{name}</div>
@@ -28,6 +31,7 @@ const columns: ColumnsType<CourseListItem> = [
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
+    sorter: true,
     render: (status: CourseListItem['status']) => <StatusTag status={status} />,
   },
   {
@@ -106,6 +110,13 @@ export default function LecturerCourseGridPage() {
             grid.setPage(p);
             grid.setPageSize(ps);
           },
+        }}
+        // Lọc theo extra.action: onChange fire cho cả phân trang lẫn sort, không lọc thì
+        // setPage(1) sẽ ghi đè pagination.onChange và làm hỏng việc chuyển trang.
+        onChange={(_pagination, _filters, sorter, extra) => {
+          if (extra.action !== 'sort') return;
+          grid.applySorter(sorter);
+          grid.setPage(1);
         }}
         onRow={(record) => ({
           onClick: () => navigate(`/lecturer/courses/${record.courseId}`),

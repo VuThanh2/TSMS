@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
+import { useTableSort } from '@/shared/hooks/useTableSort';
 import { getCoursesApi, getMyCourseApi } from './course-grid.api';
 import type { CourseGridParams } from './course-grid.api';
 
@@ -17,16 +18,20 @@ export function useCourseGrid(scope: 'all' | 'mine' = 'all') {
   const [status, setStatus] = useState<string>('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const { sort, applySorter } = useTableSort();
 
   // Debounce: chỉ gọi API sau khi ngừng gõ, tránh 1 request mỗi keystroke gây lag.
   // Ô input vẫn bind `keyword` để gõ mượt; chỉ giá trị vào queryKey mới bị trễ.
   const debouncedKeyword = useDebouncedValue(keyword);
 
+  // params đã nằm sẵn trong queryKey bên dưới nên sort tự động là một phần của cache key.
   const params: CourseGridParams = {
     keyword: debouncedKeyword || undefined,
     status: status || undefined,
     page,
     pageSize,
+    sortBy: sort.sortBy,
+    sortDir: sort.sortDir,
   };
 
   const { data, isLoading } = useQuery({
@@ -47,5 +52,7 @@ export function useCourseGrid(scope: 'all' | 'mine' = 'all') {
     setPage,
     pageSize,
     setPageSize,
+    sort,
+    applySorter,
   };
 }

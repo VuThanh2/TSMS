@@ -14,6 +14,9 @@ const GRADE_COLOR = (g: number | null) => {
   return g >= 5 ? 'text-[#1E875F]' : 'text-[#D7372C]';
 };
 
+// GET /enrollments/my-courses trả về TOÀN BỘ enrollment trong 1 response (page/pageSize
+// chưa được BE áp dụng), việc phân trang thực chất do antd làm ở client. Vì client đã nắm
+// đủ dữ liệu nên sort bằng hàm so sánh là đúng — antd sort trước rồi mới cắt trang.
 const columns = (
   onAdjust: (course: MyCourseItem) => void,
 ): ColumnsType<MyCourseItem> => [
@@ -21,12 +24,14 @@ const columns = (
     title: 'Course',
     dataIndex: 'courseName',
     key: 'name',
+    sorter: (a, b) => a.courseName.localeCompare(b.courseName),
     render: (v: string) => <span className="font-semibold">{v}</span>,
   },
   {
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
+    sorter: (a, b) => a.status.localeCompare(b.status),
     render: (v: MyCourseItem['status']) => <StatusTag status={v} />,
   },
   {
@@ -34,6 +39,8 @@ const columns = (
     dataIndex: 'grade',
     key: 'grade',
     align: 'right',
+    // Chưa chấm (null) coi như -1: thấp hơn mọi điểm thật thay vì lẫn vào nhóm điểm 0.
+    sorter: (a, b) => (a.grade ?? -1) - (b.grade ?? -1),
     render: (v: number | null) =>
       v !== null ? (
         <span className={`font-mono text-[15px] font-semibold ${GRADE_COLOR(v)}`}>
@@ -91,6 +98,13 @@ export default function StudentCoursesPage() {
             enroll.setPage(p);
             enroll.setPageSize(ps);
           },
+        }}
+        // Sort xong về trang 1 cho khớp hành vi các lưới khác. Guard extra.action là bắt buộc:
+        // onChange fire cho cả phân trang lẫn sort, thiếu guard thì setPage(1) sẽ ghi đè
+        // pagination.onChange ở trên và không chuyển trang được nữa.
+        onChange={(_pagination, _filters, _sorter, extra) => {
+          if (extra.action !== 'sort') return;
+          enroll.setPage(1);
         }}
       />
 

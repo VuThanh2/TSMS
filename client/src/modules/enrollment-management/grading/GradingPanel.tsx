@@ -39,23 +39,29 @@ export default function GradingPanel({
     );
   }
 
+  // GET /enrollments/course/{id} trả về toàn bộ roster trong 1 response, antd mới là bên
+  // cắt trang → client đã có đủ dữ liệu nên sort bằng hàm so sánh là đúng trên cả roster.
   const rosterColumns: ColumnsType<EnrollmentItem> = [
     {
       title: 'Student',
       dataIndex: 'studentFullName',
       key: 'name',
+      sorter: (a, b) => a.studentFullName.localeCompare(b.studentFullName),
       render: (v: string) => <span className="text-[15px] font-semibold">{v}</span>,
     },
     {
       title: 'Email',
       dataIndex: 'studentEmail',
       key: 'email',
+      sorter: (a, b) => a.studentEmail.localeCompare(b.studentEmail),
       render: (v: string) => <span className="font-mono text-[14px] text-text-secondary">{v}</span>,
     },
     {
       title: 'Grade',
       key: 'grade',
       align: 'right',
+      // Chưa chấm (null) coi như -1 → gom nhóm chưa chấm về một đầu, tiện lọc mắt.
+      sorter: (a, b) => (a.grade ?? -1) - (b.grade ?? -1),
       render: (_, record) => {
         const hasDraft = Object.prototype.hasOwnProperty.call(drafts, record.enrollmentId);
         const value = hasDraft ? drafts[record.enrollmentId] : record.grade;
@@ -134,6 +140,14 @@ export default function GradingPanel({
             grading.setPage(p);
             grading.setPageSize(ps);
           },
+        }}
+        // Sort xong về trang 1 cho khớp hành vi các lưới khác. Guard extra.action là bắt buộc:
+        // onChange fire cho cả phân trang lẫn sort, thiếu guard thì setPage(1) sẽ ghi đè
+        // pagination.onChange ở trên và không chuyển trang được nữa.
+        // Không đụng tới `drafts` (key theo enrollmentId) nên điểm đang gõ dở không mất khi sort.
+        onChange={(_pagination, _filters, _sorter, extra) => {
+          if (extra.action !== 'sort') return;
+          grading.setPage(1);
         }}
       />
     </div>

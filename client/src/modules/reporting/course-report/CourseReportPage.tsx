@@ -11,11 +11,23 @@ import { useCourseReport, type ReportTab } from './useCourseReport';
 
 const PIE_COLORS = ['#F45D48', '#E5A20B', '#2E73C4', '#1E875F', '#8A847E'];
 
+// Hai lưới báo cáo dưới đây không phân trang — toàn bộ dữ liệu đã ở client nên sort
+// bằng hàm so sánh của antd là đúng, không cần gửi gì xuống BE.
 const gradeColumns: ColumnsType<StudentGradeItem> = [
-  { title: 'Student', dataIndex: 'studentFullName', key: 'name', render: (v: string) => <span className="font-semibold">{v}</span> },
-  { title: 'Email', dataIndex: 'studentEmail', key: 'email', render: (v: string) => <span className="font-mono text-[14px] text-text-secondary">{v}</span> },
+  {
+    title: 'Student', dataIndex: 'studentFullName', key: 'name',
+    sorter: (a, b) => a.studentFullName.localeCompare(b.studentFullName),
+    render: (v: string) => <span className="font-semibold">{v}</span>,
+  },
+  {
+    title: 'Email', dataIndex: 'studentEmail', key: 'email',
+    sorter: (a, b) => a.studentEmail.localeCompare(b.studentEmail),
+    render: (v: string) => <span className="font-mono text-[14px] text-text-secondary">{v}</span>,
+  },
   {
     title: 'Score', dataIndex: 'grade', key: 'grade', align: 'right',
+    // Chưa chấm (null) coi như -1 → thấp hơn mọi điểm thật thay vì lẫn vào nhóm điểm 0.
+    sorter: (a, b) => (a.grade ?? -1) - (b.grade ?? -1),
     render: (v: number | null) => (
       <span
         className="font-mono text-[15px] font-semibold"
@@ -28,12 +40,31 @@ const gradeColumns: ColumnsType<StudentGradeItem> = [
 ];
 
 const attendanceColumns: ColumnsType<AttendanceReportItem> = [
-  { title: 'Student', dataIndex: 'studentFullName', key: 'name', render: (v: string) => <span className="font-semibold">{v}</span> },
-  { title: 'Present', dataIndex: 'presentCount', key: 'present', align: 'center', render: (v: number) => <span className="font-mono font-semibold text-[#1E875F]">{v}</span> },
-  { title: 'Excused', dataIndex: 'excusedCount', key: 'excused', align: 'center', render: (v: number) => <span className="font-mono font-semibold text-[#E5A20B]">{v}</span> },
-  { title: 'Absent', dataIndex: 'absentCount', key: 'absent', align: 'center', render: (v: number) => <span className="font-mono font-semibold text-[#D7372C]">{v}</span> },
+  {
+    title: 'Student', dataIndex: 'studentFullName', key: 'name',
+    sorter: (a, b) => a.studentFullName.localeCompare(b.studentFullName),
+    render: (v: string) => <span className="font-semibold">{v}</span>,
+  },
+  {
+    title: 'Present', dataIndex: 'presentCount', key: 'present', align: 'center',
+    sorter: (a, b) => a.presentCount - b.presentCount,
+    render: (v: number) => <span className="font-mono font-semibold text-[#1E875F]">{v}</span>,
+  },
+  {
+    title: 'Excused', dataIndex: 'excusedCount', key: 'excused', align: 'center',
+    sorter: (a, b) => a.excusedCount - b.excusedCount,
+    render: (v: number) => <span className="font-mono font-semibold text-[#E5A20B]">{v}</span>,
+  },
+  {
+    title: 'Absent', dataIndex: 'absentCount', key: 'absent', align: 'center',
+    sorter: (a, b) => a.absentCount - b.absentCount,
+    render: (v: number) => <span className="font-mono font-semibold text-[#D7372C]">{v}</span>,
+  },
   {
     title: 'Rate', dataIndex: 'attendanceRate', key: 'rate', align: 'right',
+    // Sort tăng dần trên cột này = ai đi học ít nhất lên đầu — cách nhanh nhất để
+    // Lecturer tìm sinh viên cần nhắc nhở.
+    sorter: (a, b) => a.attendanceRate - b.attendanceRate,
     render: (v: number) => <span className="font-mono text-[14px] font-semibold">{(v * 100).toFixed(0)}%</span>,
   },
 ];

@@ -23,10 +23,15 @@ export default function UserListPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [editUserId, setEditUserId] = useState<string | null>(null);
 
+  // `key` của cột sortable = token trong whitelist của UserRepository.ApplySort.
+  // sorter: true (KHÔNG phải hàm so sánh) — lưới này phân trang server-side, antd chỉ giữ
+  // 10 dòng của trang hiện tại; đưa hàm so sánh vào sẽ khiến antd sort lại đúng 10 dòng đó
+  // và ghi đè kết quả BE đã sort trên toàn bộ tập dữ liệu.
   const columns: ColumnsType<UserListItem> = [
     {
       title: 'Name',
-      key: 'name',
+      key: 'fullName',
+      sorter: true,
       render: (_, record) => {
         const initials = record.fullName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
         return (
@@ -43,12 +48,14 @@ export default function UserListPage() {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+      sorter: true,
       render: (email: string) => <span className="font-mono text-[14px] text-text-secondary">{email}</span>,
     },
     {
       title: 'Role',
       dataIndex: 'role',
       key: 'role',
+      sorter: true,
       render: (role: string) => (
         <Tag style={{ borderRadius: 9999, background: '#F3EEE9', color: '#5C5854', border: 'none', fontWeight: 600 }}>
           {role}
@@ -58,7 +65,8 @@ export default function UserListPage() {
     {
       title: 'Status',
       dataIndex: 'isActive',
-      key: 'status',
+      key: 'isActive',
+      sorter: true,
       render: (isActive: boolean) => (
         <Tag
           style={{
@@ -190,6 +198,15 @@ export default function UserListPage() {
             list.setPage(p);
             list.setPageSize(ps);
           },
+        }}
+        // onChange fire cho CẢ phân trang lẫn sort. Không lọc theo extra.action thì mỗi lần
+        // bấm sang trang 2, setPage(1) dưới đây sẽ ghi đè pagination.onChange ở trên và
+        // đá người dùng về trang 1. Đổi sort mới cần reset trang: giữ nguyên trang 5 sau khi
+        // xếp lại toàn bộ tập kết quả là một lát cắt vô nghĩa.
+        onChange={(_pagination, _filters, sorter, extra) => {
+          if (extra.action !== 'sort') return;
+          list.applySorter(sorter);
+          list.setPage(1);
         }}
       />
 

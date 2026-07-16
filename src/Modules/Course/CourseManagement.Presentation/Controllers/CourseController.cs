@@ -27,14 +27,18 @@ public class CourseController : ControllerBase {
     // Chỉ Admin. Trả về toàn bộ Course, hỗ trợ search theo tên và filter theo status.
     [HttpGet]
     [Authorize(Roles = "Admin")]
+    // sortBy nhận: name | startDate | endDate | status. sortDir: asc | desc.
+    // Không sort được lecturerName/enrolledCount — dữ liệu do BC khác sở hữu, enrich sau phân trang.
     public async Task<IActionResult> GetCourses(
         [FromQuery] string? keyword = null,
         [FromQuery] string? status = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortDir = null,
         CancellationToken cancellationToken = default) {
         var result = await _sender.Send(
-            new GetCoursesQuery(keyword, status, LecturerId: null, page, pageSize),
+            new GetCoursesQuery(keyword, status, LecturerId: null, page, pageSize, sortBy, sortDir),
             cancellationToken);
  
         return Ok(result.Value);
@@ -49,6 +53,8 @@ public class CourseController : ControllerBase {
         [FromQuery] string? status = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortDir = null,
         CancellationToken cancellationToken = default) {
         var claim = User.FindFirstValue(ClaimTypes.NameIdentifier)
                     ?? User.FindFirstValue("sub");
@@ -57,7 +63,7 @@ public class CourseController : ControllerBase {
             return Unauthorized();
  
         var result = await _sender.Send(
-            new GetCoursesQuery(keyword, status, lecturerId, page, pageSize),
+            new GetCoursesQuery(keyword, status, lecturerId, page, pageSize, sortBy, sortDir),
             cancellationToken);
  
         return Ok(result.Value);

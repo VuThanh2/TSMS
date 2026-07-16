@@ -12,11 +12,16 @@ import { useCourseGrid } from './useCourseGrid';
 const STATUS_OPTIONS = ['', 'Upcoming', 'Active', 'Completed'] as const;
 const STATUS_LABELS: Record<string, string> = { '': 'All', Upcoming: 'Upcoming', Active: 'Active', Completed: 'Completed' };
 
+// Lưới phân trang server-side → sorter: true, để SQL sort trên toàn bộ tập kết quả.
+// Lecturer và Capacity CỐ Ý không có sorter: lecturerName/enrolledCount do BC khác sở hữu
+// và chỉ được enrich sau khi phân trang, nên SQL không nhìn thấy chúng lúc ORDER BY —
+// muốn sort được thì phải JOIN cross-BC, điều mà kiến trúc cấm.
 const columns: ColumnsType<CourseListItem> = [
   {
     title: 'Course',
     dataIndex: 'name',
     key: 'name',
+    sorter: true,
     render: (name: string, record) => (
       <div>
         <div className="text-[15px] font-semibold">{name}</div>
@@ -36,6 +41,9 @@ const columns: ColumnsType<CourseListItem> = [
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
+    // Status map HasConversion<string> dưới DB → sort theo bảng chữ cái
+    // (Active → Completed → Upcoming), không theo thứ tự vòng đời.
+    sorter: true,
     render: (status: CourseListItem['status']) => <StatusTag status={status} />,
   },
   {
@@ -126,6 +134,13 @@ export default function CourseGridPage() {
             grid.setPage(p);
             grid.setPageSize(ps);
           },
+        }}
+        // Lọc theo extra.action: onChange fire cho cả phân trang lẫn sort, không lọc thì
+        // setPage(1) sẽ ghi đè pagination.onChange và làm hỏng việc chuyển trang.
+        onChange={(_pagination, _filters, sorter, extra) => {
+          if (extra.action !== 'sort') return;
+          grid.applySorter(sorter);
+          grid.setPage(1);
         }}
         onRow={(record) => ({
           onClick: () => navigate(`/admin/courses/${record.courseId}`),
