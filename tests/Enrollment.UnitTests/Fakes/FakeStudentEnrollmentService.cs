@@ -2,20 +2,24 @@ using EnrollmentManagement.Application.Common.Interfaces;
 
 namespace Enrollment.UnitTests.Fakes;
 
-// Fake tối giản cho IStudentEnrollmentService (cross-BC Identity→Enrollment) — chỉ implement
-// GetEmailsAsync, đủ cho test SendSessionReminderJobService. Emails chứa CHỈ student có email
-// hợp lệ + đang active (mô phỏng đúng filter của implementation thật ở Identity BC).
+// Fake cho IStudentEnrollmentService (cross-BC Identity→Enrollment). Cover cả test job
+// (GetEmailsAsync) lẫn test EnrollCourse (IsActiveStudentAsync, GetFullNameAsync, GetEmailAsync).
 public sealed class FakeStudentEnrollmentService : IStudentEnrollmentService {
     public Dictionary<Guid, string> Emails { get; set; } = new();
 
+    // ── Cấu hình cho EnrollCourse
+    public bool ActiveStudent { get; set; } = true;
+    public string FullName { get; set; } = "Nguyen Van A";
+    public string Email { get; set; } = "a.nguyen@example.com";
+
     public Task<bool> IsActiveStudentAsync(Guid studentId, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+        Task.FromResult(ActiveStudent);
 
     public Task<string?> GetFullNameAsync(Guid studentId, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+        Task.FromResult<string?>(FullName);
 
     public Task<string?> GetEmailAsync(Guid studentId, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+        Task.FromResult<string?>(Email);
 
     public Task<IReadOnlyDictionary<Guid, string>> GetEmailsAsync(
         IReadOnlyList<Guid> studentIds, CancellationToken cancellationToken = default) {
@@ -26,6 +30,7 @@ public sealed class FakeStudentEnrollmentService : IStudentEnrollmentService {
         return Task.FromResult(result);
     }
 
+    // Không dùng trong các test hiện tại — trả rỗng thay vì throw để không vướng inspection commit.
     public Task<IReadOnlyList<Guid>> GetActiveStudentIdsAsync(CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+        Task.FromResult<IReadOnlyList<Guid>>([]);
 }

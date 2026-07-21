@@ -1,37 +1,46 @@
-using EnrollmentManagement.Domain.Entities;
 using EnrollmentManagement.Domain.Repositories;
+using EnrollmentManagement.Domain.ValueObjects;
+using EnrollmentAggregate = EnrollmentManagement.Domain.Entities.Enrollment;
 
 namespace Enrollment.UnitTests.Fakes;
 
-// Fake tối giản cho IEnrollmentRepository — chỉ implement đủ để test ScheduleConflictChecker
-// (chỉ dùng GetByStudentIdAsync), các method khác không được gọi trong scope test này.
+// Fake in-memory cho IEnrollmentRepository — backing bằng 1 List, đủ cho cả test
+// ScheduleConflictChecker (chỉ dùng GetByStudentIdAsync) lẫn test handler (GetByIdAsync,
+// GetByStudentAndCourseAsync, Add, CountActiveEnrollmentsAsync). Không mô phỏng tracking/EF.
 public sealed class FakeEnrollmentRepository : IEnrollmentRepository {
-    private readonly List<EnrollmentManagement.Domain.Entities.Enrollment> _enrollments;
+    private readonly List<EnrollmentAggregate> _enrollments;
 
-    public FakeEnrollmentRepository(IEnumerable<EnrollmentManagement.Domain.Entities.Enrollment> enrollments) {
+    public FakeEnrollmentRepository(IEnumerable<EnrollmentAggregate> enrollments) {
         _enrollments = enrollments.ToList();
     }
 
-    public Task<EnrollmentManagement.Domain.Entities.Enrollment?> GetByIdAsync(
+    // Ghi lại aggregate đã Add — cho test EnrollCourse assert repository thực sự nhận enrollment mới.
+    public List<EnrollmentAggregate> Added { get; } = new();
+
+    public Task<EnrollmentAggregate?> GetByIdAsync(
         Guid id, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+        Task.FromResult(_enrollments.FirstOrDefault(e => e.Id == id));
 
-    public Task<EnrollmentManagement.Domain.Entities.Enrollment?> GetByStudentAndCourseAsync(
+    public Task<EnrollmentAggregate?> GetByStudentAndCourseAsync(
         Guid studentId, Guid courseId, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+        Task.FromResult(_enrollments.FirstOrDefault(
+            e => e.StudentId == studentId && e.CourseId == courseId));
 
-    public Task<List<EnrollmentManagement.Domain.Entities.Enrollment>> GetByCourseIdAsync(
+    public Task<List<EnrollmentAggregate>> GetByCourseIdAsync(
         Guid courseId, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+        Task.FromResult(_enrollments.Where(e => e.CourseId == courseId).ToList());
 
-    public Task<List<EnrollmentManagement.Domain.Entities.Enrollment>> GetByStudentIdAsync(
+    public Task<List<EnrollmentAggregate>> GetByStudentIdAsync(
         Guid studentId, CancellationToken cancellationToken = default) =>
         Task.FromResult(_enrollments.Where(e => e.StudentId == studentId).ToList());
 
     public Task<int> CountActiveEnrollmentsAsync(
         Guid courseId, CancellationToken cancellationToken = default) =>
-        throw new NotImplementedException();
+        Task.FromResult(_enrollments.Count(
+            e => e.CourseId == courseId && e.Status == EnrollmentStatus.Active));
 
-    public void Add(EnrollmentManagement.Domain.Entities.Enrollment enrollment) =>
-        throw new NotImplementedException();
+    public void Add(EnrollmentAggregate enrollment) {
+        _enrollments.Add(enrollment);
+        Added.Add(enrollment);
+    }
 }
