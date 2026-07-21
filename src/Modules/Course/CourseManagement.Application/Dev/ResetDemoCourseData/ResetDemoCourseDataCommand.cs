@@ -114,7 +114,7 @@ public sealed class ResetDemoCourseDataCommandHandler
             var createResult = Course.Create(
                 lecturerId: lecturerId,
                 courseName: courseNameResult.Value,
-                description: "Dữ liệu demo — được tạo tự động bởi Demo Data Reset.",
+                description: " ",
                 dateRange: dateRangeResult.Value,
                 maxCapacity: 8,
                 lecturerName: lecturerName);
