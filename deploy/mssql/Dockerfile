@@ -22,11 +22,12 @@ COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ACCEPT_EULA bắt buộc. MSSQL_SA_PASSWORD set qua Variables của Railway (không hardcode).
-# MSSQL_MEMORY_LIMIT_MB chặn OOM-kill (SQL Server mặc định ăn ~80% RAM). 2048 là mức tối
-# thiểu; đảm bảo service được cấp >= 2GB RAM, nếu không SQL Server không chạy nổi.
+# MSSQL_MEMORY_LIMIT_MB chặn OOM-kill (SQL Server mặc định ăn ~80% RAM). Phải để THẤP HƠN
+# RAM container ~500MB để chừa cho OS Linux. 1536 hợp cho container 2GB. Nếu cấp nhiều RAM
+# hơn thì override giá trị này qua Variables của Railway (không cần rebuild).
 ENV ACCEPT_EULA=Y \
     MSSQL_PID=Developer \
-    MSSQL_MEMORY_LIMIT_MB=2048
+    MSSQL_MEMORY_LIMIT_MB=1536
 
 # Chạy non-root đúng cách image 2022 kỳ vọng. Railway KHÔNG được override USER.
 USER 10001
