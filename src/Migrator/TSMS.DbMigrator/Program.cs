@@ -88,8 +88,15 @@ public static class Program {
             return (connectionStringKey, true, null);
         }
         catch (Exception ex) {
-            Console.WriteLine($"   [FAIL] {connectionStringKey}: {ex.Message}");
-            return (connectionStringKey, false, ex.Message);
+            // In cả chuỗi InnerException — EF hay bọc lỗi SQL thật trong "transient failure".
+            var messages = new List<string>();
+            for (var current = ex; current is not null; current = current.InnerException) {
+                messages.Add($"{current.GetType().Name}: {current.Message}");
+            }
+            var fullMessage = string.Join(" -> ", messages);
+
+            Console.WriteLine($"   [FAIL] {connectionStringKey}: {fullMessage}");
+            return (connectionStringKey, false, fullMessage);
         }
     }
 
