@@ -1,26 +1,35 @@
 # Dockerfile cho service DATABASE (SQL Server) trên Railway — TÁCH BIỆT với Dockerfile
 # backend ở root repo. Tạo 1 Railway service riêng, set Root Directory = deploy/mssql
 #
-# QUAN TRỌNG — vì sao KHÔNG dùng tag :2022-latest:
-# Image :2022-latest dựa trên Ubuntu 22.04, dính bug sqlpal IO fallback khi chạy trên
-# storage của Railway -> đúng lỗi "The system directory [/.system] could not be created
-# ... Access denied" mà container bị crash-loop. Tag CU trên Ubuntu 20.04 KHÔNG dính bug này.
+# Vì sao tag :2022-CU23-ubuntu-20.04 (không dùng :2022-latest):
+# :latest dựa trên Ubuntu 22.04, dính bug sqlpal IO fallback trên storage Railway.
 FROM mcr.microsoft.com/mssql/server:2022-CU23-ubuntu-20.04
 
-# Tạo sẵn thư mục dữ liệu và cấp quyền cho user mssql (UID 10001, GID 0).
-# SQL Server 2022 chạy non-root (user mssql) -> phải chown trước bằng root rồi mới trả lại.
+# Cài sudo + cấp cho user mssql (UID 10001) quyền chạy KHÔNG mật khẩu đúng 3 lệnh
+# mkdir/chown/chmod. Cần vì:
+#   1. SQL Server phải tạo thư mục hệ thống /.system ở gốc / -> user mssql không có quyền.
+#   2. Volume Railway mount vào /var/opt/mssql thuộc root -> user mssql không ghi được.
+# KHÔNG chạy cả tiến trình bằng root (mất cờ PR_SET_DUMPABLE -> hỏng quản lý bộ nhớ SQLOS).
+# Chỉ sudo đúng 3 lệnh sửa quyền lúc runtime, rồi chạy sqlservr bằng chính user mssql.
 USER root
-RUN mkdir -p /var/opt/mssql/data /var/opt/mssql/log /var/opt/mssql/secrets /var/opt/mssql/backup \
- && chown -R 10001:0 /var/opt/mssql \
- && chmod -R 770 /var/opt/mssql
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends sudo \
+ && rm -rf /var/lib/apt/lists/* \
+ && echo 'mssql ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /usr/bin/chown, /usr/bin/chmod' > /etc/sudoers.d/mssql \
+ && chmod 0440 /etc/sudoers.d/mssql
+
+COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ACCEPT_EULA bắt buộc. MSSQL_SA_PASSWORD set qua Variables của Railway (không hardcode).
-# MSSQL_MEMORY_LIMIT_MB giới hạn RAM để container không bị Railway OOM-kill (SQL Server
-# mặc định ăn tới 80% RAM). 2048 là mức tối thiểu an toàn cho SQL Server.
+# MSSQL_MEMORY_LIMIT_MB chặn OOM-kill (SQL Server mặc định ăn ~80% RAM). 2048 là mức tối
+# thiểu; đảm bảo service được cấp >= 2GB RAM, nếu không SQL Server không chạy nổi.
 ENV ACCEPT_EULA=Y \
     MSSQL_PID=Developer \
     MSSQL_MEMORY_LIMIT_MB=2048
 
-# Trả lại user non-root mssql (đúng cách image 2022 kỳ vọng). Railway KHÔNG được override USER.
+# Chạy non-root đúng cách image 2022 kỳ vọng. Railway KHÔNG được override USER.
 USER 10001
 EXPOSE 1433
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
