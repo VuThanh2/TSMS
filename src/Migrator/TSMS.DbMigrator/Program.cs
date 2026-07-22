@@ -54,13 +54,18 @@ public static class Program {
 
     // Đọc appsettings.json / appsettings.Development.json của TSMS.Api để dùng chung một nguồn
     // connection string duy nhất, tránh lặp lại cấu hình như từng xảy ra ở các DbContextFactory.
+    //
+    // Cả 2 file JSON đều optional: true — vì path tương đối ngược 5 cấp thư mục này chỉ đúng khi
+    // chạy `dotnet run` tại local.
+    // AddEnvironmentVariables() đặt SAU CÙNG để override JSON khi cần
     private static IConfiguration BuildConfiguration() {
         var apiProjectPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "Api", "TSMS.Api");
 
         return new ConfigurationBuilder()
             .SetBasePath(Path.GetFullPath(apiProjectPath))
-            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile("appsettings.json", optional: true)
             .AddJsonFile("appsettings.Development.json", optional: true)
+            .AddEnvironmentVariables()
             .Build();
     }
 

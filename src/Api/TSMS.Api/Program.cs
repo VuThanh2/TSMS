@@ -27,7 +27,9 @@ builder.Services.AddSwaggerDocumentation();
 
 var app = builder.Build();
 
-// ── Seed
+// ── Migrate + Seed
+// Migrate PHẢI chạy trước Seed vì seed role/admin cần bảng Identity đã tồn tại.
+await app.MigrateDatabasesAsync();
 await app.SeedIdentityDataAsync();
 
 // ── Middleware pipeline
@@ -35,7 +37,11 @@ if (app.Environment.IsDevelopment()) {
     app.UseSwaggerDocumentation();
 }
 
-app.UseHttpsRedirection();
+// Chỉ redirect HTTPS ở local. Trên Railway TLS terminate ở edge, container chỉ nhận
+// HTTP trên $PORT -> bật middleware này sẽ 307-redirect sang https port không phục vụ.
+if (app.Environment.IsDevelopment()) {
+    app.UseHttpsRedirection();
+}
 app.UseCors("AllowFrontend");
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseAuthentication();

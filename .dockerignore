@@ -1,0 +1,23 @@
+# .dockerignore — đặt ở ROOT của repo, cùng cấp với Dockerfile
+# Mục đích: giảm build context gửi lên Docker daemon, và đảm bảo image backend
+# không vô tình mang theo code không liên quan (frontend, tests, git history).
+
+# Build artifacts (mọi project trong src/)
+**/bin/
+**/obj/
+
+# Frontend — Dockerfile này chỉ build backend (TSMS.Api), không đụng đến client/
+client/
+
+# Test projects — không cần thiết để chạy runtime, chỉ cần cho CI/local
+tests/
+
+# Git & IDE metadata
+.git/
+.gitignore
+.vs/
+.idea/
+*.user
+
+# Docs — không ảnh hưởng build, loại ra cho build context gọn
+*.md
