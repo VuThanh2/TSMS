@@ -80,8 +80,11 @@ if [ ! -f /var/opt/mssql/mssql.conf ]; then
 [coredump]
 coredumptype = mini
 captureminiandfull = false
+
+[fileengine]
+sectorsize = 4096
 EOF_CONF
-    echo "Created mssql.conf"
+    echo "Created mssql.conf with forced 4KB sector size"
 fi
 
 df -h /var/opt/mssql | tail -1
