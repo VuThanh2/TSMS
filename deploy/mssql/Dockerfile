@@ -13,7 +13,7 @@ FROM mcr.microsoft.com/mssql/server:2022-CU23-ubuntu-20.04
 # Chỉ sudo đúng 3 lệnh sửa quyền lúc runtime, rồi chạy sqlservr bằng chính user mssql.
 USER root
 RUN apt-get update \
- && apt-get install -y --no-install-recommends sudo \
+ && apt-get install -y --no-install-recommends sudo util-linux \
  && rm -rf /var/lib/apt/lists/* \
  && echo 'mssql ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /usr/bin/chown, /usr/bin/chmod' > /etc/sudoers.d/mssql \
  && chmod 0440 /etc/sudoers.d/mssql
@@ -22,17 +22,20 @@ COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ACCEPT_EULA bắt buộc. MSSQL_SA_PASSWORD set qua Variables của Railway (không hardcode).
+#
 # MSSQL_MEMORY_LIMIT_MB chặn OOM-kill (SQL Server mặc định ăn ~80% RAM). Phải để THẤP HƠN
-# RAM container ~500MB để chừa cho OS Linux. 1024 hợp cho container 2GB.
+# RAM container ~500MB để chừa cho OS Linux. 1024 hợp cho container 1.5-2GB; nếu cấp nhiều
+# RAM hơn thì override qua Variables của Railway (không cần rebuild).
+# Luôn dùng biến tính bằng MB, KHÔNG dùng memory.memorylimitpercent trong mssql.conf:
+# SQLPAL đọc RAM của HOST (346 GB) nên 80% = 277 GB, và nó ghi đè biến này.
 #
-# FIX: Stack Overflow là do SQLPAL đọc /proc/cpuinfo của HOST (32 CPUs) chứ không đọc cgroup
-# limit -> tạo 32 schedulers + hàng trăm worker threads, mỗi thread pre-allocate stack.
-# Cách FIX:
-#   1. MSSQL_MEMORY_LIMIT_MB = 1024 (thay vì 1536) để giảm memory pressure
-#   2. Entrypoint sẽ ghi mssql.conf với maxdop=2 để SQL Server tự giới hạn parallelism
-#   3. Không dùng taskset vì nó không thực sự limit cgroup
-#
-# TSMS_CPU_COUNT=2: Gợi ý cho entrypoint script về số CPUs cần dùng.
+# TSMS_CPU_COUNT: SQLPAL đọc /proc/cpuinfo của HOST (32-48 CPU trên Railway) chứ không đọc
+# cgroup limit -> tạo từng ấy scheduler + hàng trăm worker thread, mỗi thread pre-allocate
+# stack -> chạm quota thật của container -> pthread_create trả EAGAIN (errno 11) -> fatal
+# 0x6 "Stack Overflow". Entrypoint dùng taskset (sched_setaffinity) để ép SQLPAL xuống N core.
+# Đã kiểm chứng bằng header crash: có taskset -> "Processors: 2"; gỡ ra -> "Processors: 48".
+# maxdop KHÔNG thay thế được taskset — nó chỉ giới hạn parallelism của query, không giới hạn
+# số scheduler tạo lúc khởi động (và cũng không phải key hợp lệ của mssql.conf).
 ENV ACCEPT_EULA=Y \
     MSSQL_PID=Developer \
     MSSQL_MEMORY_LIMIT_MB=1024 \
