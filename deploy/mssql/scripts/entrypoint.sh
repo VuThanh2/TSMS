@@ -16,7 +16,7 @@ echo "  whoami: $(id)"
 # Kiểm tra sudo có thật sự dùng được không. Nhiều container runtime mount rootfs bằng
 # nosuid -> binary setuid như sudo mất tác dụng, mọi lệnh mkdir/chown bên dưới im lặng
 # không làm gì, rồi sqlservr chết vì ACCESS_DENIED mà không rõ lý do. Phải biết sớm.
-if sudo -n /usr/bin/mkdir -p /.system 2>/dev/null; then
+if sudo -n /usr/bin/mkdir -p /var/opt/mssql/.system 2>/dev/null; then
     SUDO="sudo -n"
     echo "  sudo: available"
 else
@@ -24,22 +24,24 @@ else
     echo "  sudo: NOT available (nosuid mount?) - fallback sang quyen san co cua user mssql"
 fi
 
-# .system trên volume là "persistent hive root" của SQLPAL — thiếu nó (hoặc không ghi được
-# vào nó) chính là fatal 0xc0000022 "Unable to set persistent hive root". Phải tạo tường minh,
-# không dựa vào việc sqlservr tự tạo được.
-$SUDO /usr/bin/mkdir -p /.system \
-    /var/opt/mssql/.system \
-    /var/opt/mssql/data \
-    /var/opt/mssql/log \
-    /var/opt/mssql/secrets \
-    /var/opt/mssql/backup || echo "  WARN: mkdir failed"
+# 1. CHỈ tạo các thư mục thật trên Volume được mount của Railway
+$SUDO /usr/bin/mkdir -p     /var/opt/mssql/.system     /var/opt/mssql/data     /var/opt/mssql/log     /var/opt/mssql/secrets     /var/opt/mssql/backup || echo "  WARN: mkdir failed"
+
+# 2. Xóa /.system nếu nó đang là thư mục thật (xóa tàn dư để tránh lỗi 0xc0000022 persistent hive root)
+$SUDO rm -rf /.system
+
+# 3. Tạo Symlink trỏ từ /.system tới Volume vĩnh viễn
+$SUDO ln -sfn /var/opt/mssql/.system /.system || echo "  WARN: symlink failed"
 
 # FIX: Trả quyền sở hữu về user mssql (10001) và GID mssql (10001), không root (0).
 # Process chạy là uid=10001(mssql) gid=10001(mssql), vậy nên group phải là 10001,
 # KHÔNG phải 0 (root). Nếu chown về 10001:0 thì SQLPAL không thể ghi vào /.system
 # vì gid của nó là 10001, không phải 0 -> EAGAIN "Resource temporarily unavailable".
-$SUDO /usr/bin/chown -R 10001:10001 /.system /var/opt/mssql || echo "  WARN: chown failed"
-$SUDO /usr/bin/chmod -R 770 /.system /var/opt/mssql || echo "  WARN: chmod failed"
+$SUDO /usr/bin/chown -R 10001:10001 /var/opt/mssql || echo "  WARN: chown failed"
+$SUDO /usr/bin/chmod -R 770 /var/opt/mssql || echo "  WARN: chmod failed"
+
+# Đổi quyền sở hữu riêng cho Symlink (dùng cờ -h để chỉ sửa bản thân symlink)
+$SUDO /usr/bin/chown -h 10001:10001 /.system || echo "  WARN: chown symlink failed"
 
 # In quyền THẬT sau khi sửa, và test ghi thật sự. Đây là bằng chứng duy nhất phân biệt
 # "chown có tác dụng" với "Railway mount volume đè lên sau khi chown".
@@ -47,7 +49,8 @@ echo "  mount: $(mount | grep -F /var/opt/mssql || echo 'khong thay mount rieng 
 ls -ldn / /.system /var/opt/mssql /var/opt/mssql/.system 2>&1 | sed 's/^/  /'
 
 write_ok=true
-for dir in /.system /var/opt/mssql /var/opt/mssql/.system /var/opt/mssql/data; do
+# Chỉ test ghi trên volume, không cần test /.system nữa vì nó là symlink
+for dir in /var/opt/mssql /var/opt/mssql/.system /var/opt/mssql/data; do
     if touch "$dir/.write-test" 2>/dev/null; then
         rm -f "$dir/.write-test"
     else
@@ -73,11 +76,11 @@ rm -rf /var/opt/mssql/log/core.sqlservr.* 2>/dev/null || true
 # và nó ghi đè MSSQL_MEMORY_LIMIT_MB. Chỉ dùng biến môi trường tính bằng MB.
 # KHÔNG đặt network.tlscert/tlskey — trỏ tới file không tồn tại thì SQL Server fail startup.
 if [ ! -f /var/opt/mssql/mssql.conf ]; then
-    cat > /var/opt/mssql/mssql.conf <<'EOF'
+    cat > /var/opt/mssql/mssql.conf <<'EOF_CONF'
 [coredump]
 coredumptype = mini
 captureminiandfull = false
-EOF
+EOF_CONF
     echo "Created mssql.conf"
 fi
 
@@ -124,4 +127,3 @@ echo "Pinning sqlservr to CPUs ${cpu_mask} (TSMS_CPU_COUNT=${TSMS_CPU_COUNT}). H
 taskset -c "$cpu_mask" /opt/mssql/bin/sqlservr &
 pid=$!
 wait "$pid"
-
