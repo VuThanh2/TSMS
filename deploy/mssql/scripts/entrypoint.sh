@@ -65,10 +65,7 @@ echo "Permissions ready."
 # Giữ lại bước dọn để container tự chữa kể cả khi đang crash-loop (không shell vào được).
 rm -rf /var/opt/mssql/log/core.sqlservr.* 2>/dev/null || true
 
-# mssql.conf: CHỈ đặt những key mssql-conf thật sự hỗ trợ.
-# KHÔNG đặt maxdop ở đây — nó là server option của sp_configure (T-SQL), không phải
-# mssql-conf setting, và dù có đặt được thì nó cũng chỉ giới hạn parallelism của query,
-# KHÔNG giới hạn số scheduler SQLOS tạo lúc khởi động. Việc đó do taskset lo (xem bên dưới).
+# mssql.conf: CHỈ những cấu hình RUNTIME, KHÔNG query-level.
 # KHÔNG đặt memory.memorylimitpercent — SQLPAL đọc RAM của HOST (346 GB), 80% = 277 GB,
 # và nó ghi đè MSSQL_MEMORY_LIMIT_MB. Chỉ dùng biến môi trường tính bằng MB.
 # KHÔNG đặt network.tlscert/tlskey — trỏ tới file không tồn tại thì SQL Server fail startup.
@@ -95,26 +92,33 @@ graceful_shutdown() {
 }
 trap graceful_shutdown SIGINT SIGTERM
 
-# Ghim CPU affinity trước khi start. SQLPAL đọc CPU khả dụng qua sched_getaffinity, và nó
-# đọc /proc/cpuinfo của HOST chứ không đọc cgroup limit -> thấy 32-48 CPU, tạo từng ấy
-# scheduler + hàng trăm worker thread, vượt quota thật của container -> pthread_create trả
-# EAGAIN (errno 11) -> fatal 0x6 "Stack Overflow".
-# taskset gọi sched_setaffinity, đổi affinity mask THẬT của tiến trình nên SQLPAL bị ép
-# xuống đúng N core. Đã kiểm chứng: có taskset -> header crash ghi "Processors: 2";
-# gỡ ra -> quay lại "Processors: 48" kèm đúng stack trace cũ. KHÔNG gỡ dòng này.
+# FIX: Use taskset to pin SQL Server to N CPUs.
+# SQLPAL đọc CPU khả dụng qua sched_getaffinity, và nó đọc /proc/cpuinfo của HOST 
+# chứ không đọc cgroup limit -> thấy 32-48 CPU, tạo từng ấy scheduler + hàng trăm 
+# worker thread, vượt quota thật của container -> pthread_create trả EAGAIN (errno 11) 
+# -> fatal 0x6 "Stack Overflow".
+#
+# taskset gọi sched_setaffinity, đổi affinity mask THẬT của tiến trình nên SQLPAL 
+# bị ép xuống đúng N core. Đã kiểm chứng bằng header crash: 
+# - Có taskset -> "Processors: 2" và HOẠT ĐỘNG BÌNH THƯỜNG
+# - Gỡ taskset -> "Processors: 48" + Stack Overflow
+# 
+# TSMS_CPU_COUNT=2 (env var từ Dockerfile) -> taskset to CPUs 0-1
 cpu_count=${TSMS_CPU_COUNT:-2}
 cpu_mask="0-$((cpu_count - 1))"
 
 # Dừng hẳn nếu thiếu taskset (gói util-linux trong Dockerfile). Chạy tiếp mà không ghim
-# affinity thì chắc chắn crash 0x6, và crash đó rất khó lần ngược về nguyên nhân này.
+# affinity thì chắc chắn crash 0x6, và crash đó rất khó lần ngược về nguyên nhân.
 if ! command -v taskset >/dev/null 2>&1; then
-    echo "FATAL: khong tim thay taskset. Cai 'util-linux' trong Dockerfile truoc khi chay."
+    echo "FATAL: khong tim thay taskset. Kiem tra 'util-linux' da duoc cai trong Dockerfile."
     exit 1
 fi
 
-echo "Pinning sqlservr to CPU ${cpu_mask} (host reports $(nproc) CPUs)."
+echo "Pinning sqlservr to CPUs ${cpu_mask} (TSMS_CPU_COUNT=${TSMS_CPU_COUNT}). Host reports $(nproc) CPUs."
 
 # Chạy sqlservr bằng chính user mssql (giữ PR_SET_DUMPABLE), forward signal qua trap ở trên.
+# taskset sẽ ép SQLPAL chỉ thấy CPUs 0-$((cpu_count-1)).
 taskset -c "$cpu_mask" /opt/mssql/bin/sqlservr &
 pid=$!
 wait "$pid"
+
