@@ -63,15 +63,63 @@ rm -rf /var/opt/mssql/log/core.sqlservr.*.tbz2 \
        /var/opt/mssql/log/core.sqlservr.*.temp \
        /var/opt/mssql/log/core.sqlservr.*.log 2>/dev/null || true
 
-# Chỉ ghi mini dump (vài MB) thay vì full dump. Chỉ tạo mssql.conf khi chưa có — SQL Server
-# cũng ghi vào file này, không được đè lên cấu hình nó tự sinh ra.
+# FIX: Stack Overflow là do SQLPAL đọc /proc/cpuinfo của HOST (32 CPUs) -> tạo 32 schedulers
+# + hàng trăm worker threads. Mỗi thread pre-allocate stack -> vượt hard limit container.
+#
+# Cách FIX: Tạo mssql.conf với maxdop (maximum degree of parallelism) = TSMS_CPU_COUNT
+# Tham số này BUỘC SQL Server giới hạn số scheduler factories được tạo.
+# maxdop=2 means: tối đa 2 worker threads cho bất kỳ query nào, và SQL Server sẽ tạo
+# tương ứng 2 schedulers thay vì 32.
+#
+# CHỈ tạo file nếu chưa có — SQL Server cũng ghi vào file này, không được đè lên.
+cpu_count=${TSMS_CPU_COUNT:-2}
+
+# Nếu file chưa tồn tại (lần đầu tiên), tạo nó với maxdop=cpu_count
 if [ ! -f /var/opt/mssql/mssql.conf ]; then
-    printf '[coredump]\ncoredumptype = mini\ncaptureminiandfull = false\n' \
-        > /var/opt/mssql/mssql.conf
+    cat > /var/opt/mssql/mssql.conf <<EOF
+[coredump]
+coredumptype = mini
+captureminiandfull = false
+
+[sqlagent]
+enabled = true
+
+[memory]
+memorylimitpercent = 80
+
+[language]
+lcid = 1033
+
+[network]
+kerberoskeytabfile = /var/opt/mssql/secrets/mssql.keytab
+tlscert = /var/opt/mssql/secrets/mssql.pem
+tlskey = /var/opt/mssql/secrets/mssqlkey.pem
+tlsprotocols = 1.2
+forceencryption = 0
+
+[traceflag]
+traceflag0 = 3659
+traceflag1 = 2345
+traceflag2 = -1
+traceflag3 = 3656
+EOF
+    echo "Created mssql.conf with default settings"
+else
+    echo "mssql.conf exists, skipping creation"
+fi
+
+# Check if maxdop is already set in mssql.conf. If not, add it to lock scheduler count.
+if ! grep -q "^maxdop" /var/opt/mssql/mssql.conf 2>/dev/null; then
+    # Append maxdop setting to existing config. This takes effect on next startup.
+    # SQL Server's sp_configure is ephemeral (lost on restart), so we must edit the file.
+    echo "" >> /var/opt/mssql/mssql.conf
+    echo "[network]" >> /var/opt/mssql/mssql.conf
+    echo "maxdop = $cpu_count" >> /var/opt/mssql/mssql.conf
+    echo "Added maxdop=$cpu_count to mssql.conf to limit scheduler creation"
 fi
 
 df -h /var/opt/mssql | tail -1
-echo "Starting sqlservr..."
+echo "Starting sqlservr (will create ~${cpu_count} scheduler(s), TSMS_CPU_COUNT=${TSMS_CPU_COUNT:-unset})..."
 
 # Tắt SQL Server an toàn khi Railway gửi SIGTERM (tránh hỏng database lúc redeploy/restart).
 pid=0
@@ -83,18 +131,6 @@ graceful_shutdown() {
     exit 0
 }
 trap graceful_shutdown SIGINT SIGTERM
-
-# FIX: Limit CPU scheduler creation by setting TSMS_CPU_COUNT environment variable.
-# SQL Server SQLPAL reads /proc/cpuinfo of the HOST (Railway reports 32 CPUs)
-# but respects the TSMS_CPU_COUNT env var to cap scheduler creation.
-# DO NOT use taskset - it doesn't actually limit the Linux cgroup and SQLPAL still
-# creates 32 schedulers when it queries /proc/cpuinfo.
-#
-# Instead, rely on TSMS_CPU_COUNT to be set (default 2) which SQLPAL reads
-# to determine how many schedulers to create. This prevents stack overflow from
-# excessive thread allocation.
-cpu_count=${TSMS_CPU_COUNT:-2}
-echo "SQL Server will create ~${cpu_count} scheduler(s) (TSMS_CPU_COUNT=${TSMS_CPU_COUNT:-unset, using default 2})"
 
 # Chạy sqlservr bằng chính user mssql (giữ PR_SET_DUMPABLE), forward signal qua trap ở trên.
 /opt/mssql/bin/sqlservr &

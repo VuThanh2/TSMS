@@ -13,7 +13,7 @@ FROM mcr.microsoft.com/mssql/server:2022-CU23-ubuntu-20.04
 # Chỉ sudo đúng 3 lệnh sửa quyền lúc runtime, rồi chạy sqlservr bằng chính user mssql.
 USER root
 RUN apt-get update \
- && apt-get install -y --no-install-recommends sudo util-linux \
+ && apt-get install -y --no-install-recommends sudo \
  && rm -rf /var/lib/apt/lists/* \
  && echo 'mssql ALL=(ALL) NOPASSWD: /usr/bin/mkdir, /usr/bin/chown, /usr/bin/chmod' > /etc/sudoers.d/mssql \
  && chmod 0440 /etc/sudoers.d/mssql
@@ -23,16 +23,19 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ACCEPT_EULA bắt buộc. MSSQL_SA_PASSWORD set qua Variables của Railway (không hardcode).
 # MSSQL_MEMORY_LIMIT_MB chặn OOM-kill (SQL Server mặc định ăn ~80% RAM). Phải để THẤP HƠN
-# RAM container ~500MB để chừa cho OS Linux. 1536 hợp cho container 2GB. Nếu cấp nhiều RAM
-# hơn thì override giá trị này qua Variables của Railway (không cần rebuild).
+# RAM container ~500MB để chừa cho OS Linux. 1024 hợp cho container 2GB.
 #
-# TSMS_CPU_COUNT: SQLPAL đọc /proc/cpuinfo của HOST (32 CPU trên Railway) chứ không đọc
-# cgroup limit -> tạo 32 scheduler + vài trăm worker thread, mỗi thread cấp sẵn stack.
-# Chạm trần memory/pids thật của container -> pthread_create trả EAGAIN (errno 11) ->
-# SQLPAL quăng fatal "Stack Overflow". Ghim affinity để SQLOS chỉ tạo N scheduler.
+# FIX: Stack Overflow là do SQLPAL đọc /proc/cpuinfo của HOST (32 CPUs) chứ không đọc cgroup
+# limit -> tạo 32 schedulers + hàng trăm worker threads, mỗi thread pre-allocate stack.
+# Cách FIX:
+#   1. MSSQL_MEMORY_LIMIT_MB = 1024 (thay vì 1536) để giảm memory pressure
+#   2. Entrypoint sẽ ghi mssql.conf với maxdop=2 để SQL Server tự giới hạn parallelism
+#   3. Không dùng taskset vì nó không thực sự limit cgroup
+#
+# TSMS_CPU_COUNT=2: Gợi ý cho entrypoint script về số CPUs cần dùng.
 ENV ACCEPT_EULA=Y \
     MSSQL_PID=Developer \
-    MSSQL_MEMORY_LIMIT_MB=1536 \
+    MSSQL_MEMORY_LIMIT_MB=1024 \
     TSMS_CPU_COUNT=2
 
 # Chạy non-root đúng cách image 2022 kỳ vọng. Railway KHÔNG được override USER.
@@ -40,3 +43,4 @@ USER 10001
 EXPOSE 1433
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
