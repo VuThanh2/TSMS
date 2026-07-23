@@ -34,8 +34,11 @@ $SUDO /usr/bin/mkdir -p /.system \
     /var/opt/mssql/secrets \
     /var/opt/mssql/backup || echo "  WARN: mkdir failed"
 
-# Trả quyền sở hữu về user mssql (10001) group root (0), quyền 770.
-$SUDO /usr/bin/chown -R 10001:0 /.system /var/opt/mssql || echo "  WARN: chown failed"
+# FIX: Trả quyền sở hữu về user mssql (10001) và GID mssql (10001), không root (0).
+# Process chạy là uid=10001(mssql) gid=10001(mssql), vậy nên group phải là 10001,
+# KHÔNG phải 0 (root). Nếu chown về 10001:0 thì SQLPAL không thể ghi vào /.system
+# vì gid của nó là 10001, không phải 0 -> EAGAIN "Resource temporarily unavailable".
+$SUDO /usr/bin/chown -R 10001:10001 /.system /var/opt/mssql || echo "  WARN: chown failed"
 $SUDO /usr/bin/chmod -R 770 /.system /var/opt/mssql || echo "  WARN: chmod failed"
 
 # In quyền THẬT sau khi sửa, và test ghi thật sự. Đây là bằng chứng duy nhất phân biệt
