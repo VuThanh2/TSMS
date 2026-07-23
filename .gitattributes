@@ -1,4 +1,0 @@
-# Shell script chạy trong Linux container PHẢI giữ line ending LF. Máy dev là Windows,
-# nếu git tự đổi sang CRLF thì container báo "bad interpreter: /bin/bash^M" và chết ngay
-# lúc khởi động — lỗi rất khó lần ra từ log.
-*.sh text eol=lf
