@@ -50,9 +50,20 @@ public static class MigrationExtensions {
         await provider.GetRequiredService<ReportingDbContext>().Database.MigrateAsync();
     }
 
-    // Lỗi mạng/timeout lúc DB chưa sẵn sàng thì đáng thử lại; lỗi logic thì không.
+    // Các mã lỗi SQL Server KHÔNG bao giờ tự hết khi thử lại — sai mật khẩu hay sai quyền
+    // thì thử 12 lần cũng vẫn sai. Phải để nó nổ ngay, thay vì im lặng loop suốt 4 phút
+    // rồi mới báo lỗi (làm nguyên nhân thật bị chôn dưới hàng chục dòng log giống nhau).
+    private static readonly HashSet<int> FatalSqlErrors = [
+        18456, // Login failed for user
+        18452, // Login failed - untrusted domain / SQL auth bị tắt
+        4060,  // Cannot open database requested by the login
+        40615  // Không được firewall cho phép
+    ];
+
+    // Lỗi mạng/timeout lúc DB chưa sẵn sàng thì đáng thử lại; lỗi xác thực thì không.
     private static bool IsTransient(Exception ex) => ex switch {
-        SqlException or TimeoutException => true,
+        SqlException sql => !sql.Errors.Cast<SqlError>().Any(e => FatalSqlErrors.Contains(e.Number)),
+        TimeoutException => true,
         _ => ex.InnerException is not null && IsTransient(ex.InnerException)
     };
 }
