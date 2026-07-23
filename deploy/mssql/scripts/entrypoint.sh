@@ -84,14 +84,20 @@ graceful_shutdown() {
 }
 trap graceful_shutdown SIGINT SIGTERM
 
-# Ghim CPU affinity trước khi start: SQLPAL thấy 32 CPU của host Railway nên tạo 32
-# scheduler + hàng trăm worker thread, vượt quota thật của container -> pthread_create
-# trả EAGAIN (errno 11) -> fatal "Stack Overflow". taskset ép SQLOS chỉ thấy N core.
+# FIX: Limit CPU scheduler creation by setting TSMS_CPU_COUNT environment variable.
+# SQL Server SQLPAL reads /proc/cpuinfo of the HOST (Railway reports 32 CPUs)
+# but respects the TSMS_CPU_COUNT env var to cap scheduler creation.
+# DO NOT use taskset - it doesn't actually limit the Linux cgroup and SQLPAL still
+# creates 32 schedulers when it queries /proc/cpuinfo.
+#
+# Instead, rely on TSMS_CPU_COUNT to be set (default 2) which SQLPAL reads
+# to determine how many schedulers to create. This prevents stack overflow from
+# excessive thread allocation.
 cpu_count=${TSMS_CPU_COUNT:-2}
-cpu_mask="0-$((cpu_count - 1))"
-echo "Pinning sqlservr to CPU ${cpu_mask} (host reports $(nproc) CPUs)."
+echo "SQL Server will create ~${cpu_count} scheduler(s) (TSMS_CPU_COUNT=${TSMS_CPU_COUNT:-unset, using default 2})"
 
 # Chạy sqlservr bằng chính user mssql (giữ PR_SET_DUMPABLE), forward signal qua trap ở trên.
-taskset -c "$cpu_mask" /opt/mssql/bin/sqlservr &
+/opt/mssql/bin/sqlservr &
 pid=$!
 wait "$pid"
+
