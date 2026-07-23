@@ -4,6 +4,12 @@
 # /.system và volume /var/opt/mssql TẠI RUNTIME — build-time chown vô dụng vì Railway
 # mount volume (root-owned) đè lên sau khi build.
 
+# Tắt core dump của kernel NGAY từ đầu. Mỗi lần sqlservr crash, bộ thu dump của Microsoft
+# spam hàng trăm dòng "find: /proc/<pid>/... Permission denied" (Railway chặn ptrace nên
+# nó luôn thất bại), chạm rate limit 500 logs/sec của Railway -> log chẩn đoán thật sự
+# bị VỨT ("Messages dropped: 783"). Dump này dù sao cũng không thu được, bỏ hẳn cho sạch.
+ulimit -c 0 2>/dev/null || true
+
 echo "Configuring runtime permissions for SQL Server..."
 echo "  whoami: $(id)"
 
@@ -15,7 +21,7 @@ if sudo -n /usr/bin/mkdir -p /.system 2>/dev/null; then
     echo "  sudo: available"
 else
     SUDO=""
-    echo "  sudo: NOT available (nosuid mount?) - fallback sang quyền sẵn có của user mssql"
+    echo "  sudo: NOT available (nosuid mount?) - fallback sang quyen san co cua user mssql"
 fi
 
 # .system trên volume là "persistent hive root" của SQLPAL — thiếu nó (hoặc không ghi được
@@ -54,72 +60,29 @@ fi
 
 echo "Permissions ready."
 
-# Dọn core dump cũ TRƯỚC khi start. Mỗi lần sqlservr crash, crash-support-functions.sh
-# nén core dump vào /var/opt/mssql/log — vài trăm MB/lần. Với restart policy của Railway
-# thì crash-loop sẽ ăn sạch volume, rồi chính ENOSPC lại gây crash mới (vòng lặp chết).
-# Xoá ở đây để container tự chữa được kể cả khi đang crash-loop (không shell vào được).
-# Không cần sudo: chown -R ở trên đã trả quyền sở hữu /var/opt/mssql về user mssql.
-rm -rf /var/opt/mssql/log/core.sqlservr.*.tbz2 \
-       /var/opt/mssql/log/core.sqlservr.*.temp \
-       /var/opt/mssql/log/core.sqlservr.*.log 2>/dev/null || true
+# Dọn core dump cũ. Trước khi có ulimit -c 0 ở trên, mỗi lần crash ghi vài trăm MB vào
+# /var/opt/mssql/log; crash-loop từng ăn sạch volume rồi chính ENOSPC lại gây crash mới.
+# Giữ lại bước dọn để container tự chữa kể cả khi đang crash-loop (không shell vào được).
+rm -rf /var/opt/mssql/log/core.sqlservr.* 2>/dev/null || true
 
-# FIX: Stack Overflow là do SQLPAL đọc /proc/cpuinfo của HOST (32 CPUs) -> tạo 32 schedulers
-# + hàng trăm worker threads. Mỗi thread pre-allocate stack -> vượt hard limit container.
-#
-# Cách FIX: Tạo mssql.conf với maxdop (maximum degree of parallelism) = TSMS_CPU_COUNT
-# Tham số này BUỘC SQL Server giới hạn số scheduler factories được tạo.
-# maxdop=2 means: tối đa 2 worker threads cho bất kỳ query nào, và SQL Server sẽ tạo
-# tương ứng 2 schedulers thay vì 32.
-#
-# CHỈ tạo file nếu chưa có — SQL Server cũng ghi vào file này, không được đè lên.
-cpu_count=${TSMS_CPU_COUNT:-2}
-
-# Nếu file chưa tồn tại (lần đầu tiên), tạo nó với maxdop=cpu_count
+# mssql.conf: CHỈ đặt những key mssql-conf thật sự hỗ trợ.
+# KHÔNG đặt maxdop ở đây — nó là server option của sp_configure (T-SQL), không phải
+# mssql-conf setting, và dù có đặt được thì nó cũng chỉ giới hạn parallelism của query,
+# KHÔNG giới hạn số scheduler SQLOS tạo lúc khởi động. Việc đó do taskset lo (xem bên dưới).
+# KHÔNG đặt memory.memorylimitpercent — SQLPAL đọc RAM của HOST (346 GB), 80% = 277 GB,
+# và nó ghi đè MSSQL_MEMORY_LIMIT_MB. Chỉ dùng biến môi trường tính bằng MB.
+# KHÔNG đặt network.tlscert/tlskey — trỏ tới file không tồn tại thì SQL Server fail startup.
 if [ ! -f /var/opt/mssql/mssql.conf ]; then
-    cat > /var/opt/mssql/mssql.conf <<EOF
+    cat > /var/opt/mssql/mssql.conf <<'EOF'
 [coredump]
 coredumptype = mini
 captureminiandfull = false
-
-[sqlagent]
-enabled = true
-
-[memory]
-memorylimitpercent = 80
-
-[language]
-lcid = 1033
-
-[network]
-kerberoskeytabfile = /var/opt/mssql/secrets/mssql.keytab
-tlscert = /var/opt/mssql/secrets/mssql.pem
-tlskey = /var/opt/mssql/secrets/mssqlkey.pem
-tlsprotocols = 1.2
-forceencryption = 0
-
-[traceflag]
-traceflag0 = 3659
-traceflag1 = 2345
-traceflag2 = -1
-traceflag3 = 3656
 EOF
-    echo "Created mssql.conf with default settings"
-else
-    echo "mssql.conf exists, skipping creation"
-fi
-
-# Check if maxdop is already set in mssql.conf. If not, add it to lock scheduler count.
-if ! grep -q "^maxdop" /var/opt/mssql/mssql.conf 2>/dev/null; then
-    # Append maxdop setting to existing config. This takes effect on next startup.
-    # SQL Server's sp_configure is ephemeral (lost on restart), so we must edit the file.
-    echo "" >> /var/opt/mssql/mssql.conf
-    echo "[network]" >> /var/opt/mssql/mssql.conf
-    echo "maxdop = $cpu_count" >> /var/opt/mssql/mssql.conf
-    echo "Added maxdop=$cpu_count to mssql.conf to limit scheduler creation"
+    echo "Created mssql.conf"
 fi
 
 df -h /var/opt/mssql | tail -1
-echo "Starting sqlservr (will create ~${cpu_count} scheduler(s), TSMS_CPU_COUNT=${TSMS_CPU_COUNT:-unset})..."
+echo "Starting sqlservr..."
 
 # Tắt SQL Server an toàn khi Railway gửi SIGTERM (tránh hỏng database lúc redeploy/restart).
 pid=0
@@ -132,8 +95,26 @@ graceful_shutdown() {
 }
 trap graceful_shutdown SIGINT SIGTERM
 
+# Ghim CPU affinity trước khi start. SQLPAL đọc CPU khả dụng qua sched_getaffinity, và nó
+# đọc /proc/cpuinfo của HOST chứ không đọc cgroup limit -> thấy 32-48 CPU, tạo từng ấy
+# scheduler + hàng trăm worker thread, vượt quota thật của container -> pthread_create trả
+# EAGAIN (errno 11) -> fatal 0x6 "Stack Overflow".
+# taskset gọi sched_setaffinity, đổi affinity mask THẬT của tiến trình nên SQLPAL bị ép
+# xuống đúng N core. Đã kiểm chứng: có taskset -> header crash ghi "Processors: 2";
+# gỡ ra -> quay lại "Processors: 48" kèm đúng stack trace cũ. KHÔNG gỡ dòng này.
+cpu_count=${TSMS_CPU_COUNT:-2}
+cpu_mask="0-$((cpu_count - 1))"
+
+# Dừng hẳn nếu thiếu taskset (gói util-linux trong Dockerfile). Chạy tiếp mà không ghim
+# affinity thì chắc chắn crash 0x6, và crash đó rất khó lần ngược về nguyên nhân này.
+if ! command -v taskset >/dev/null 2>&1; then
+    echo "FATAL: khong tim thay taskset. Cai 'util-linux' trong Dockerfile truoc khi chay."
+    exit 1
+fi
+
+echo "Pinning sqlservr to CPU ${cpu_mask} (host reports $(nproc) CPUs)."
+
 # Chạy sqlservr bằng chính user mssql (giữ PR_SET_DUMPABLE), forward signal qua trap ở trên.
-/opt/mssql/bin/sqlservr &
+taskset -c "$cpu_mask" /opt/mssql/bin/sqlservr &
 pid=$!
 wait "$pid"
-
