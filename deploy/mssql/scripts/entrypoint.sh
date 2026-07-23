@@ -5,17 +5,52 @@
 # mount volume (root-owned) đè lên sau khi build.
 
 echo "Configuring runtime permissions for SQL Server..."
+echo "  whoami: $(id)"
 
-# Tạo sẵn thư mục hệ thống /.system (ở gốc /) và các thư mục dữ liệu trên volume.
-sudo /usr/bin/mkdir -p /.system \
+# Kiểm tra sudo có thật sự dùng được không. Nhiều container runtime mount rootfs bằng
+# nosuid -> binary setuid như sudo mất tác dụng, mọi lệnh mkdir/chown bên dưới im lặng
+# không làm gì, rồi sqlservr chết vì ACCESS_DENIED mà không rõ lý do. Phải biết sớm.
+if sudo -n /usr/bin/mkdir -p /.system 2>/dev/null; then
+    SUDO="sudo -n"
+    echo "  sudo: available"
+else
+    SUDO=""
+    echo "  sudo: NOT available (nosuid mount?) - fallback sang quyền sẵn có của user mssql"
+fi
+
+# .system trên volume là "persistent hive root" của SQLPAL — thiếu nó (hoặc không ghi được
+# vào nó) chính là fatal 0xc0000022 "Unable to set persistent hive root". Phải tạo tường minh,
+# không dựa vào việc sqlservr tự tạo được.
+$SUDO /usr/bin/mkdir -p /.system \
+    /var/opt/mssql/.system \
     /var/opt/mssql/data \
     /var/opt/mssql/log \
     /var/opt/mssql/secrets \
-    /var/opt/mssql/backup
+    /var/opt/mssql/backup || echo "  WARN: mkdir failed"
 
 # Trả quyền sở hữu về user mssql (10001) group root (0), quyền 770.
-sudo /usr/bin/chown -R 10001:0 /.system /var/opt/mssql
-sudo /usr/bin/chmod -R 770 /.system /var/opt/mssql
+$SUDO /usr/bin/chown -R 10001:0 /.system /var/opt/mssql || echo "  WARN: chown failed"
+$SUDO /usr/bin/chmod -R 770 /.system /var/opt/mssql || echo "  WARN: chmod failed"
+
+# In quyền THẬT sau khi sửa, và test ghi thật sự. Đây là bằng chứng duy nhất phân biệt
+# "chown có tác dụng" với "Railway mount volume đè lên sau khi chown".
+echo "  mount: $(mount | grep -F /var/opt/mssql || echo 'khong thay mount rieng cho /var/opt/mssql')"
+ls -ldn / /.system /var/opt/mssql /var/opt/mssql/.system 2>&1 | sed 's/^/  /'
+
+write_ok=true
+for dir in /.system /var/opt/mssql /var/opt/mssql/.system /var/opt/mssql/data; do
+    if touch "$dir/.write-test" 2>/dev/null; then
+        rm -f "$dir/.write-test"
+    else
+        echo "  FATAL: user $(id -u) KHONG ghi duoc vao $dir"
+        write_ok=false
+    fi
+done
+
+if [ "$write_ok" != true ]; then
+    echo "FATAL: quyen ghi chua du -> sqlservr se chet voi 0xc0000022. Dung tai day."
+    exit 1
+fi
 
 echo "Permissions ready."
 
