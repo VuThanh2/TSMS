@@ -30,7 +30,14 @@ graceful_shutdown() {
 }
 trap graceful_shutdown SIGINT SIGTERM
 
+# Ghim CPU affinity trước khi start: SQLPAL thấy 32 CPU của host Railway nên tạo 32
+# scheduler + hàng trăm worker thread, vượt quota thật của container -> pthread_create
+# trả EAGAIN (errno 11) -> fatal "Stack Overflow". taskset ép SQLOS chỉ thấy N core.
+cpu_count=${TSMS_CPU_COUNT:-2}
+cpu_mask="0-$((cpu_count - 1))"
+echo "Pinning sqlservr to CPU ${cpu_mask} (host reports $(nproc) CPUs)."
+
 # Chạy sqlservr bằng chính user mssql (giữ PR_SET_DUMPABLE), forward signal qua trap ở trên.
-/opt/mssql/bin/sqlservr &
+taskset -c "$cpu_mask" /opt/mssql/bin/sqlservr &
 pid=$!
 wait "$pid"
