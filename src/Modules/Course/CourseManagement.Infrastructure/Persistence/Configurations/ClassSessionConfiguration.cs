@@ -1,5 +1,4 @@
 using CourseManagement.Domain.Entities;
-using CourseManagement.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

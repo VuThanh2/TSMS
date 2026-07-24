@@ -4,7 +4,6 @@ using CourseManagement.Domain.Errors;
 using CourseManagement.Domain.Repositories;
 using CourseManagement.Domain.ValueObjects;
 using MediatR;
-using SharedKernel.Abstractions;
 using SharedKernel.Primitives;
 
 namespace CourseManagement.Application.Courses.UpdateCourse;

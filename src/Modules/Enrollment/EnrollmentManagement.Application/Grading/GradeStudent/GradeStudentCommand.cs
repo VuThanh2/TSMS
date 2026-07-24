@@ -4,7 +4,6 @@ using EnrollmentManagement.Domain.ValueObjects;
 using EnrollmentManagement.Application.Common.Interfaces;
 using EnrollmentManagement.Application.Common.Mappers;
 using MediatR;
-using SharedKernel.Abstractions;
 using SharedKernel.Primitives;
 
 namespace EnrollmentManagement.Application.Grading.GradeStudent;

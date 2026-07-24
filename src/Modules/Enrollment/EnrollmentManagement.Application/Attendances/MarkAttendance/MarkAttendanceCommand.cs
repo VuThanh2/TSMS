@@ -4,7 +4,6 @@ using EnrollmentManagement.Domain.Errors;
 using EnrollmentManagement.Domain.Repositories;
 using EnrollmentManagement.Domain.ValueObjects;
 using MediatR;
-using SharedKernel.Abstractions;
 using SharedKernel.Primitives;
 
 namespace EnrollmentManagement.Application.Attendances.MarkAttendance;

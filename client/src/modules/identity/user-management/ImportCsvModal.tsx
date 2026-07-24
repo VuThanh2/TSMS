@@ -19,7 +19,7 @@ const CSV_SAMPLE_ROWS = [
 ];
 
 // Tạo file CSV ngay ở client rồi trigger download — template là dữ liệu tĩnh,
-// không cần endpoint backend. Prefix BOM (﻿) để Excel mở đúng UTF-8.
+// không cần endpoint backend. Prefix BOM (U+FEFF) để Excel mở đúng UTF-8.
 function downloadCsvTemplate() {
   const lines = [CSV_COLUMNS.join(','), ...CSV_SAMPLE_ROWS.map((r) => r.join(','))];
   const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });

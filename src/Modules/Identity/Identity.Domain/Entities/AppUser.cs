@@ -103,7 +103,6 @@ public class AppUser : IdentityUser<Guid>
         return Result.Success();
     }
 
-    /// Activates an inactive account.
     public Result Activate()
     {
         if (IsActive)
@@ -116,7 +115,6 @@ public class AppUser : IdentityUser<Guid>
         return Result.Success();
     }
     
-    /// Deactivates an active account.
     public Result Deactivate()
     {
         if (!IsActive)

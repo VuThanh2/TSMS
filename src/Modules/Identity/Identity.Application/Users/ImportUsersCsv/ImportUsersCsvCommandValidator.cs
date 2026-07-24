@@ -1,5 +1,4 @@
 using FluentValidation;
-using Identity.Domain.Errors;
 
 namespace Identity.Application.Users.ImportUsersCsv;
 

@@ -13,7 +13,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Reporting.Application.Common.Interfaces;
 using SharedInfrastructure.Persistence;
-using SharedKernel.Abstractions;
 
 namespace CourseManagement.Infrastructure.Extensions;
 
