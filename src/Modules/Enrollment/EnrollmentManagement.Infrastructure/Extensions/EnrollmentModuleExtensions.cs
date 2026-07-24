@@ -13,7 +13,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SharedInfrastructure.Persistence;
 using SharedInfrastructure.Time;
-using SharedKernel.Abstractions;
 
 namespace EnrollmentManagement.Infrastructure.Extensions;
 

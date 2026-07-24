@@ -2,7 +2,6 @@ using CourseManagement.Infrastructure.Extensions;
 using EnrollmentManagement.Infrastructure.Extensions;
 using EnrollmentManagement.Infrastructure.Hubs;
 using Hangfire;
-using Hangfire.Dashboard;
 using Identity.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Reporting.Infrastructure.Extensions;

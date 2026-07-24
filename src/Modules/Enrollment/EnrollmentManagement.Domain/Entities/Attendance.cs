@@ -1,4 +1,3 @@
-using EnrollmentManagement.Domain.Errors;
 using EnrollmentManagement.Domain.Events;
 using EnrollmentManagement.Domain.ValueObjects;
 using SharedKernel.Abstractions;

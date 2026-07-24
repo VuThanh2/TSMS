@@ -1,4 +1,3 @@
-using CourseManagement.Application.Common.Interfaces;
 using Identity.Application.Common.Interfaces;
 using Identity.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;

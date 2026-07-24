@@ -4,7 +4,6 @@ using System.Text;
 using Identity.Application.Common.Interfaces;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Options;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Identity.Infrastructure.Services;
@@ -12,11 +11,9 @@ namespace Identity.Infrastructure.Services;
 // Generate JWT access token cho user sau khi login thành công.
 public class TokenService : ITokenService {
     private readonly JwtOptions _jwtOptions;
-    private readonly UserManager<AppUser> _userManager;
 
-    public TokenService(JwtOptions jwtOptions, UserManager<AppUser> userManager) {
+    public TokenService(JwtOptions jwtOptions) {
         _jwtOptions = jwtOptions;
-        _userManager = userManager;
     }
 
     public string GenerateToken(AppUser user) {

@@ -41,7 +41,6 @@ export function useGradeHub(onGradeUpdated: (payload: unknown) => void) {
       connection.off('GradeUpdated', handleGradeUpdated);
       void connection.stop();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only mount once,
-    // latest callback is captured via handlerRef above.
+    // Chủ đích chỉ mount 1 lần; callback mới nhất đã được capture qua handlerRef ở trên.
   }, []);
 }

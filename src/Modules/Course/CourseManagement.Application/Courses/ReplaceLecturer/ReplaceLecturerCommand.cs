@@ -3,7 +3,6 @@ using CourseManagement.Application.Common.Mappers;
 using CourseManagement.Domain.Errors;
 using CourseManagement.Domain.Repositories;
 using MediatR;
-using SharedKernel.Abstractions;
 using SharedKernel.Primitives;
 
 namespace CourseManagement.Application.Courses.ReplaceLecturer;

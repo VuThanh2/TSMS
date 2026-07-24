@@ -1,4 +1,3 @@
-using CourseManagement.Application.ClassSessions.GetClassSessions;
 using CourseManagement.Application.Courses.CreateCourse;
 using CourseManagement.Application.Courses.GetAvailableCourses;
 using CourseManagement.Application.Courses.GetCourseById;
